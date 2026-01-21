@@ -1,0 +1,14 @@
+# Prevenir ejecución de PHP en carpeta de subidas
+<FilesMatch "\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Permitir solo descarga de archivos específicos
+<FilesMatch "\.(jpg|jpeg|png|gif|pdf|doc|docx)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Prevenir listado de directorios
+Options -Indexes
