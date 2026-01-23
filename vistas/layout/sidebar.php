@@ -27,7 +27,7 @@
     
     <nav class="sidebar-nav">
         <div class="nav-section">
-            <div class="nav-section-title">MENÚ</div>
+            <div class="nav-section-title">MENÚ PRINCIPAL</div>
             <?php
             $current_page = basename($_SERVER['PHP_SELF']);
             $current_dir = basename(dirname($_SERVER['PHP_SELF']));
@@ -52,7 +52,7 @@
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                 </span>
-                <span class="nav-text">Directorio</span>
+                <span class="nav-text">Funcionarios</span>
             </a>
             <a href="<?php echo APP_URL; ?>/vistas/expedientes/index.php" class="nav-item <?php echo $current_dir == 'expedientes' ? 'active' : ''; ?>">
                 <span class="nav-icon">
@@ -65,18 +65,17 @@
         </div>
         
         <div class="nav-section">
-            <div class="nav-section-title">GESTIÓN</div>
-            <a href="<?php echo APP_URL; ?>/vistas/reportes/index.php" class="nav-item">
+            <div class="nav-section-title">GESTIÓN ADMINISTRATIVA</div>
+            <a href="<?php echo APP_URL; ?>/vistas/nombramientos/index.php" class="nav-item">
                 <span class="nav-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="16" y1="13" x2="8" y2="13"></line>
                         <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
                 </span>
-                <span class="nav-text">Reportes</span>
+                <span class="nav-text">Nombramientos</span>
             </a>
             <a href="<?php echo APP_URL; ?>/vistas/vacaciones/index.php" class="nav-item <?php echo $current_dir == 'vacaciones' ? 'active' : ''; ?>">
                 <span class="nav-icon">
@@ -92,7 +91,18 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </span>
-                <span class="nav-text">Vacaciones</span>
+                <span class="nav-text">Control Vacacional</span>
+            </a>
+            <a href="<?php echo APP_URL; ?>/vistas/traslados/index.php" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="17 1 21 5 17 9"></polyline>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                        <polyline points="7 23 3 19 7 15"></polyline>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                    </svg>
+                </span>
+                <span class="nav-text">Traslados</span>
             </a>
             <a href="<?php echo APP_URL; ?>/vistas/amonestaciones/index.php" class="nav-item <?php echo $current_dir == 'amonestaciones' ? 'active' : ''; ?>">
                 <span class="nav-icon">
@@ -104,6 +114,42 @@
                 </span>
                 <span class="nav-text">Amonestaciones</span>
             </a>
+            <a href="<?php echo APP_URL; ?>/vistas/remociones/index.php" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </span>
+                <span class="nav-text">Remociones</span>
+            </a>
+            
+            <!-- Menú Desplegable: Salidas -->
+            <div class="nav-item-accordion">
+                <a href="javascript:void(0)" class="nav-item" onclick="toggleSubmenu(this)">
+                    <span class="nav-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </span>
+                    <span class="nav-text">Salidas</span>
+                    <span class="nav-arrow" style="margin-left: auto; transition: transform 0.3s ease;">▼</span>
+                </a>
+                <div class="nav-submenu" style="display: none; padding-left: 20px;">
+                    <a href="<?php echo APP_URL; ?>/vistas/despidos/index.php" class="nav-item nav-subitem">
+                        <span class="nav-text">Despidos</span>
+                    </a>
+                    <a href="<?php echo APP_URL; ?>/vistas/renuncias/index.php" class="nav-item nav-subitem">
+                        <span class="nav-text">Renuncias</span>
+                    </a>
+                    <a href="<?php echo APP_URL; ?>/vistas/renuncias_aprobadas/index.php" class="nav-item nav-subitem">
+                        <span class="nav-text">Renuncias Aprobadas</span>
+                    </a>
+                </div>
+            </div>
         </div>
         
         <?php if (verificarNivel(1)): ?>
@@ -143,22 +189,19 @@
         <?php endif; ?>
     </nav>
     
-    <div class="sidebar-footer">
-        <div class="user-profile">
-            <div class="user-avatar-small">
-                <?php echo strtoupper(substr($_SESSION['nombres'], 0, 2)); ?>
-            </div>
-            <div class="user-info">
-                <div class="user-name-small"><?php echo htmlspecialchars($_SESSION['nombres']); ?></div>
-                <div class="user-role"><?php echo htmlspecialchars($_SESSION['cargo']); ?></div>
-            </div>
-        </div>
-        <a href="<?php echo APP_URL; ?>/config/logout.php" class="logout-btn" title="Cerrar sesión">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-        </a>
-    </div>
+    <script>
+    function toggleSubmenu(element) {
+        const submenu = element.nextElementSibling;
+        const arrow = element.querySelector('.nav-arrow');
+        
+        if (submenu.style.display === 'none' || submenu.style.display === '') {
+            submenu.style.display = 'block';
+            arrow.style.transform = 'rotate(180deg)';
+        } else {
+            submenu.style.display = 'none';
+            arrow.style.transform = 'rotate(0deg)';
+        }
+    }
+    </script>
 </aside>
+

@@ -147,6 +147,151 @@ if ($funcionario['fecha_ingreso']) {
             letter-spacing: 0.5px;
         }
         
+        /* ========================================
+           EXPEDIENTE CONTAINER - SIDEBAR LAYOUT
+           ======================================== */
+        
+        .expediente-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 24px;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .expediente-sidebar {
+            border-right: 1px solid #e2e8f0;
+            padding-right: 24px;
+        }
+        
+        .foto-perfil {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 auto 16px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .expediente-sidebar h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0 0 4px;
+            text-align: center;
+        }
+        
+        .expediente-sidebar .cargo {
+            font-size: 13px;
+            color: #718096;
+            margin: 0 0 12px;
+            text-align: center;
+            display: block;
+        }
+        
+        .expediente-sidebar .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: capitalize;
+            letter-spacing: 0.3px;
+            margin: 0 auto 20px;
+            display: block;
+            width: fit-content;
+        }
+        
+        .nav-menu {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            stroke-width: 2;
+        }
+        
+        .nav-item:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #00a8cc 0%, #0088aa 100%);
+            color: white;
+            border-left-color: #005f73;
+            font-weight: 600;
+        }
+        
+        .nav-item.active svg {
+            color: white;
+        }
+        
+        .expediente-content {
+            min-height: 500px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .expediente-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .expediente-sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+                padding-right: 0;
+                padding-bottom: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .nav-menu {
+                display: flex;
+                overflow-x: auto;
+                gap: 8px;
+                border-top: none;
+                padding-top: 0;
+                margin-top: 16px;
+            }
+            
+            .nav-item {
+                flex-shrink: 0;
+                min-width: 140px;
+                font-size: 13px;
+            }
+        }
+        
         .badge-success {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
@@ -611,147 +756,115 @@ if ($funcionario['fecha_ingreso']) {
         </header>
         
         <div class="content-wrapper">
-            <!-- Header del Expediente -->
-            <div class="expediente-header">
-                <div class="expediente-avatar">
-                    <?php echo strtoupper(substr($funcionario['nombres'], 0, 1) . substr($funcionario['apellidos'], 0, 1)); ?>
-                </div>
-                <div class="expediente-info">
-                    <h2 class="expediente-nombre">
-                        <?php echo htmlspecialchars($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?>
-                    </h2>
-                    <div class="expediente-meta">
-                        <span class="expediente-meta-item">
-                            <strong>Cédula:</strong> <?php echo htmlspecialchars($funcionario['cedula']); ?>
-                        </span>
-                        <span class="expediente-meta-item">
-                            <strong>Cargo:</strong> <?php echo htmlspecialchars($funcionario['nombre_cargo']); ?>
-                        </span>
-                        <span class="expediente-meta-item">
-                            <strong>Departamento:</strong> <?php echo htmlspecialchars($funcionario['departamento']); ?>
-                        </span>
+            <!-- EXPEDIENTE CONTAINER CON SIDEBAR -->
+            <div class="expediente-container">
+                <!-- SIDEBAR -->
+                <aside class="expediente-sidebar">
+                    <div class="text-center">
+                        <div class="foto-perfil">
+                            <?php echo strtoupper(substr($funcionario['nombres'], 0, 1) . substr($funcionario['apellidos'], 0, 1)); ?>
+                        </div>
+                        <h3><?php echo htmlspecialchars($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?></h3>
+                        <span class="cargo"><?php echo htmlspecialchars($funcionario['nombre_cargo']); ?></span>
                         <span class="badge badge-success">
                             <?php echo ucfirst($funcionario['estado']); ?>
                         </span>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Grid de Pestañas Moderno -->
-            <div class="tabs-grid-container">
-                <div class="tabs-grid">
-                    <div class="tab-card active" style="--gradient: var(--tab-info);" onclick="switchTab('info', this)">
-                        <div class="tab-card-content">
-                            <span class="tab-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                            </span>
-                            <div class="tab-title">Información Personal</div>
-                        </div>
-                    </div>
                     
-                    <div class="tab-card" style="--gradient: var(--tab-cargas);" onclick="switchTab('cargas', this)">
-                        <div class="tab-card-content">
-                            <span class="tab-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
-                            </span>
-                            <div class="tab-title">Cargas Familiares</div>
+                    <!-- Menú de Navegación -->
+                    <nav class="nav-menu">
+                        <div class="nav-item active" onclick="switchTab('info', this)" data-tab="info">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Información Personal</span>
                         </div>
-                    </div>
-                    
-                    <div class="tab-card" style="--gradient: var(--tab-activos);" onclick="switchTab('activos', this)">
-                        <div class="tab-card-content">
-                            <span class="tab-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                                </svg>
-                            </span>
-                            <div class="tab-title">Activos Asignados</div>
+                        
+                        <div class="nav-item" onclick="switchTab('cargas', this)" data-tab="cargas">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span>Cargas Familiares</span>
                         </div>
-                    </div>
-                    
-                    <div class="tab-card" style="--gradient: var(--tab-vacaciones);" onclick="switchTab('vacaciones-calc', this)">
-                        <div class="tab-card-content">
-                            <span class="tab-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-                                    <circle cx="12" cy="12" r="5"></circle>
-                                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                                </svg>
-                            </span>
-                            <div class="tab-title">Calculadora Vacaciones</div>
+                        
+                        <div class="nav-item" onclick="switchTab('activos', this)" data-tab="activos">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                            <span>Activos Asignados</span>
                         </div>
-                    </div>
-                    
-                    <div class="tab-card" style="--gradient: var(--tab-riesgo);" onclick="switchTab('riesgo', this)">
-                        <div class="tab-card-content">
-                            <span class="tab-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                </svg>
-                            </span>
-                            <div class="tab-title">Barra de Riesgo</div>
+                        
+                        <div class="nav-item" onclick="switchTab('vacaciones-calc', this)" data-tab="vacaciones-calc">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <span>Calculadora Vacaciones</span>
                         </div>
-                    </div>
-                    
-                    <div class="tab-card" style="--gradient: var(--tab-nombramientos);" onclick="switchTab('nombramientos', this)">
-                        <div class="tab-card-content">
-                            <span class="tab-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <line x1="10" y1="9" x2="8" y2="9"></line>
-                                </svg>
-                            </span>
-                            <div class="tab-title">Nombramientos</div>
+                        
+                        <div class="nav-item" onclick="switchTab('riesgo', this)" data-tab="riesgo">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <span>Barra de Riesgo</span>
                         </div>
-                    </div>
-                    
-                    <div class="tab-card" style="--gradient: var(--tab-historial-vac);" onclick="switchTab('vacaciones', this)">
-                        <div class="tab-card-content">
-                            <span class="tab-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                            </span>
-                            <div class="tab-title">Historial Vacaciones</div>
+                        
+                        <div class="nav-item" onclick="switchTab('nombramientos', this)" data-tab="nombramientos">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <line x1="10" y1="9" x2="8" y2="9"></line>
+                            </svg>
+                            <span>Nombramientos</span>
                         </div>
-                    </div>
-                    
-                    <div class="tab-card" style="--gradient: var(--tab-amonestaciones);" onclick="switchTab('amonestaciones', this)">
-                        <div class="tab-card-content">
-                            <span class="tab-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                                </svg>
-                            </span>
-                            <div class="tab-title">Amonestaciones</div>
+                        
+                        <div class="nav-item" onclick="switchTab('vacaciones', this)" data-tab="vacaciones">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span>Historial Vacaciones</span>
                         </div>
-                    </div>
-                </div>
-            </div>
+                        
+                        <div class="nav-item" onclick="switchTab('amonestaciones', this)" data-tab="amonestaciones">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            <span>Amonestaciones</span>
+                        </div>
+                        
+                        <div class="nav-item" onclick="switchTab('salidas', this)" data-tab="salidas">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            <span>Retiros/Despidos</span>
+                        </div>
+                    </nav>
+                </aside>
+                
+                <!-- CONTENIDO -->
+                <main class="expediente-content">
             
             <!-- Contenido de las Pestañas -->
             
