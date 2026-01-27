@@ -224,40 +224,17 @@ $remociones = $stmt->fetchAll();
         </div>
     </div>
     
+    
+    <!-- Filtros en Tiempo Real -->
+    <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
-        const searchInput = document.getElementById('search-empleado');
-        const filterDepartamento = document.getElementById('filter-departamento');
-        const filterAnio = document.getElementById('filter-anio');
-        const rows = document.querySelectorAll('.remocion-row');
-        
-        function aplicarFiltros() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const departamento = filterDepartamento.value;
-            const anio = filterAnio.value;
-            
-            rows.forEach(row => {
-                const empleado = row.dataset.empleado;
-                const rowDepartamento = row.dataset.departamento;
-                const rowAnio = row.dataset.anio;
-                
-                const matchSearch = empleado.includes(searchTerm);
-                const matchDepartamento = !departamento || rowDepartamento === departamento;
-                const matchAnio = !anio || rowAnio === anio;
-                
-                row.style.display = (matchSearch && matchDepartamento && matchAnio) ? '' : 'none';
-            });
-        }
-        
-        searchInput.addEventListener('input', aplicarFiltros);
-        filterDepartamento.addEventListener('change', aplicarFiltros);
-        filterAnio.addEventListener('change', aplicarFiltros);
-        
-        function limpiarFiltros() {
-            searchInput.value = '';
-            filterDepartamento.value = '';
-            filterAnio.value = '';
-            aplicarFiltros();
-        }
+        inicializarFiltros({
+            module: 'remociones',
+            searchId: 'search-empleado',
+            filterIds: ['filter-departamento', 'filter-anio'],
+            tableBodySelector: 'table tbody',
+            countSelector: '.card-subtitle'
+        });
     </script>
 </body>
 </html>

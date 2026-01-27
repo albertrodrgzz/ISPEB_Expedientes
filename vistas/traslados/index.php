@@ -237,40 +237,18 @@ $traslados = $stmt->fetchAll();
         </div>
     </div>
     
+    
+    <!-- Filtros en Tiempo Real -->
+    <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
-        const searchInput = document.getElementById('search-empleado');
-        const filterOrigen = document.getElementById('filter-origen');
-        const filterDestino = document.getElementById('filter-destino');
-        const rows = document.querySelectorAll('.traslado-row');
-        
-        function aplicarFiltros() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const origen = filterOrigen.value;
-            const destino = filterDestino.value;
-            
-            rows.forEach(row => {
-                const empleado = row.dataset.empleado;
-                const rowOrigen = row.dataset.origen;
-                const rowDestino = row.dataset.destino;
-                
-                const matchSearch = empleado.includes(searchTerm);
-                const matchOrigen = !origen || rowOrigen === origen;
-                const matchDestino = !destino || rowDestino === destino;
-                
-                row.style.display = (matchSearch && matchOrigen && matchDestino) ? '' : 'none';
-            });
-        }
-        
-        searchInput.addEventListener('input', aplicarFiltros);
-        filterOrigen.addEventListener('change', aplicarFiltros);
-        filterDestino.addEventListener('change', aplicarFiltros);
-        
-        function limpiarFiltros() {
-            searchInput.value = '';
-            filterOrigen.value = '';
-            filterDestino.value = '';
-            aplicarFiltros();
-        }
+        // Inicializar filtros AJAX para traslados
+        inicializarFiltros({
+            module: 'traslados',
+            searchId: 'search-empleado',
+            filterIds: ['filter-origen', 'filter-destino'],
+            tableBodySelector: '#traslados-tbody',
+            countSelector: '.card-subtitle'
+        });
     </script>
 </body>
 </html>

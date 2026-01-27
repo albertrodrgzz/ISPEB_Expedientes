@@ -264,40 +264,17 @@ $nombramientos = $stmt->fetchAll();
         </div>
     </div>
     
+    
+    <!-- Filtros en Tiempo Real -->
+    <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
-        const searchInput = document.getElementById('search-empleado');
-        const filterDepartamento = document.getElementById('filter-departamento');
-        const filterEstado = document.getElementById('filter-estado');
-        const rows = document.querySelectorAll('.nombramiento-row');
-        
-        function aplicarFiltros() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const departamento = filterDepartamento.value;
-            const estado = filterEstado.value;
-            
-            rows.forEach(row => {
-                const empleado = row.dataset.empleado;
-                const rowDepartamento = row.dataset.departamento;
-                const rowEstado = row.dataset.estado;
-                
-                const matchSearch = empleado.includes(searchTerm);
-                const matchDepartamento = !departamento || rowDepartamento === departamento;
-                const matchEstado = !estado || rowEstado === estado;
-                
-                row.style.display = (matchSearch && matchDepartamento && matchEstado) ? '' : 'none';
-            });
-        }
-        
-        searchInput.addEventListener('input', aplicarFiltros);
-        filterDepartamento.addEventListener('change', aplicarFiltros);
-        filterEstado.addEventListener('change', aplicarFiltros);
-        
-        function limpiarFiltros() {
-            searchInput.value = '';
-            filterDepartamento.value = '';
-            filterEstado.value = '';
-            aplicarFiltros();
-        }
+        inicializarFiltros({
+            module: 'nombramientos',
+            searchId: 'search-empleado',
+            filterIds: ['filter-departamento', 'filter-estado'],
+            tableBodySelector: 'table tbody',
+            countSelector: '.card-subtitle'
+        });
     </script>
 </body>
 </html>

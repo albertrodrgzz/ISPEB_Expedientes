@@ -194,6 +194,8 @@ if (file_exists($directorio_respaldos)) {
     <title>Restaurar Base de Datos - <?php echo APP_NAME; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .warning-box {
             background: #fff3cd;
@@ -459,6 +461,10 @@ if (file_exists($directorio_respaldos)) {
         </div>
     </div>
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../../publico/js/sweetalert-utils.js"></script>
+    
     <script>
         function mostrarArchivoSeleccionado(input) {
             const selectedFileDiv = document.getElementById('selected-file');
@@ -476,30 +482,38 @@ if (file_exists($directorio_respaldos)) {
         }
         
         function confirmarRestauracion() {
-            const confirmacion = confirm(
-                '⚠️ ADVERTENCIA CRÍTICA\n\n' +
-                'Esta acción SOBRESCRIBIRÁ TODOS los datos actuales de la base de datos.\n\n' +
-                '¿Está ABSOLUTAMENTE SEGURO de que desea continuar?\n\n' +
-                'Se recomienda hacer un respaldo antes de proceder.'
-            );
-            
-            if (confirmacion) {
-                const segundaConfirmacion = confirm(
-                    'Esta es su última oportunidad para cancelar.\n\n' +
-                    '¿Confirma que desea RESTAURAR la base de datos?'
-                );
-                
-                if (segundaConfirmacion) {
-                    // Mostrar indicador de carga
-                    const form = document.getElementById('form-restaurar');
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '⏳ Restaurando... Por favor espere';
-                    return true;
+            // Primera confirmación con SweetAlert2
+            confirmarPeligro(
+                'Esta acción SOBRESCRIBIRÁ TODOS los datos actuales de la base de datos. Se recomienda hacer un respaldo antes de proceder.',
+                '⚠️ ADVERTENCIA CRÍTICA',
+                'Sí, continuar',
+                'Cancelar'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    // Segunda confirmación
+                    confirmarPeligro(
+                        '¿Confirma que desea RESTAURAR la base de datos? Esta es su última oportunidad para cancelar.',
+                        'Confirmación Final',
+                        'Sí, restaurar ahora',
+                        'No, cancelar'
+                    ).then((secondResult) => {
+                        if (secondResult.isConfirmed) {
+                            // Mostrar indicador de carga
+                            const form = document.getElementById('form-restaurar');
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '⏳ Restaurando... Por favor espere';
+                            
+                            mostrarCargando('Restaurando base de datos... Esto puede tardar varios minutos.');
+                            
+                            // Enviar formulario
+                            form.submit();
+                        }
+                    });
                 }
-            }
+            });
             
-            return false;
+            return false; // Prevenir envío automático del formulario
         }
     </script>
 </body>

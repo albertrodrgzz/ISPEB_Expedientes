@@ -432,76 +432,17 @@ $amonestaciones = $stmt->fetchAll();
         </div>
     </div>
     
+    
+    <!-- Filtros en Tiempo Real -->
+    <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
-        // Filtrado en tiempo real
-        const searchInput = document.getElementById('search-empleado');
-        const filterDepartamento = document.getElementById('filter-departamento');
-        const filterTipoFalta = document.getElementById('filter-tipo-falta');
-        const filterAnio = document.getElementById('filter-anio');
-        const rows = document.querySelectorAll('.amonestacion-row');
-        
-        function aplicarFiltros() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const departamento = filterDepartamento.value;
-            const tipoFalta = filterTipoFalta.value;
-            const anio = filterAnio.value;
-            
-            let visibleCount = 0;
-            
-            rows.forEach(row => {
-                const empleado = row.dataset.empleado;
-                const rowDepartamento = row.dataset.departamento;
-                const rowTipoFalta = row.dataset.tipoFalta;
-                const rowAnio = row.dataset.anio;
-                
-                const matchSearch = empleado.includes(searchTerm);
-                const matchDepartamento = !departamento || rowDepartamento === departamento;
-                const matchTipoFalta = !tipoFalta || rowTipoFalta === tipoFalta;
-                const matchAnio = !anio || rowAnio === anio;
-                
-                if (matchSearch && matchDepartamento && matchTipoFalta && matchAnio) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            
-            // Mostrar mensaje si no hay resultados
-            const tbody = document.getElementById('amonestaciones-tbody');
-            const existingNoResults = tbody.querySelector('tr[data-no-results]');
-            
-            if (visibleCount === 0 && rows.length > 0) {
-                if (!existingNoResults) {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-no-results', 'true');
-                    tr.innerHTML = `
-                        <td colspan="7">
-                            <div class="no-results">
-                                <div class="no-results-icon">🔍</div>
-                                <p>No se encontraron resultados con los filtros aplicados</p>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-            } else if (existingNoResults && visibleCount > 0) {
-                existingNoResults.remove();
-            }
-        }
-        
-        searchInput.addEventListener('input', aplicarFiltros);
-        filterDepartamento.addEventListener('change', aplicarFiltros);
-        filterTipoFalta.addEventListener('change', aplicarFiltros);
-        filterAnio.addEventListener('change', aplicarFiltros);
-        
-        function limpiarFiltros() {
-            searchInput.value = '';
-            filterDepartamento.value = '';
-            filterTipoFalta.value = '';
-            filterAnio.value = '';
-            aplicarFiltros();
-        }
+        inicializarFiltros({
+            module: 'amonestaciones',
+            searchId: 'search-empleado',
+            filterIds: ['filter-departamento', 'filter-tipo-falta', 'filter-anio'],
+            tableBodySelector: '#amonestaciones-tbody',
+            countSelector: '.card-subtitle'
+        });
     </script>
 </body>
 </html>

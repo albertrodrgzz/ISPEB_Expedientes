@@ -51,6 +51,8 @@ $puede_eliminar = puedeEliminar();
     <title>Expediente: <?php echo htmlspecialchars($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?> - <?php echo APP_NAME; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .expediente-header {
             background: var(--color-white);
@@ -877,27 +879,39 @@ $puede_eliminar = puedeEliminar();
         }
         
         function deleteNombramiento(id) {
-            if (!confirm('¿Está seguro de eliminar este nombramiento?')) return;
-            
-            const formData = new FormData();
-            formData.append('id', id);
-            
-            fetch('ajax/delete_nombramiento.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                    loadNombramientos();
-                } else {
-                    showAlert(data.error, 'error');
+            confirmarPeligro(
+                'Esta acción eliminará permanentemente este nombramiento del sistema.',
+                '¿Está seguro de eliminar este nombramiento?',
+                'Sí, eliminar',
+                'Cancelar'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Eliminando nombramiento...');
+                    
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    
+                    fetch('ajax/delete_nombramiento.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            mostrarExito('Nombramiento eliminado correctamente').then(() => {
+                                loadNombramientos();
+                            });
+                        } else {
+                            mostrarError(data.message || 'Error al eliminar');
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        mostrarError('Error al procesar la solicitud');
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('Error al eliminar el nombramiento', 'error');
             });
         }
         
@@ -1030,27 +1044,39 @@ $puede_eliminar = puedeEliminar();
         }
         
         function deleteVacacion(id) {
-            if (!confirm('¿Está seguro de eliminar este registro?')) return;
-            
-            const formData = new FormData();
-            formData.append('id', id);
-            
-            fetch('ajax/delete_vacacion.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                    loadVacaciones();
-                } else {
-                    showAlert(data.error, 'error');
+            confirmarPeligro(
+                'Esta acción eliminará permanentemente este registro de vacaciones.',
+                '¿Está seguro de eliminar este registro?',
+                'Sí, eliminar',
+                'Cancelar'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Eliminando registro...');
+                    
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    
+                    fetch('ajax/delete_vacacion.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            mostrarExito('Registro eliminado correctamente').then(() => {
+                                loadVacaciones();
+                            });
+                        } else {
+                            mostrarError(data.message || 'Error al eliminar');
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        mostrarError('Error al procesar la solicitud');
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('Error al eliminar el registro', 'error');
             });
         }
         
@@ -1172,27 +1198,39 @@ $puede_eliminar = puedeEliminar();
         }
         
         function deleteAmonestacion(id) {
-            if (!confirm('¿Está seguro de eliminar esta amonestación? Esta acción solo debe realizarse en casos excepcionales.')) return;
-            
-            const formData = new FormData();
-            formData.append('id', id);
-            
-            fetch('ajax/delete_amonestacion.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                    loadAmonestaciones();
-                } else {
-                    showAlert(data.error, 'error');
+            confirmarPeligro(
+                'Esta acción solo debe realizarse en casos excepcionales. El registro se eliminará permanentemente del sistema.',
+                '¿Está seguro de eliminar esta amonestación?',
+                'Sí, eliminar',
+                'Cancelar'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Eliminando amonestación...');
+                    
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    
+                    fetch('ajax/delete_amonestacion.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            mostrarExito('Amonestación eliminada correctamente').then(() => {
+                                loadAmonestaciones();
+                            });
+                        } else {
+                            mostrarError(data.message || 'Error al eliminar');
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        mostrarError('Error al procesar la solicitud');
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('Error al eliminar la amonestación', 'error');
             });
         }
         
@@ -1233,5 +1271,9 @@ $puede_eliminar = puedeEliminar();
         loadAmonestaciones();
         <?php endif; ?>
     </script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../../publico/js/sweetalert-utils.js"></script>
 </body>
 </html>

@@ -90,6 +90,8 @@ $usuarios = $stmt->fetchAll();
     <title>Administración - <?php echo APP_NAME; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .admin-tabs {
             display: flex;
@@ -760,6 +762,49 @@ $usuarios = $stmt->fetchAll();
         </div>
     </div>
     
+    <!-- Modal: Editar Usuario -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Usuario</h2>
+            </div>
+            <form id="editUserForm" onsubmit="return handleEditUser(event)">
+                <input type="hidden" name="id" id="edit_user_id">
+                <div class="form-group">
+                    <label class="form-label">Funcionario</label>
+                    <input type="text" id="edit_user_funcionario" class="form-input" readonly style="background: #f7fafc;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre de Usuario</label>
+                    <input type="text" name="username" id="edit_user_username" class="form-input" required minlength="4">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" id="edit_user_email" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cargo</label>
+                    <select name="cargo_id" id="edit_user_cargo" class="form-select" required>
+                        <option value="">Seleccione un cargo...</option>
+                        <?php
+                        $stmt = $db->query("SELECT id, nombre_cargo, nivel_acceso FROM cargos ORDER BY nivel_acceso, nombre_cargo");
+                        $cargos_list = $stmt->fetchAll();
+                        foreach ($cargos_list as $cargo):
+                        ?>
+                            <option value="<?php echo $cargo['id']; ?>">
+                                <?php echo htmlspecialchars($cargo['nombre_cargo']) . ' (Nivel ' . $cargo['nivel_acceso'] . ')'; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeEditUserModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script>
         // Tab switching
         function switchTab(tabName) {
@@ -833,20 +878,31 @@ $usuarios = $stmt->fetchAll();
             const newStatus = currentStatus === 'activo' ? 'inactivo' : 'activo';
             const confirmMsg = `¿Está seguro de ${newStatus === 'activo' ? 'activar' : 'desactivar'} este usuario?`;
             
-            if (!confirm(confirmMsg)) return;
-            
-            fetch('ajax/toggle_usuario.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ usuario_id: userId, nuevo_estado: newStatus })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Estado actualizado');
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            confirmarAccion(confirmMsg, '¿Cambiar estado?', 'Sí, cambiar', 'Cancelar').then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Actualizando estado...');
+                    
+                    fetch('ajax/toggle_usuario.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ usuario_id: userId, nuevo_estado: newStatus })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            mostrarExito('Estado actualizado correctamente').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            mostrarError(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        mostrarError('Error al actualizar el estado');
+                        console.error(error);
+                    });
                 }
             });
         }
@@ -874,9 +930,58 @@ $usuarios = $stmt->fetchAll();
             });
         }
         
-        // Edit user (placeholder)
+        // Edit user
         function editUser(userId) {
-            alert('Funcionalidad de edición en desarrollo. ID: ' + userId);
+            fetch(`ajax/obtener_usuario.php?id=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('edit_user_id').value = data.data.id;
+                        document.getElementById('edit_user_funcionario').value = data.data.nombre_completo + ' - ' + data.data.cedula;
+                        document.getElementById('edit_user_username').value = data.data.username;
+                        document.getElementById('edit_user_email').value = data.data.email || '';
+                        document.getElementById('edit_user_cargo').value = data.data.cargo_id;
+                        
+                        document.getElementById('editUserModal').classList.add('active');
+                    } else {
+                        alert('❌ Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('❌ Error al cargar datos del usuario');
+                    console.error(error);
+                });
+        }
+        
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').classList.remove('active');
+            document.getElementById('editUserForm').reset();
+        }
+        
+        function handleEditUser(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            fetch('ajax/editar_usuario.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Usuario actualizado exitosamente');
+                    closeEditUserModal();
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('❌ Error al actualizar usuario');
+                console.error(error);
+            });
+            
+            return false;
         }
         
         // Close modal on outside click
@@ -888,5 +993,9 @@ $usuarios = $stmt->fetchAll();
             });
         });
     </script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../../publico/js/sweetalert-utils.js"></script>
 </body>
 </html>

@@ -63,7 +63,7 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
                     <h2 class="card-title">Filtros de Búsqueda</h2>
                 </div>
                 <div style="padding: 24px;">
-                    <form method="GET" action="" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                         <div class="form-group" style="margin: 0;">
                             <label for="buscar" style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar</label>
                             <input 
@@ -112,8 +112,8 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
                         </div>
                         
                         <div style="display: flex; align-items: flex-end; gap: 8px;">
-                            <button type="submit" class="btn btn-primary" style="flex: 1;">Filtrar</button>
-                            <a href="index.php" class="btn" style="background: #e2e8f0; color: #2d3748; text-decoration: none;">Limpiar</a>
+                            <button type="submit" class="btn" style="flex: 1; background: #4299e1; color: white;">Buscar</button>
+                            <a href="index.php" class="btn" style="flex: 1; background: #e2e8f0; color: #2d3748; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;">Limpiar</a>
                         </div>
                     </form>
                 </div>
@@ -209,6 +209,7 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
             </div>
         </div>
     </div>
+    
     
     <script src="../../publico/js/app.js"></script>
 </body>

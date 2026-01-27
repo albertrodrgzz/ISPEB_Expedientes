@@ -51,6 +51,8 @@ $cargos = $stmt->fetchAll();
     <title>Gestión Organizacional - <?php echo APP_NAME; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .org-tabs {
             display: flex;
@@ -429,6 +431,63 @@ $cargos = $stmt->fetchAll();
         </div>
     </div>
     
+    <!-- Modal: Editar Departamento -->
+    <div id="editDepartamentoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Departamento</h2>
+            </div>
+            <form id="editDepartamentoForm" onsubmit="return handleEditDepartamento(event)">
+                <input type="hidden" name="id" id="edit_dept_id">
+                <div class="form-group">
+                    <label class="form-label">Nombre del Departamento *</label>
+                    <input type="text" name="nombre" id="edit_dept_nombre" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea name="descripcion" id="edit_dept_descripcion" class="form-textarea"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal('editDepartamentoModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal: Editar Cargo -->
+    <div id="editCargoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Cargo</h2>
+            </div>
+            <form id="editCargoForm" onsubmit="return handleEditCargo(event)">
+                <input type="hidden" name="id" id="edit_cargo_id">
+                <div class="form-group">
+                    <label class="form-label">Nombre del Cargo *</label>
+                    <input type="text" name="nombre_cargo" id="edit_cargo_nombre" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nivel de Acceso *</label>
+                    <select name="nivel_acceso" id="edit_cargo_nivel" class="form-select" required>
+                        <option value="">Seleccione...</option>
+                        <option value="1">Nivel 1 - Administrador Total</option>
+                        <option value="2">Nivel 2 - Operativo</option>
+                        <option value="3">Nivel 3 - Solo Lectura</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea name="descripcion" id="edit_cargo_descripcion" class="form-textarea"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal('editCargoModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script>
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -503,30 +562,130 @@ $cargos = $stmt->fetchAll();
             const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
             const confirmMsg = `¿Está seguro de ${nuevoEstado === 'activo' ? 'activar' : 'desactivar'} este departamento?`;
             
-            if (!confirm(confirmMsg)) return;
-            
-            fetch('ajax/toggle_departamento.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ departamento_id: id, nuevo_estado: nuevoEstado })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Estado actualizado');
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            confirmarAccion(confirmMsg, '¿Cambiar estado?', 'Sí, cambiar', 'Cancelar').then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Actualizando estado...');
+                    
+                    fetch('ajax/toggle_departamento.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ departamento_id: id, nuevo_estado: nuevoEstado })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            mostrarExito('Estado actualizado correctamente').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            mostrarError(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        mostrarError('Error al actualizar el estado');
+                        console.error(error);
+                    });
                 }
             });
         }
         
         function editDepartamento(id) {
-            alert('Funcionalidad de edición en desarrollo. ID: ' + id);
+            // Obtener datos del departamento
+            fetch(`ajax/obtener_departamento.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Llenar el formulario
+                        document.getElementById('edit_dept_id').value = data.data.id;
+                        document.getElementById('edit_dept_nombre').value = data.data.nombre;
+                        document.getElementById('edit_dept_descripcion').value = data.data.descripcion || '';
+                        
+                        // Abrir modal
+                        document.getElementById('editDepartamentoModal').classList.add('active');
+                    } else {
+                        alert('❌ Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('❌ Error al cargar datos del departamento');
+                    console.error(error);
+                });
+        }
+        
+        function handleEditDepartamento(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            fetch('ajax/editar_departamento.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Departamento actualizado exitosamente');
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('❌ Error al actualizar departamento');
+                console.error(error);
+            });
+            
+            return false;
         }
         
         function editCargo(id) {
-            alert('Funcionalidad de edición en desarrollo. ID: ' + id);
+            // Obtener datos del cargo
+            fetch(`ajax/obtener_cargo.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Llenar el formulario
+                        document.getElementById('edit_cargo_id').value = data.data.id;
+                        document.getElementById('edit_cargo_nombre').value = data.data.nombre_cargo;
+                        document.getElementById('edit_cargo_nivel').value = data.data.nivel_acceso;
+                        document.getElementById('edit_cargo_descripcion').value = data.data.descripcion || '';
+                        
+                        // Abrir modal
+                        document.getElementById('editCargoModal').classList.add('active');
+                    } else {
+                        alert('❌ Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('❌ Error al cargar datos del cargo');
+                    console.error(error);
+                });
+        }
+        
+        function handleEditCargo(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            fetch('ajax/editar_cargo.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Cargo actualizado exitosamente');
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('❌ Error al actualizar cargo');
+                console.error(error);
+            });
+            
+            return false;
         }
         
         // Close modal on outside click
@@ -538,5 +697,9 @@ $cargos = $stmt->fetchAll();
             });
         });
     </script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../../publico/js/sweetalert-utils.js"></script>
 </body>
 </html>

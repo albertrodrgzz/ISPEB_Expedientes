@@ -214,6 +214,103 @@ class Funcionario {
     }
     
     /**
+     * Reactivar funcionario inactivo (reingreso)
+     * Permite reincorporar a un funcionario que fue dado de baja
+     * @param int $id ID del funcionario a reactivar
+     * @param array $datosNuevos Nuevos datos de cargo, departamento, fecha_ingreso
+     * @return bool
+     */
+    public function reactivarFuncionario($id, $datosNuevos) {
+        try {
+            // Actualizar datos del funcionario
+            $stmt = $this->db->prepare("
+                UPDATE funcionarios SET
+                    cargo_id = ?,
+                    departamento_id = ?,
+                    fecha_ingreso = ?,
+                    estado = 'activo',
+                    telefono = COALESCE(?, telefono),
+                    email = COALESCE(?, email),
+                    direccion = COALESCE(?, direccion)
+                WHERE id = ?
+            ");
+            
+            $resultado = $stmt->execute([
+                $datosNuevos['cargo_id'],
+                $datosNuevos['departamento_id'],
+                $datosNuevos['fecha_ingreso'],
+                $datosNuevos['telefono'] ?? null,
+                $datosNuevos['email'] ?? null,
+                $datosNuevos['direccion'] ?? null,
+                $id
+            ]);
+            
+            if ($resultado) {
+                // Registrar evento de reingreso en historial_administrativo
+                $this->registrarReingreso($id, $datosNuevos);
+                
+                // Reactivar usuario si existe
+                $this->reactivarUsuario($id);
+            }
+            
+            return $resultado;
+        } catch (Exception $e) {
+            error_log("Error al reactivar funcionario: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Registrar evento de reingreso en historial administrativo
+     * @param int $funcionario_id ID del funcionario
+     * @param array $datos Datos del reingreso
+     */
+    private function registrarReingreso($funcionario_id, $datos) {
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO historial_administrativo 
+                (funcionario_id, tipo_evento, fecha_evento, detalles, registrado_por)
+                VALUES (?, 'NOMBRAMIENTO', ?, ?, ?)
+            ");
+            
+            $detalles = json_encode([
+                'tipo' => 'REINGRESO',
+                'cargo_id' => $datos['cargo_id'],
+                'departamento_id' => $datos['departamento_id'],
+                'observaciones' => 'Reingreso automático al sistema'
+            ]);
+            
+            $stmt->execute([
+                $funcionario_id,
+                $datos['fecha_ingreso'],
+                $detalles,
+                $_SESSION['usuario_id'] ?? null
+            ]);
+        } catch (Exception $e) {
+            error_log("Error al registrar reingreso: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Reactivar usuario asociado al funcionario
+     * @param int $funcionario_id ID del funcionario
+     */
+    private function reactivarUsuario($funcionario_id) {
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE usuarios 
+                SET estado = 'activo', 
+                    intentos_fallidos = 0,
+                    bloqueado_hasta = NULL
+                WHERE funcionario_id = ?
+            ");
+            $stmt->execute([$funcionario_id]);
+        } catch (Exception $e) {
+            error_log("Error al reactivar usuario: " . $e->getMessage());
+        }
+    }
+    
+    /**
      * Eliminar funcionario (soft delete)
      */
     public function eliminar($id) {

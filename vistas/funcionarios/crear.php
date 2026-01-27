@@ -14,11 +14,19 @@ if (!verificarNivel(2)) {
     exit;
 }
 
+// Generar token CSRF
+$csrfToken = generarTokenCSRF();
+
 $error = '';
 $success = '';
 
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // VALIDACIÓN CSRF - CRÍTICO PARA SEGURIDAD
+    if (!isset($_POST['csrf_token']) || !verificarTokenCSRF($_POST['csrf_token'])) {
+        die('Error de seguridad: Token CSRF inválido. Por favor, recargue la página e intente nuevamente.');
+    }
+    
     $datos = [
         'cedula' => limpiar($_POST['cedula']),
         'nombres' => limpiar($_POST['nombres']),
@@ -43,10 +51,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $modeloFuncionario = new Funcionario();
         
         // Verificar si la cédula ya existe
-        if ($modeloFuncionario->obtenerPorCedula($datos['cedula'])) {
-            $error = 'Ya existe un funcionario con esa cédula';
+        $funcionarioExistente = $modeloFuncionario->obtenerPorCedula($datos['cedula']);
+        
+        if ($funcionarioExistente) {
+            // Si existe y está INACTIVO, reactivar (reingreso)
+            if ($funcionarioExistente['estado'] === 'inactivo') {
+                $reactivado = $modeloFuncionario->reactivarFuncionario(
+                    $funcionarioExistente['id'], 
+                    $datos
+                );
+                
+                if ($reactivado) {
+                    registrarAuditoria(
+                        'REACTIVAR_FUNCIONARIO', 
+                        'funcionarios', 
+                        $funcionarioExistente['id'], 
+                        ['estado_anterior' => 'inactivo'], 
+                        [
+                            'estado_nuevo' => 'activo', 
+                            'cargo_id' => $datos['cargo_id'],
+                            'departamento_id' => $datos['departamento_id'],
+                            'fecha_ingreso' => $datos['fecha_ingreso']
+                        ]
+                    );
+                    
+                    $_SESSION['success'] = 'Funcionario reactivado exitosamente (Reingreso al sistema)';
+                    header('Location: ver.php?id=' . $funcionarioExistente['id']);
+                    exit;
+                } else {
+                    $error = 'Error al reactivar el funcionario';
+                }
+            } else {
+                // Si está activo, mostrar error
+                $error = 'Ya existe un funcionario activo con esa cédula';
+            }
         } else {
-            // Crear funcionario
+            // No existe, crear nuevo funcionario
             $id = $modeloFuncionario->crear($datos);
             
             if ($id) {
@@ -178,6 +218,9 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
                     <?php endif; ?>
                     
                     <form method="POST" action="">
+                        <!-- Token CSRF para protección contra ataques -->
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
+                        
                         <div class="form-grid">
                             <!-- Cédula -->
                             <div class="form-group">
@@ -344,5 +387,8 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
             </div>
         </div>
     </div>
+    
+    <!-- UX Mejoras: Feedback automático de formularios -->
+    <script src="<?php echo APP_URL; ?>/publico/js/ux-mejoras.js"></script>
 </body>
 </html>

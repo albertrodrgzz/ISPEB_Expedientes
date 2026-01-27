@@ -94,6 +94,8 @@ $usuarios = $stmt->fetchAll();
     <title>Auditoría - <?php echo APP_NAME; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .filters {
             background: var(--color-white);
@@ -136,6 +138,91 @@ $usuarios = $stmt->fetchAll();
             font-size: 12px;
             color: var(--color-text-light);
             margin-top: 4px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--color-border);
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .detail-item {
+            padding: 12px;
+            background: var(--color-bg);
+            border-radius: var(--radius-md);
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: var(--color-text-light);
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: var(--color-text);
+        }
+        
+        .json-viewer {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+        
+        .json-key {
+            color: #60a5fa;
+        }
+        
+        .json-string {
+            color: #34d399;
+        }
+        
+        .json-number {
+            color: #fbbf24;
         }
     </style>
 </head>
@@ -281,11 +368,120 @@ $usuarios = $stmt->fetchAll();
         </div>
     </div>
     
+    <!-- Modal: Detalles de Auditoría -->
+    <div id="detallesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Detalles del Evento de Auditoría</h2>
+            </div>
+            <div id="detallesContenido">
+                <!-- Se llenará dinámicamente -->
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 24px;">
+                <button class="btn" onclick="cerrarModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../../publico/js/sweetalert-utils.js"></script>
+    
     <script>
         function verDetalles(id) {
-            // Aquí se podría implementar un modal con los detalles JSON
-            alert('Funcionalidad de detalles en desarrollo. ID: ' + id);
+            mostrarCargando('Cargando detalles...');
+            
+            fetch(`ajax/obtener_evento_auditoria.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    cerrarCargando();
+                    
+                    if (data.success) {
+                        mostrarModalDetalles(data.data);
+                    } else {
+                        mostrarError(data.message);
+                    }
+                })
+                .catch(error => {
+                    cerrarCargando();
+                    mostrarError('Error al cargar los detalles');
+                    console.error(error);
+                });
         }
+        
+        function mostrarModalDetalles(evento) {
+            let html = `
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Usuario</div>
+                        <div class="detail-value">${evento.usuario_nombre || 'Sistema'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acción</div>
+                        <div class="detail-value">${evento.accion}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tabla Afectada</div>
+                        <div class="detail-value">${evento.tabla_afectada || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Registro ID</div>
+                        <div class="detail-value">${evento.registro_id || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Dirección IP</div>
+                        <div class="detail-value">${evento.ip_address || '-'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Fecha/Hora</div>
+                        <div class="detail-value">${new Date(evento.created_at).toLocaleString('es-VE')}</div>
+                    </div>
+                </div>
+            `;
+            
+            if (evento.datos_anteriores) {
+                html += `
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; margin-top: 24px;">📋 Datos Anteriores</h3>
+                    <div class="json-viewer">${formatJSON(evento.datos_anteriores)}</div>
+                `;
+            }
+            
+            if (evento.datos_nuevos) {
+                html += `
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; margin-top: 16px;">✨ Datos Nuevos</h3>
+                    <div class="json-viewer">${formatJSON(evento.datos_nuevos)}</div>
+                `;
+            }
+            
+            document.getElementById('detallesContenido').innerHTML = html;
+            document.getElementById('detallesModal').classList.add('active');
+        }
+        
+        function formatJSON(obj) {
+            if (typeof obj === 'string') {
+                try {
+                    obj = JSON.parse(obj);
+                } catch (e) {
+                    return obj;
+                }
+            }
+            
+            return JSON.stringify(obj, null, 2)
+                .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
+                .replace(/: (\d+)/g, ': <span class="json-number">$1</span>');
+        }
+        
+        function cerrarModal() {
+            document.getElementById('detallesModal').classList.remove('active');
+        }
+        
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('detallesModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModal();
+            }
+        });
     </script>
 </body>
 </html>

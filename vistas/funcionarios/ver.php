@@ -38,6 +38,39 @@ if (!verificarDepartamento($id) && $_SESSION['nivel_acceso'] > 2) {
 
 $puede_editar = verificarDepartamento($id);
 
+// Verificar si el funcionario tiene usuario
+$db = getDB();
+$stmt = $db->prepare("
+    SELECT 
+        u.id,
+        u.username,
+        u.nivel_acceso,
+        u.estado,
+        u.password_hash
+    FROM usuarios u
+    WHERE u.cedula = ?
+");
+$stmt->execute([$funcionario['cedula']]);
+$usuario_existente = $stmt->fetch();
+
+// Determinar estado del usuario
+$tiene_usuario = false;
+$estado_usuario = 'sin_usuario';
+$username_display = '';
+
+if ($usuario_existente) {
+    $tiene_usuario = true;
+    $username_display = $usuario_existente['username'];
+    
+    if ($usuario_existente['password_hash'] === 'PENDING') {
+        $estado_usuario = 'pendiente';
+    } elseif ($usuario_existente['estado'] === 'inactivo') {
+        $estado_usuario = 'inactivo';
+    } else {
+        $estado_usuario = 'activo';
+    }
+}
+
 // Calcular edad
 $edad = '';
 if ($funcionario['fecha_nacimiento']) {
@@ -164,6 +197,11 @@ if ($funcionario['fecha_ingreso']) {
         .expediente-sidebar {
             border-right: 1px solid #e2e8f0;
             padding-right: 24px;
+            position: sticky;
+            top: 24px;
+            align-self: start;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
         }
         
         .foto-perfil {
@@ -769,6 +807,41 @@ if ($funcionario['fecha_ingreso']) {
                         <span class="badge badge-success">
                             <?php echo ucfirst($funcionario['estado']); ?>
                         </span>
+                        
+                        <!-- Estado de Usuario -->
+                        <div id="user-status-container" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                            <?php if ($tiene_usuario): ?>
+                                <?php if ($estado_usuario === 'activo'): ?>
+                                    <span class="badge badge-success" style="display: block; margin-bottom: 8px;">
+                                        👤 <?php echo htmlspecialchars($username_display); ?>
+                                    </span>
+                                    <small style="color: #718096; font-size: 12px;">Cuenta activa</small>
+                                <?php elseif ($estado_usuario === 'pendiente'): ?>
+                                    <span class="badge badge-warning" style="display: block; margin-bottom: 8px;">
+                                        ⏳ Registro Pendiente
+                                    </span>
+                                    <small style="color: #718096; font-size: 12px;">Usuario: <?php echo htmlspecialchars($username_display); ?></small>
+                                <?php else: ?>
+                                    <span class="badge badge-danger" style="display: block; margin-bottom: 8px;">
+                                        🚫 Usuario Inactivo
+                                    </span>
+                                    <small style="color: #718096; font-size: 12px;">Usuario: <?php echo htmlspecialchars($username_display); ?></small>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <?php if (verificarNivel(2)): ?>
+                                    <span class="badge badge-danger" style="display: block; margin-bottom: 8px;">
+                                        ❌ Sin acceso al sistema
+                                    </span>
+                                    <button onclick="abrirModalCrearUsuario()" class="btn btn-primary" style="width: 100%; margin-top: 8px; font-size: 13px; padding: 8px 12px;">
+                                        + Crear Usuario
+                                    </button>
+                                <?php else: ?>
+                                    <span class="badge badge-secondary" style="display: block;">
+                                        Sin acceso al sistema
+                                    </span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     
                     <!-- Menú de Navegación -->
@@ -1410,6 +1483,137 @@ if ($funcionario['fecha_ingreso']) {
                 cerrarModalCarga();
             }
         });
+        
+        // ==========================================
+        // FUNCIONALIDAD DE CREACIÓN DE USUARIO
+        // ==========================================
+        
+        const funcionarioId = <?php echo $id; ?>;
+        const funcionarioNombre = '<?php echo addslashes($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?>';
+        
+        function abrirModalCrearUsuario() {
+            Swal.fire({
+                title: 'Crear Cuenta de Usuario',
+                html: `
+                    <div style="text-align: left;">
+                        <p style="margin-bottom: 20px; color: #718096;">
+                            <strong>Funcionario:</strong> ${funcionarioNombre}
+                        </p>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #4a5568;">
+                                Nivel de Acceso *
+                            </label>
+                            <select id="nivel_acceso" class="swal2-input" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                                <option value="4">Nivel 4 - Usuario Regular</option>
+                                <option value="3">Nivel 3 - Jefe de Departamento</option>
+                                <option value="2">Nivel 2 - Secretaría/RRHH</option>
+                                <?php if (verificarNivel(1)): ?>
+                                <option value="1">Nivel 1 - Administrador</option>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        
+                        <div style="background: #f7fafc; padding: 12px; border-radius: 8px; margin-top: 16px;">
+                            <small style="color: #718096;">
+                                ℹ️ El sistema generará automáticamente un nombre de usuario y contraseña temporal.
+                            </small>
+                        </div>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Crear Usuario',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                cancelButtonColor: '#6c757d',
+                width: '500px',
+                preConfirm: () => {
+                    const nivel = document.getElementById('nivel_acceso').value;
+                    if (!nivel) {
+                        Swal.showValidationMessage('Debe seleccionar un nivel de acceso');
+                        return false;
+                    }
+                    return { nivel_acceso: nivel };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    crearUsuario(result.value.nivel_acceso);
+                }
+            });
+        }
+        
+        function crearUsuario(nivelAcceso) {
+            mostrarCargando('Creando usuario...');
+            
+            fetch('ajax/crear_usuario.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    funcionario_id: funcionarioId,
+                    nivel_acceso: nivelAcceso
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                cerrarCargando();
+                
+                if (data.success) {
+                    // Mostrar credenciales generadas
+                    Swal.fire({
+                        title: '✅ Usuario Creado Exitosamente',
+                        html: `
+                            <div style="text-align: left; background: #f7fafc; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                                <p style="margin-bottom: 16px; color: #2d3748;">
+                                    <strong>Funcionario:</strong> ${data.usuario.funcionario}
+                                </p>
+                                <div style="background: white; padding: 16px; border-radius: 8px; border: 2px solid #00a8cc; margin-bottom: 12px;">
+                                    <p style="margin: 0 0 8px 0; font-size: 13px; color: #718096; font-weight: 600;">NOMBRE DE USUARIO</p>
+                                    <p style="margin: 0; font-size: 18px; font-weight: 700; color: #00a8cc; font-family: monospace;">
+                                        ${data.usuario.username}
+                                    </p>
+                                </div>
+                                <div style="background: white; padding: 16px; border-radius: 8px; border: 2px solid #ef476f; margin-bottom: 16px;">
+                                    <p style="margin: 0 0 8px 0; font-size: 13px; color: #718096; font-weight: 600;">CONTRASEÑA TEMPORAL</p>
+                                    <p style="margin: 0; font-size: 18px; font-weight: 700; color: #ef476f; font-family: monospace;">
+                                        ${data.usuario.password_temporal}
+                                    </p>
+                                </div>
+                                <div style="background: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                                    <p style="margin: 0; font-size: 13px; color: #856404;">
+                                        ⚠️ <strong>Importante:</strong> El empleado debe completar su registro en la página de inicio usando su cédula.
+                                    </p>
+                                </div>
+                            </div>
+                        `,
+                        icon: 'success',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#10b981',
+                        width: '600px'
+                    }).then(() => {
+                        // Recargar la página para actualizar el estado
+                        location.reload();
+                    });
+                } else {
+                    mostrarError(data.message || 'Error al crear el usuario');
+                }
+            })
+            .catch(error => {
+                cerrarCargando();
+                mostrarError('Error de conexión al crear el usuario');
+                console.error(error);
+            });
+        }
     </script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../../publico/js/sweetalert-utils.js"></script>
+
+    
+    <!-- UX Mejoras: Feedback automático de formularios -->
+    <script src="<?php echo APP_URL; ?>/publico/js/ux-mejoras.js"></script>
 </body>
 </html>
