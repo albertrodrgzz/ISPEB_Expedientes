@@ -88,7 +88,7 @@ class PDF extends FPDF
     function Header()
     {
         // Logo ISPEB (izquierda)
-        $logo_path = __DIR__ . '/../../publico/imagenes/logos-institucionales.jpg';
+        $logo_path = __DIR__ . '/../../publico/imagenes/cintillo.png';
         if (file_exists($logo_path)) {
             $this->Image($logo_path, 15, 10, 30);
         }

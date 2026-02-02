@@ -492,7 +492,7 @@ $usuarios = $stmt->fetchAll();
                         <div class="quick-action-title">Auditoría</div>
                         <div class="quick-action-desc">Ver log de acciones</div>
                     </a>
-                    <a href="#" onclick="alert('Próximamente: Configuración avanzada del sistema'); return false;" class="quick-action-card" style="opacity: 0.7;">
+                    <a href="#" onclick="Swal.fire({icon: 'info', title: 'Próximamente', text: 'Configuración avanzada del sistema', confirmButtonColor: '#00a8cc'}); return false;" class="quick-action-card" style="opacity: 0.7;">
                         <div class="quick-action-icon">⚙️</div>
                         <div class="quick-action-title">Configuración</div>
                         <div class="quick-action-desc">Ajustes del sistema</div>
@@ -747,8 +747,11 @@ $usuarios = $stmt->fetchAll();
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Nombre de Usuario</label>
-                    <input type="text" name="username" class="form-input" required minlength="4">
+                    <div style="background: #e6f7ff; border-left: 4px solid #00a8cc; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                        <p style="margin: 0; color: #0066cc; font-size: 14px;">
+                            ℹ️ <strong>Usuario automático:</strong> El nombre de usuario se generará automáticamente como <code>[letra(s)_nombre][apellido]</code>
+                        </p>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Contraseña Temporal</label>
@@ -850,24 +853,71 @@ $usuarios = $stmt->fetchAll();
         function handleCreateUser(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const funcionarioSelect = e.target.querySelector('[name="funcionario_id"]');
+            const funcionarioNombre = funcionarioSelect.options[funcionarioSelect.selectedIndex].text;
             
-            fetch('ajax/crear_usuario.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Usuario creado exitosamente');
-                    closeCreateUserModal();
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            Swal.fire({
+                title: '¿Crear Usuario?',
+                html: `¿Está seguro de crear un usuario para <strong>${funcionarioNombre}</strong>?<br><small style="color: #666;">El nombre de usuario se generará automáticamente</small>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, crear',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Creando usuario...');
+                    
+                    fetch('ajax/crear_usuario.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Usuario Creado!',
+                                html: `
+                                    <p>El usuario ha sido creado exitosamente</p>
+                                    <div style="background: #f0f9ff; border: 1px solid #00a8cc; border-radius: 8px; padding: 16px; margin-top: 16px;">
+                                        <p style="margin: 0 0 8px 0; color: #0066cc; font-weight: bold;">📝 Credenciales:</p>
+                                        <p style="margin: 4px 0; font-family: monospace; font-size: 16px;">
+                                            <strong>Usuario:</strong> <span style="color: #00a8cc;">${data.username}</span>
+                                        </p>
+                                        <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">
+                                            ⚠️ Comunique estas credenciales al funcionario
+                                        </p>
+                                    </div>
+                                `,
+                                confirmButtonColor: '#10b981',
+                                confirmButtonText: 'Entendido'
+                            }).then(() => {
+                                closeCreateUserModal();
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No se pudo crear el usuario',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Conexión',
+                            text: 'No se pudo crear el usuario. Intente nuevamente.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                alert('❌ Error al crear usuario');
-                console.error(error);
             });
             
             return false;
@@ -909,23 +959,73 @@ $usuarios = $stmt->fetchAll();
         
         // Reset password
         function resetPassword(userId) {
-            const newPassword = prompt('Ingrese la nueva contraseña temporal:');
-            if (!newPassword || newPassword.length < 6) {
-                alert('La contraseña debe tener al menos 6 caracteres');
-                return;
-            }
-            
-            fetch('ajax/reset_password.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ usuario_id: userId, nueva_password: newPassword })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Contraseña actualizada exitosamente');
-                } else {
-                    alert('❌ Error: ' + data.message);
+            Swal.fire({
+                title: 'Resetear Contraseña',
+                html: `
+                    <div style="text-align: left;">
+                        <p style="margin-bottom: 16px; color: #718096;">
+                            Ingrese la nueva contraseña temporal para este usuario:
+                        </p>
+                        <input type="password" id="swal-password" class="swal2-input" placeholder="Nueva contraseña" style="width: 90%; margin: 0;">
+                        <small style="display: block; margin-top: 8px; color: #a0aec0;">
+                            Mínimo 6 caracteres
+                        </small>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Resetear Contraseña',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                cancelButtonColor: '#6c757d',
+                preConfirm: () => {
+                    const password = document.getElementById('swal-password').value;
+                    if (!password || password.length < 6) {
+                        Swal.showValidationMessage('La contraseña debe tener al menos 6 caracteres');
+                        return false;
+                    }
+                    return password;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Actualizando contraseña...');
+                    
+                    fetch('ajax/reset_password.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ usuario_id: userId, nueva_password: result.value })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Contraseña Actualizada!',
+                                text: 'La contraseña temporal ha sido establecida correctamente',
+                                confirmButtonColor: '#10b981',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No se pudo actualizar la contraseña',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Conexión',
+                            text: 'No se pudo actualizar la contraseña. Intente nuevamente.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        console.error(error);
+                    });
                 }
             });
         }
@@ -944,11 +1044,21 @@ $usuarios = $stmt->fetchAll();
                         
                         document.getElementById('editUserModal').classList.add('active');
                     } else {
-                        alert('❌ Error: ' + data.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'No se pudo cargar los datos del usuario',
+                            confirmButtonColor: '#ef4444'
+                        });
                     }
                 })
                 .catch(error => {
-                    alert('❌ Error al cargar datos del usuario');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Conexión',
+                        text: 'No se pudo cargar los datos del usuario',
+                        confirmButtonColor: '#ef4444'
+                    });
                     console.error(error);
                 });
         }
@@ -961,24 +1071,60 @@ $usuarios = $stmt->fetchAll();
         function handleEditUser(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const username = formData.get('username');
             
-            fetch('ajax/editar_usuario.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Usuario actualizado exitosamente');
-                    closeEditUserModal();
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            Swal.fire({
+                title: '¿Guardar Cambios?',
+                html: `¿Está seguro de actualizar el usuario <strong>"${username}"</strong>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Actualizando usuario...');
+                    
+                    fetch('ajax/editar_usuario.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Usuario Actualizado!',
+                                text: 'Los datos del usuario han sido actualizados correctamente',
+                                confirmButtonColor: '#10b981',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                closeEditUserModal();
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No se pudo actualizar el usuario',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Conexión',
+                            text: 'No se pudo actualizar el usuario. Intente nuevamente.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                alert('❌ Error al actualizar usuario');
-                console.error(error);
             });
             
             return false;

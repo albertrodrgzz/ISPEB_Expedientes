@@ -68,10 +68,10 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
                             <label for="buscar" style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar</label>
                             <input 
                                 type="text" 
-                                id="buscar" 
+                                id="searchFuncionarios" 
                                 name="buscar" 
                                 class="search-input" 
-                                placeholder="Nombre, cédula..."
+                                placeholder="🔍 Buscar funcionario..."
                                 value="<?php echo htmlspecialchars($filtros['buscar']); ?>"
                                 style="width: 100%;"
                             >
@@ -129,7 +129,7 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
                 </div>
                 
                 <div class="table-container">
-                    <table class="table">
+                    <table class="table" id="funcionariosTable">
                         <thead>
                             <tr>
                                 <th>Funcionario</th>
@@ -212,5 +212,17 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
     
     
     <script src="../../publico/js/app.js"></script>
+    <script>
+        // Real-time search filter for funcionarios
+        document.getElementById('searchFuncionarios')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#funcionariosTable tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    </script>
 </body>
 </html>

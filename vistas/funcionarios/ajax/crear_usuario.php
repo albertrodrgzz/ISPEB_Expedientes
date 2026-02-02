@@ -1,10 +1,11 @@
 <?php
 /**
- * AJAX: Crear usuario para un funcionario
+ * AJAX: Crear usuario para un funcionario desde su perfil
  */
 
 require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../config/seguridad.php';
+require_once __DIR__ . '/../../../config/username_generator.php';
 
 header('Content-Type: application/json');
 
@@ -20,16 +21,14 @@ try {
     $data = json_decode(file_get_contents('php://input'), true);
     
     $funcionario_id = $data['funcionario_id'] ?? null;
-    $nivel_acceso = $data['nivel_acceso'] ?? 4;
-    $username_custom = $data['username'] ?? null;
+    $password = $data['password'] ?? '';
     
     if (!$funcionario_id) {
         throw new Exception('ID de funcionario requerido');
     }
     
-    // Solo nivel 1 puede asignar nivel 1
-    if ($nivel_acceso == 1 && !verificarNivel(1)) {
-        throw new Exception('Solo administradores pueden crear otros administradores');
+    if (strlen($password) < 6) {
+        throw new Exception('La contraseña debe tener al menos 6 caracteres');
     }
     
     $db = getDB();
@@ -38,13 +37,10 @@ try {
     $stmt = $db->prepare("
         SELECT 
             f.id,
-            f.cedula,
             f.nombres,
             f.apellidos,
-            f.email,
-            d.nombre as departamento
+            CONCAT(f.nombres, ' ', f.apellidos) as nombre_completo
         FROM funcionarios f
-        LEFT JOIN departamentos d ON f.departamento_id = d.id
         WHERE f.id = ?
     ");
     $stmt->execute([$funcionario_id]);
@@ -55,73 +51,32 @@ try {
     }
     
     // Verificar que no tenga usuario ya
-    $stmt = $db->prepare("SELECT id FROM usuarios WHERE cedula = ?");
-    $stmt->execute([$funcionario['cedula']]);
+    $stmt = $db->prepare("SELECT id FROM usuarios WHERE funcionario_id = ?");
+    $stmt->execute([$funcionario_id]);
     if ($stmt->fetch()) {
         throw new Exception('Este funcionario ya tiene un usuario asignado');
     }
     
-    // Generar username si no se proporcionó
-    if (!$username_custom) {
-        // Formato: primera letra nombre + apellido + últimos 4 dígitos cédula
-        $primera_letra = strtolower(substr($funcionario['nombres'], 0, 1));
-        $apellido = strtolower(preg_replace('/[^a-zA-Z]/', '', $funcionario['apellidos']));
-        $apellido = explode(' ', $apellido)[0]; // Primer apellido
-        $ultimos_digitos = substr(preg_replace('/[^0-9]/', '', $funcionario['cedula']), -4);
-        
-        $username_base = $primera_letra . $apellido . $ultimos_digitos;
-        $username = $username_base;
-        
-        // Verificar unicidad
-        $counter = 1;
-        while (true) {
-            $stmt = $db->prepare("SELECT id FROM usuarios WHERE username = ?");
-            $stmt->execute([$username]);
-            if (!$stmt->fetch()) {
-                break;
-            }
-            $counter++;
-            $username = $username_base . '_' . $counter;
-        }
-    } else {
-        $username = $username_custom;
-        
-        // Verificar que el username no exista
-        $stmt = $db->prepare("SELECT id FROM usuarios WHERE username = ?");
-        $stmt->execute([$username]);
-        if ($stmt->fetch()) {
-            throw new Exception('El nombre de usuario ya existe');
-        }
-    }
-    
-    // Generar contraseña temporal segura
-    $caracteres = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
-    $password_temporal = '';
-    for ($i = 0; $i < 12; $i++) {
-        $password_temporal .= $caracteres[random_int(0, strlen($caracteres) - 1)];
-    }
+    // Generar username automáticamente
+    $username = generarUsernameUnico($db, $funcionario['nombres'], $funcionario['apellidos']);
     
     // Crear usuario
+    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+    
     $stmt = $db->prepare("
         INSERT INTO usuarios (
+            funcionario_id,
             username,
             password_hash,
-            cedula,
-            nivel_acceso,
-            departamento,
             estado,
-            created_at
-        ) VALUES (?, ?, ?, ?, ?, 'activo', NOW())
+            registro_completado
+        ) VALUES (?, ?, ?, 'activo', 1)
     ");
     
-    $password_hash = password_hash($password_temporal, PASSWORD_DEFAULT);
-    
     $stmt->execute([
+        $funcionario_id,
         $username,
-        $password_hash,
-        $funcionario['cedula'],
-        $nivel_acceso,
-        $funcionario['departamento']
+        $password_hash
     ]);
     
     $usuario_id = $db->lastInsertId();
@@ -135,8 +90,7 @@ try {
         [
             'username' => $username,
             'funcionario_id' => $funcionario_id,
-            'funcionario' => $funcionario['nombres'] . ' ' . $funcionario['apellidos'],
-            'nivel_acceso' => $nivel_acceso
+            'funcionario' => $funcionario['nombre_completo']
         ]
     );
     
@@ -146,9 +100,7 @@ try {
         'usuario' => [
             'id' => $usuario_id,
             'username' => $username,
-            'password_temporal' => $password_temporal,
-            'nivel_acceso' => $nivel_acceso,
-            'funcionario' => $funcionario['nombres'] . ' ' . $funcionario['apellidos']
+            'funcionario' => $funcionario['nombre_completo']
         ]
     ]);
     

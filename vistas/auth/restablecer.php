@@ -235,22 +235,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
         }
         
         .login-header .logo {
-            width: 90px;
-            height: 90px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            border-radius: 22px;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
-            font-size: 40px;
-            color: white;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 0;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             position: relative;
             z-index: 1;
             animation: float 3s ease-in-out infinite;
+            overflow: hidden;
+        }
+        
+        .login-header .logo img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
         }
         
         @keyframes float {
@@ -258,21 +266,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
             50% { transform: translateY(-10px); }
         }
         
-        .login-header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
-            position: relative;
-            z-index: 1;
-        }
-        
+        /* Ocultar textos del header */
+        .login-header h1,
         .login-header p {
-            font-size: 16px;
-            opacity: 0.95;
-            font-weight: 400;
-            position: relative;
-            z-index: 1;
+            display: none;
         }
         
         /* Panel derecho - Formulario */
@@ -504,16 +501,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
 <body>
     <!-- Banner de ancho completo -->
     <div class="banner-container">
-        <img src="../../publico/imagenes/logos-institucionales.jpg" alt="Gobierno Bolivariano - ISPEB - Dirección de Telemática">
+        <img src="../../publico/imagenes/cintillo.png" alt="Gobierno Bolivariano - ISPEB - Dirección de Telemática">
     </div>
     
     <!-- Contenedor centrado para el formulario -->
     <div class="login-wrapper">
         <div class="login-container">
             <div class="login-header">
-                <div class="logo">🔑</div>
-                <h1>ISPEB</h1>
-                <p>Dirección de Telemática</p>
+                <div class="logo"><img src="../../publico/imagenes/logo-telematica-letras-blancas.png" alt="ISPEB Telemática"></div>
             </div>
             
             <div class="login-body">

@@ -150,7 +150,7 @@ $funcionarios = $stmt->fetchAll();
                         <p class="card-subtitle">Últimos funcionarios registrados en el sistema</p>
                     </div>
                     <div class="card-actions">
-                        <input type="text" id="buscar" class="search-input" placeholder="Buscar...">
+                        <input type="text" id="buscar" class="search-input" placeholder="🔍 Buscar funcionario...">
                         <?php if (verificarNivel(2)): ?>
                             <a href="../funcionarios/crear.php" class="btn btn-primary">
                                 <span>+</span> Nuevo
@@ -370,6 +370,17 @@ $funcionarios = $stmt->fetchAll();
                     }
                 }
             }
+        });
+        
+        // Real-time search filter for funcionarios
+        document.getElementById('buscar')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#tabla-funcionarios tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
         });
     </script>
 </body>

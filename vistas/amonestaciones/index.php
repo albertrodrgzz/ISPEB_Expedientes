@@ -304,8 +304,8 @@ $amonestaciones = $stmt->fetchAll();
                 <h3 class="section-title">🔍 Filtros de Búsqueda</h3>
                 <div class="filter-grid">
                     <div class="form-group" style="margin: 0;">
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar Empleado</label>
-                        <input type="text" id="search-empleado" class="search-input" placeholder="Nombre, apellido o cédula..." style="width: 100%;">
+                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar</label>
+                        <input type="text" id="searchAmonestaciones" class="search-input" placeholder="🔍 Buscar amonestación..." style="width: 100%;">
                     </div>
                     
                     <div class="form-group" style="margin: 0;">
@@ -362,7 +362,7 @@ $amonestaciones = $stmt->fetchAll();
                     </div>
                 </div>
                 <div style="overflow-x: auto;">
-                    <table class="amonestaciones-table" id="amonestaciones-table">
+                    <table class="amonestaciones-table" id="amonestacionesTable">
                         <thead>
                             <tr>
                                 <th>Empleado</th>
@@ -433,15 +433,16 @@ $amonestaciones = $stmt->fetchAll();
     </div>
     
     
-    <!-- Filtros en Tiempo Real -->
-    <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
-        inicializarFiltros({
-            module: 'amonestaciones',
-            searchId: 'search-empleado',
-            filterIds: ['filter-departamento', 'filter-tipo-falta', 'filter-anio'],
-            tableBodySelector: '#amonestaciones-tbody',
-            countSelector: '.card-subtitle'
+        // Real-time search filter for amonestaciones
+        document.getElementById('searchAmonestaciones')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#amonestacionesTable tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
         });
     </script>
 </body>

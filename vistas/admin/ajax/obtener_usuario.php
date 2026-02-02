@@ -24,11 +24,11 @@ try {
         SELECT 
             u.id,
             u.username,
-            u.email,
             u.funcionario_id,
             u.estado,
             CONCAT(f.nombres, ' ', f.apellidos) as nombre_completo,
             f.cedula,
+            f.email,
             c.id as cargo_id,
             c.nombre_cargo,
             c.nivel_acceso

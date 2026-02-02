@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-01-2026 a las 00:44:50
+-- Tiempo de generación: 02-02-2026 a las 11:58:32
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -185,7 +185,96 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla_afectada`, `regist
 (79, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-26 23:15:18'),
 (80, 1, 'GENERAR_REPORTE_PDF', NULL, NULL, NULL, '{\"tipo\":\"nombramientos\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-26 23:25:36'),
 (81, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-26 23:25:47'),
-(82, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-26 23:36:11');
+(82, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-26 23:36:11'),
+(83, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-26 23:50:50'),
+(84, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 01:32:13'),
+(85, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 01:48:39'),
+(86, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', '2026-01-27 01:50:17'),
+(87, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 02:20:33'),
+(88, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 02:26:01'),
+(89, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 02:26:17'),
+(90, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 02:26:21'),
+(91, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 02:26:39'),
+(92, 1, 'CREAR_DEPARTAMENTO', 'departamentos', 6, NULL, '{\"nombre\":\"Pruebas QA\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 02:27:15'),
+(93, 1, 'ACTUALIZAR_DEPARTAMENTO', 'departamentos', 6, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 02:42:33'),
+(94, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 09:41:27'),
+(95, 1, 'CAMBIAR_ESTADO_DEPARTAMENTO', 'departamentos', 6, '{\"estado_anterior\":\"activo\"}', '{\"estado_nuevo\":\"inactivo\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 09:44:20'),
+(96, 1, 'CREAR_CARGO', 'cargos', 7, NULL, '{\"nombre_cargo\":\"Pasante de Pruebas\",\"nivel_acceso\":\"3\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 09:44:50'),
+(97, 1, 'ACTUALIZAR_CARGO', 'cargos', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 09:45:01'),
+(98, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 10:29:45'),
+(99, 1, 'CREAR_FUNCIONARIO', 'funcionarios', 47, NULL, '{\"cedula\":\"12193581\",\"nombres\":\"Mayling\",\"apellidos\":\"Sifontes\",\"fecha_nacimiento\":\"1976-10-28\",\"genero\":\"F\",\"telefono\":\"04120869764\",\"email\":\"mailing@gmail.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"cargo_id\":\"4\",\"departamento_id\":\"2\",\"fecha_ingreso\":\"2026-01-27\",\"estado\":\"activo\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 10:31:26'),
+(100, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 10:39:17'),
+(101, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 21:15:38'),
+(102, 1, 'ACTUALIZAR_FUNCIONARIO', 'funcionarios', 47, '{\"id\":47,\"cedula\":\"12193581\",\"nombres\":\"Mayling\",\"apellidos\":\"Sifontes\",\"fecha_nacimiento\":\"1976-10-28\",\"genero\":\"F\",\"telefono\":\"04120869764\",\"email\":\"mailing@gmail.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"nivel_educativo\":null,\"titulo_obtenido\":null,\"fecha_ingreso_admin_publica\":null,\"cantidad_hijos\":0,\"cargo_id\":4,\"departamento_id\":2,\"fecha_ingreso\":\"2026-01-27\",\"foto\":null,\"estado\":\"activo\",\"created_at\":\"2026-01-27 06:31:26\",\"updated_at\":\"2026-01-27 06:31:26\",\"edad\":49,\"antiguedad_anos\":0,\"nombre_cargo\":\"Secretaria\",\"nivel_acceso\":2,\"departamento\":\"Sistemas\"}', '{\"cedula\":\"12193581\",\"nombres\":\"Mayling\",\"apellidos\":\"Sifontes\",\"fecha_nacimiento\":\"1976-10-28\",\"genero\":\"F\",\"telefono\":\"04120869764\",\"email\":\"mailing@gmail.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"cargo_id\":\"4\",\"departamento_id\":\"2\",\"fecha_ingreso\":\"2026-01-27\",\"foto\":null,\"estado\":\"activo\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-27 21:25:49'),
+(103, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 13:06:53'),
+(104, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 1, NULL, '{\"funcionario\":\"CARLOS RODR\\u00edGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 13:08:29'),
+(105, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 1, NULL, '{\"funcionario\":\"CARLOS RODR\\u00edGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 13:08:30'),
+(106, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 1, NULL, '{\"funcionario\":\"CARLOS RODR\\u00edGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 13:08:30'),
+(107, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 1, NULL, '{\"funcionario\":\"CARLOS RODR\\u00edGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 13:08:42'),
+(108, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 1, NULL, '{\"funcionario\":\"CARLOS RODR\\u00edGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 13:08:43'),
+(109, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 13:09:13'),
+(110, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 18:35:29'),
+(111, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 18:36:06'),
+(112, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 18:46:28'),
+(113, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 46, NULL, '{\"funcionario\":\"ALBERT RODRIGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 18:49:08'),
+(114, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 46, NULL, '{\"funcionario\":\"ALBERT RODRIGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 18:49:09'),
+(115, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 46, NULL, '{\"funcionario\":\"ALBERT RODRIGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 18:49:40'),
+(116, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 46, NULL, '{\"funcionario\":\"ALBERT RODRIGUEZ\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 18:49:41'),
+(117, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 19:09:54'),
+(118, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 19:10:01'),
+(119, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-28 19:12:21'),
+(120, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:09:55'),
+(121, 1, 'ACTUALIZAR_FUNCIONARIO', 'funcionarios', 47, '{\"id\":47,\"cedula\":\"12193581\",\"nombres\":\"Mayling\",\"apellidos\":\"Sifontes\",\"fecha_nacimiento\":\"1976-10-28\",\"genero\":\"F\",\"telefono\":\"04120869764\",\"email\":\"mailing@gmail.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"nivel_educativo\":null,\"titulo_obtenido\":null,\"fecha_ingreso_admin_publica\":null,\"cantidad_hijos\":0,\"cargo_id\":4,\"departamento_id\":2,\"fecha_ingreso\":\"2026-01-27\",\"foto\":null,\"estado\":\"activo\",\"created_at\":\"2026-01-27 06:31:26\",\"updated_at\":\"2026-01-27 17:25:49\",\"edad\":49,\"antiguedad_anos\":0,\"nombre_cargo\":\"Secretaria\",\"nivel_acceso\":2,\"departamento\":\"Sistemas\"}', '{\"cedula\":\"12193581\",\"nombres\":\"Mayling\",\"apellidos\":\"Sifontes\",\"fecha_nacimiento\":\"1976-10-28\",\"genero\":\"F\",\"telefono\":\"04120869764\",\"email\":\"mailing@gmail.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"cargo_id\":\"4\",\"departamento_id\":\"2\",\"fecha_ingreso\":\"2026-01-27\",\"foto\":null,\"estado\":\"activo\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:15:47'),
+(122, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36', '2026-01-29 01:18:38'),
+(123, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:23:22'),
+(124, 1, 'RESETEAR_PASSWORD', 'usuarios', 46, NULL, '{\"usuario\":\"31087083\",\"funcionario\":\"Albert Rodriguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:38:27'),
+(125, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:38:38'),
+(126, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:38:56'),
+(127, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:55:15'),
+(128, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:55:18'),
+(129, 1, 'CREAR_FUNCIONARIO', 'funcionarios', 48, NULL, '{\"cedula\":\"31087083\",\"nombres\":\"Albert Nazareth\",\"apellidos\":\"Rodriguez Sifontes\",\"fecha_nacimiento\":\"2005-11-08\",\"genero\":\"M\",\"telefono\":\"04249399005\",\"email\":\"albertrodrigrez7@gmail.com\",\"direccion\":\"Venezuela\",\"cargo_id\":\"6\",\"departamento_id\":\"1\",\"fecha_ingreso\":\"2026-01-28\",\"estado\":\"activo\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:56:51'),
+(130, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 01:58:08'),
+(131, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:13:29'),
+(132, 1, 'CREAR_FUNCIONARIO', 'funcionarios', 49, NULL, '{\"cedula\":\"31087083\",\"nombres\":\"Albert Nazareth\",\"apellidos\":\"Rodriguez Sifontes\",\"fecha_nacimiento\":\"2005-11-08\",\"genero\":\"M\",\"telefono\":\"04249399005\",\"email\":\"albertrodrigrez7@gmail.com\",\"direccion\":\"Venezuela\",\"cargo_id\":\"6\",\"departamento_id\":\"1\",\"fecha_ingreso\":\"2026-01-28\",\"estado\":\"activo\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:14:15'),
+(133, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:14:27'),
+(134, NULL, 'REGISTRO_COMPLETADO', 'usuarios', 50, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:32:29'),
+(135, NULL, 'REGISTRO_COMPLETADO', 'usuarios', 51, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:40:05'),
+(136, NULL, 'REGISTRO_COMPLETADO', 'usuarios', 52, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:44:51'),
+(137, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:51:38'),
+(138, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:51:43'),
+(139, NULL, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:51:51'),
+(140, NULL, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:52:19'),
+(141, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:52:21'),
+(142, 1, 'RESETEAR_PASSWORD', 'usuarios', 52, NULL, '{\"usuario\":\"arodriguez\",\"funcionario\":\"Albert Nazareth Rodriguez Sifontes\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:52:42'),
+(143, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:52:53'),
+(144, NULL, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:53:02'),
+(145, NULL, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:53:07'),
+(146, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:53:09'),
+(147, 1, 'CAMBIAR_ESTADO_USUARIO', 'usuarios', 52, '{\"estado_anterior\":\"activo\"}', '{\"estado_nuevo\":\"inactivo\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:53:24'),
+(148, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:53:37'),
+(149, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 02:54:02'),
+(150, NULL, 'REGISTRO_COMPLETADO', 'usuarios', 53, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 11:46:08'),
+(151, NULL, 'LOGIN_FALLIDO', 'usuarios', 53, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 11:46:19'),
+(152, 53, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-29 11:46:30'),
+(153, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 02:15:55'),
+(154, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 02:16:11'),
+(155, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 03:42:52'),
+(156, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 03:43:34'),
+(157, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 03:45:50'),
+(158, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 03:49:57'),
+(159, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 03:50:49'),
+(160, 1, 'GENERAR_RESPALDO_BD', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 03:51:32'),
+(161, 1, 'IMPORTAR_BD', 'sistema', NULL, '\"Importaci\\u00f3n: backup_20260130_002422.sql, 308 sentencias ejecutadas, 5 omitidas, 0 errores\"', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 04:24:49'),
+(162, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 11:10:52'),
+(163, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-01-30 11:11:42'),
+(164, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-01 03:05:39'),
+(165, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 49, NULL, '{\"funcionario\":\"ALBERT NAZARETH RODRIGUEZ SIFONTES\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-01 03:06:19'),
+(166, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 49, NULL, '{\"funcionario\":\"ALBERT NAZARETH RODRIGUEZ SIFONTES\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-01 03:06:20'),
+(167, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-01 03:06:53'),
+(168, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-01 03:09:48'),
+(169, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 49, NULL, '{\"funcionario\":\"ALBERT NAZARETH RODRIGUEZ SIFONTES\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-01 03:10:26'),
+(170, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 49, NULL, '{\"funcionario\":\"ALBERT NAZARETH RODRIGUEZ SIFONTES\",\"generado_por\":\"Carlos Rodr\\u00edguez\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-01 03:10:26'),
+(171, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', '2026-02-01 03:11:07');
 
 -- --------------------------------------------------------
 
@@ -231,7 +320,8 @@ INSERT INTO `cargos` (`id`, `nombre_cargo`, `nivel_acceso`, `descripcion`, `crea
 (3, 'Jefe de Departamento', 2, 'Responsable de un departamento específico - Acceso operativo limitado a su departamento', '2026-01-21 04:19:39'),
 (4, 'Secretaria', 2, 'Personal administrativo - Acceso operativo para gestión de expedientes', '2026-01-21 04:19:39'),
 (5, 'Asistente', 3, 'Personal de apoyo - Solo lectura y descarga de documentos', '2026-01-21 04:19:39'),
-(6, 'Técnico', 3, 'Personal técnico - Solo lectura y descarga de documentos', '2026-01-21 04:19:39');
+(6, 'Técnico', 3, 'Personal técnico - Solo lectura y descarga de documentos', '2026-01-21 04:19:39'),
+(7, 'Pasante de Pruebas', 3, '', '2026-01-27 09:44:50');
 
 -- --------------------------------------------------------
 
@@ -258,7 +348,8 @@ INSERT INTO `departamentos` (`id`, `nombre`, `descripcion`, `estado`, `created_a
 (2, 'Sistemas', 'Departamento de desarrollo y mantenimiento de sistemas informáticos', 'activo', '2026-01-21 04:19:39', '2026-01-21 04:34:29'),
 (3, 'Redes y Telecomunicaciones', 'Departamento de infraestructura de redes y comunicaciones', 'activo', '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
 (4, 'Atención al Usuario', 'Departamento de atención y servicio al usuario final', 'activo', '2026-01-21 04:19:39', '2026-01-21 04:34:29'),
-(5, 'Reparaciones Electrónicas', 'Departamento de reparación y mantenimiento de equipos electrónicos', 'activo', '2026-01-21 04:19:39', '2026-01-21 04:34:29');
+(5, 'Reparaciones Electrónicas', 'Departamento de reparación y mantenimiento de equipos electrónicos', 'activo', '2026-01-21 04:19:39', '2026-01-21 04:34:29'),
+(6, 'Calidad de Software', 'Prueba', 'inactivo', '2026-01-27 02:27:15', '2026-01-27 09:44:20');
 
 -- --------------------------------------------------------
 
@@ -340,7 +431,7 @@ INSERT INTO `funcionarios` (`id`, `cedula`, `nombres`, `apellidos`, `fecha_nacim
 (43, 'V-54567890', 'Lucía', 'Espinoza', '1993-06-30', 'F', '0414-3456781', 'lespinoza@ispeb.gob.ve', NULL, 'Bachiller', 'Bachiller en Ciencias', NULL, 0, 5, 1, '2021-08-25', 'default-avatar.png', 'activo', '2026-01-21 04:19:39', '2026-01-21 04:34:29'),
 (44, 'V-55678901', 'María', 'Núñez', '1995-01-15', 'F', '0426-4567892', 'mbenitez@ispeb.gob.ve', NULL, 'TSU', 'Técnico en Informática', NULL, 0, 5, 3, '2022-09-08', 'default-avatar.png', 'activo', '2026-01-21 04:19:39', '2026-01-21 04:34:29'),
 (45, 'V-56789012', 'Alejandra', 'Soto', '1992-08-21', 'F', '0412-5678904', 'asoto@ispeb.gob.ve', NULL, 'Bachiller', 'Bachiller en Humanidades', NULL, 0, 5, 5, '2020-11-30', 'default-avatar.png', 'activo', '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(46, '31087083', 'Albert', 'Rodriguez', '2005-11-08', 'M', '04249399005', 'albertrodrigrez7@gmail.com', 'Venezuela', NULL, NULL, NULL, 0, 6, 1, '2026-01-21', NULL, 'activo', '2026-01-21 18:43:15', '2026-01-21 18:43:15');
+(49, '31087083', 'Albert Nazareth', 'Rodriguez Sifontes', '2005-11-08', 'M', '04249399005', 'albertrodrigrez7@gmail.com', 'Venezuela', NULL, NULL, NULL, 0, 6, 1, '2026-01-28', NULL, 'activo', '2026-01-29 02:14:15', '2026-01-29 02:14:15');
 
 -- --------------------------------------------------------
 
@@ -465,7 +556,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `funcionario_id`, `username`, `password_hash`, `email_recuperacion`, `token_recuperacion`, `token_expiracion`, `ultimo_acceso`, `intentos_fallidos`, `bloqueado_hasta`, `estado`, `registro_completado`, `pregunta_seguridad_1`, `respuesta_seguridad_1`, `pregunta_seguridad_2`, `respuesta_seguridad_2`, `pregunta_seguridad_3`, `respuesta_seguridad_3`, `created_at`, `updated_at`) VALUES
-(1, 1, 'crodriguez', '$2y$10$xa40rsKwiZjrzgt/sb4lTuviA61o3tFcmUjvJnJrUiepBVvjAKj6O', 'crodriguez@ispeb.gob.ve', NULL, NULL, '2026-01-26 19:36:11', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-21 04:19:39', '2026-01-26 23:36:11'),
+(1, 1, 'crodriguez', '$2y$10$xa40rsKwiZjrzgt/sb4lTuviA61o3tFcmUjvJnJrUiepBVvjAKj6O', 'crodriguez@ispeb.gob.ve', NULL, NULL, '2026-01-31 23:09:48', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-21 04:19:39', '2026-02-01 03:09:48'),
 (2, 2, 'mgonzalez', '$2y$10$xa40rsKwiZjrzgt/sb4lTuviA61o3tFcmUjvJnJrUiepBVvjAKj6O', 'mgonzalez@ispeb.gob.ve', NULL, NULL, NULL, 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
 (3, 3, 'lmartinez', '$2y$10$xa40rsKwiZjrzgt/sb4lTuviA61o3tFcmUjvJnJrUiepBVvjAKj6O', 'lmartinez@ispeb.gob.ve', NULL, NULL, NULL, 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
 (4, 4, 'aperez', '$2y$10$xa40rsKwiZjrzgt/sb4lTuviA61o3tFcmUjvJnJrUiepBVvjAKj6O', 'aperez@ispeb.gob.ve', NULL, NULL, '2026-01-21 00:37:08', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:37:08'),
@@ -510,7 +601,7 @@ INSERT INTO `usuarios` (`id`, `funcionario_id`, `username`, `password_hash`, `em
 (43, 43, 'lespinoza', '$2y$10$xa40rsKwiZjrzgt/sb4lTuviA61o3tFcmUjvJnJrUiepBVvjAKj6O', 'lespinoza@ispeb.gob.ve', NULL, NULL, NULL, 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
 (44, 44, 'mbenitez', '$2y$10$xa40rsKwiZjrzgt/sb4lTuviA61o3tFcmUjvJnJrUiepBVvjAKj6O', 'mbenitez@ispeb.gob.ve', NULL, NULL, NULL, 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
 (45, 45, 'asoto', '$2y$10$xa40rsKwiZjrzgt/sb4lTuviA61o3tFcmUjvJnJrUiepBVvjAKj6O', 'asoto@ispeb.gob.ve', NULL, NULL, NULL, 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(46, 46, '31087083', '$2y$10$BKuF2cMpPCjfDI7TNbi3..PnN3raPY.80dbF0/SPJGWRjIqNvsvym', 'albertrodrigrez7@gmail.com', NULL, NULL, NULL, 0, NULL, 'activo', 1, '¿Cuál es el nombre de tu primera mascota?', '$2y$10$xIp.i.bOKbpHJ3uaV/jlPeVjNJsKSLyt2iwOiKaHLBW6udDLtbOCW', '¿En qué ciudad naciste?', '$2y$10$rBNyR9PUJw1Zb1xxSVO3x.3txMUSkDW3QMzHa6etZNI5zkYGUTLfG', '¿Cuál es tu comida favorita?', '$2y$10$9qWNHuAAZHojVHRHcEhIueUGRQmwc3xDvr35egB736iEpc3D.1TEu', '2026-01-21 18:43:15', '2026-01-21 18:46:33');
+(53, 49, 'arodriguez', '$2y$10$QyNu3maaw4xihlQUfw22I.QzPr6GCrIEqE4u/C.r6VTJgOBDgooQm', NULL, NULL, NULL, '2026-01-29 07:46:30', 0, NULL, 'activo', 1, '¿Cuál es el nombre de tu primera mascota?', '$2y$10$4zTuJuxsb2s/FkkzGJS08enuc.dNCCA90hNLehbirmHAhfdO8/th6', '¿En qué ciudad naciste?', '$2y$10$yU5703P2te9zL0rbj2gVK.a5VRKPcXrA2O/rcRC/fzfE.pBqF2xFq', '¿Cuál es el nombre de tu mejor amigo de la infancia?', '$2y$10$KApVkv8SAsKV78fG7qlb3uvmgaB9qJThnNqgClDTlNS7xph90gYuK', '2026-01-29 11:40:18', '2026-01-29 11:46:30');
 
 -- --------------------------------------------------------
 
@@ -709,7 +800,7 @@ ALTER TABLE `activos_tecnologicos`
 -- AUTO_INCREMENT de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=172;
 
 --
 -- AUTO_INCREMENT de la tabla `cargas_familiares`
@@ -721,19 +812,19 @@ ALTER TABLE `cargas_familiares`
 -- AUTO_INCREMENT de la tabla `cargos`
 --
 ALTER TABLE `cargos`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `departamentos`
 --
 ALTER TABLE `departamentos`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `funcionarios`
 --
 ALTER TABLE `funcionarios`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT de la tabla `historial_administrativo`
@@ -757,7 +848,7 @@ ALTER TABLE `preguntas_seguridad_catalogo`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- Restricciones para tablas volcadas

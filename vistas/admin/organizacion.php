@@ -511,23 +511,59 @@ $cargos = $stmt->fetchAll();
         function handleCreateDepartamento(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const nombre = formData.get('nombre');
             
-            fetch('ajax/crear_departamento.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Departamento creado exitosamente');
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            Swal.fire({
+                title: '¿Crear Departamento?',
+                html: `¿Está seguro de crear el departamento <strong>"${nombre}"</strong>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, crear',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Creando departamento...');
+                    
+                    fetch('ajax/crear_departamento.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Departamento Creado!',
+                                text: 'El departamento ha sido creado exitosamente',
+                                confirmButtonColor: '#10b981',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No se pudo crear el departamento',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Conexión',
+                            text: 'No se pudo crear el departamento. Intente nuevamente.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                alert('❌ Error al crear departamento');
-                console.error(error);
             });
             
             return false;
@@ -536,23 +572,60 @@ $cargos = $stmt->fetchAll();
         function handleCreateCargo(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const nombre = formData.get('nombre_cargo');
+            const nivel = formData.get('nivel_acceso');
             
-            fetch('ajax/crear_cargo.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Cargo creado exitosamente');
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            Swal.fire({
+                title: '¿Crear Cargo?',
+                html: `¿Está seguro de crear el cargo <strong>"${nombre}"</strong> con nivel de acceso <strong>${nivel}</strong>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, crear',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Creando cargo...');
+                    
+                    fetch('ajax/crear_cargo.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Cargo Creado!',
+                                text: 'El cargo ha sido creado exitosamente',
+                                confirmButtonColor: '#10b981',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No se pudo crear el cargo',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Conexión',
+                            text: 'No se pudo crear el cargo. Intente nuevamente.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                alert('❌ Error al crear cargo');
-                console.error(error);
             });
             
             return false;
@@ -605,11 +678,21 @@ $cargos = $stmt->fetchAll();
                         // Abrir modal
                         document.getElementById('editDepartamentoModal').classList.add('active');
                     } else {
-                        alert('❌ Error: ' + data.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'No se pudo cargar los datos del departamento',
+                            confirmButtonColor: '#ef4444'
+                        });
                     }
                 })
                 .catch(error => {
-                    alert('❌ Error al cargar datos del departamento');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Conexión',
+                        text: 'No se pudo cargar los datos del departamento',
+                        confirmButtonColor: '#ef4444'
+                    });
                     console.error(error);
                 });
         }
@@ -617,23 +700,59 @@ $cargos = $stmt->fetchAll();
         function handleEditDepartamento(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const nombre = formData.get('nombre');
             
-            fetch('ajax/editar_departamento.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Departamento actualizado exitosamente');
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            Swal.fire({
+                title: '¿Guardar Cambios?',
+                html: `¿Está seguro de actualizar el departamento <strong>"${nombre}"</strong>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Actualizando departamento...');
+                    
+                    fetch('ajax/editar_departamento.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Departamento Actualizado!',
+                                text: 'Los datos del departamento han sido actualizados correctamente',
+                                confirmButtonColor: '#10b981',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No se pudo actualizar el departamento',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Conexión',
+                            text: 'No se pudo actualizar el departamento. Intente nuevamente.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                alert('❌ Error al actualizar departamento');
-                console.error(error);
             });
             
             return false;
@@ -654,11 +773,21 @@ $cargos = $stmt->fetchAll();
                         // Abrir modal
                         document.getElementById('editCargoModal').classList.add('active');
                     } else {
-                        alert('❌ Error: ' + data.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'No se pudo cargar los datos del cargo',
+                            confirmButtonColor: '#ef4444'
+                        });
                     }
                 })
                 .catch(error => {
-                    alert('❌ Error al cargar datos del cargo');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Conexión',
+                        text: 'No se pudo cargar los datos del cargo',
+                        confirmButtonColor: '#ef4444'
+                    });
                     console.error(error);
                 });
         }
@@ -666,23 +795,59 @@ $cargos = $stmt->fetchAll();
         function handleEditCargo(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const nombre = formData.get('nombre_cargo');
             
-            fetch('ajax/editar_cargo.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Cargo actualizado exitosamente');
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + data.message);
+            Swal.fire({
+                title: '¿Guardar Cambios?',
+                html: `¿Está seguro de actualizar el cargo <strong>"${nombre}"</strong>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarCargando('Actualizando cargo...');
+                    
+                    fetch('ajax/editar_cargo.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        cerrarCargando();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Cargo Actualizado!',
+                                text: 'Los datos del cargo han sido actualizados correctamente',
+                                confirmButtonColor: '#10b981',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No se pudo actualizar el cargo',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        cerrarCargando();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Conexión',
+                            text: 'No se pudo actualizar el cargo. Intente nuevamente.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                        console.error(error);
+                    });
                 }
-            })
-            .catch(error => {
-                alert('❌ Error al actualizar cargo');
-                console.error(error);
             });
             
             return false;

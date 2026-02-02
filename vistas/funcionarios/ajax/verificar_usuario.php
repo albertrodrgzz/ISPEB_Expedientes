@@ -38,12 +38,14 @@ try {
         SELECT 
             u.id,
             u.username,
-            u.nivel_acceso,
+            c.nivel_acceso,
             u.estado,
             u.password_hash,
             u.created_at
         FROM usuarios u
-        WHERE u.cedula = ?
+        INNER JOIN funcionarios f ON u.funcionario_id = f.id
+        INNER JOIN cargos c ON f.cargo_id = c.id
+        WHERE f.cedula = ?
     ");
     $stmt->execute([$funcionario['cedula']]);
     $usuario = $stmt->fetch();

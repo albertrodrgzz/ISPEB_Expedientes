@@ -180,8 +180,8 @@ $nombramientos = $stmt->fetchAll();
                 <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">🔍 Filtros de Búsqueda</h3>
                 <div class="filter-grid">
                     <div>
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar Empleado</label>
-                        <input type="text" id="search-empleado" class="search-input" placeholder="Nombre, apellido o cédula..." style="width: 100%;">
+                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar</label>
+                        <input type="text" id="searchNombramientos" class="search-input" placeholder="🔍 Buscar nombramiento..." style="width: 100%;">
                     </div>
                     <div>
                         <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Departamento</label>
@@ -212,7 +212,7 @@ $nombramientos = $stmt->fetchAll();
                     <h2 class="card-title">📄 Registro de Nombramientos</h2>
                 </div>
                 <div style="overflow-x: auto;">
-                    <table class="data-table">
+                    <table class="data-table" id="nombramientosTable">
                         <thead>
                             <tr>
                                 <th>Empleado</th>
@@ -265,15 +265,16 @@ $nombramientos = $stmt->fetchAll();
     </div>
     
     
-    <!-- Filtros en Tiempo Real -->
-    <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
-        inicializarFiltros({
-            module: 'nombramientos',
-            searchId: 'search-empleado',
-            filterIds: ['filter-departamento', 'filter-estado'],
-            tableBodySelector: 'table tbody',
-            countSelector: '.card-subtitle'
+        // Real-time search filter for nombramientos
+        document.getElementById('searchNombramientos')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#nombramientosTable tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
         });
     </script>
 </body>

@@ -346,19 +346,17 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             75% { transform: translateY(-20px) translateX(5px); opacity: 1; }
         }
         
-        /* Logo mejorado con múltiples capas */
+        /* Logo mejorado - Más grande y prominente */
         .login-header .logo {
-            width: 90px;
-            height: 90px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            border-radius: 22px;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
-            font-size: 40px;
-            color: white;
+            margin-bottom: 0;
             box-shadow: 
                 0 8px 32px rgba(0, 0, 0, 0.15),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3),
@@ -367,6 +365,13 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             position: relative;
             z-index: 1;
             animation: float-logo 3s ease-in-out infinite;
+            overflow: hidden;
+        }
+        
+        .login-header .logo img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
         }
         
         /* Brillo sutil en el logo */
@@ -387,23 +392,10 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             50% { transform: translateY(-10px) scale(1.02); }
         }
         
-        .login-header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        
+        /* Ocultar textos del header */
+        .login-header h1,
         .login-header p {
-            font-size: 16px;
-            opacity: 0.95;
-            font-weight: 400;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+            display: none;
         }
         
         /* Panel derecho - Formulario */
@@ -626,7 +618,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
 <body>
     <!-- Banner de ancho completo -->
     <div class="banner-container">
-        <img src="publico/imagenes/logos-institucionales.jpg" alt="Gobierno Bolivariano - ISPEB - Dirección de Telemática">
+        <img src="publico/imagenes/cintillo.png" alt="Gobierno Bolivariano - ISPEB - Dirección de Telemática">
     </div>
     
     <!-- Contenedor centrado para el login -->
@@ -638,7 +630,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             <div class="particle"></div>
             <div class="particle"></div>
             <div class="particle"></div>
-            <div class="logo">📁</div>
+            <div class="logo"><img src="publico/imagenes/logo-telematica-letras-blancas.png" alt="ISPEB Telemática"></div>
             <h1>ISPEB</h1>
             <p>Dirección de Telemática</p>
         </div>
@@ -706,5 +698,72 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         </div>
         </div>
     </div>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Detectar si viene de un registro exitoso
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const registroExitoso = urlParams.get('registro_exitoso');
+            const username = urlParams.get('username');
+            
+            if (registroExitoso === '1' && username) {
+                // Limpiar URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // Mostrar SweetAlert
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Registro Completado!',
+                    html: `
+                        <div style="text-align: center; padding: 10px;">
+                            <p style="font-size: 16px; color: #4b5563; margin-bottom: 20px;">
+                                Tu cuenta ha sido creada exitosamente
+                            </p>
+                            <div style="background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%); 
+                                        padding: 16px; 
+                                        border-radius: 12px; 
+                                        border: 2px solid #86efac;
+                                        margin-bottom: 16px;">
+                                <p style="font-size: 14px; color: #166534; margin-bottom: 8px; font-weight: 600;">
+                                    Tu usuario es:
+                                </p>
+                                <p style="font-size: 24px; 
+                                          font-weight: 700; 
+                                          color: #15803d; 
+                                          font-family: 'Courier New', monospace;
+                                          letter-spacing: 1px;">
+                                    ${username}
+                                </p>
+                            </div>
+                            <p style="font-size: 14px; color: #6b7280;">
+                                Ahora puedes iniciar sesión con tu usuario y contraseña
+                            </p>
+                        </div>
+                    `,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#00a8cc',
+                    buttonsStyling: true,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true
+                }).then(function(result) {
+                    // Auto-llenar el campo de usuario
+                    const usernameInput = document.getElementById('username');
+                    if (usernameInput) {
+                        usernameInput.value = username;
+                    }
+                    // Enfocar el campo de contraseña
+                    const passwordInput = document.getElementById('password');
+                    if (passwordInput) {
+                        setTimeout(function() {
+                            passwordInput.focus();
+                        }, 200);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

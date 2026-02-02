@@ -303,8 +303,8 @@ $vacaciones = $stmt->fetchAll();
                 </h3>
                 <div class="filter-grid">
                     <div class="form-group" style="margin: 0;">
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar Empleado</label>
-                        <input type="text" id="search-empleado" class="search-input" placeholder="Nombre, apellido o cédula..." style="width: 100%;">
+                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar</label>
+                        <input type="text" id="searchVacaciones" class="search-input" placeholder="🔍 Buscar vacación..." style="width: 100%;">
                     </div>
                     
                     <div class="form-group" style="margin: 0;">
@@ -374,7 +374,7 @@ $vacaciones = $stmt->fetchAll();
                     </div>
                 </div>
                 <div style="overflow-x: auto;">
-                    <table class="vacaciones-table" id="vacaciones-table">
+                    <table class="vacaciones-table" id="vacacionesTable">
                         <thead>
                             <tr>
                                 <th>Empleado</th>
@@ -458,79 +458,16 @@ $vacaciones = $stmt->fetchAll();
     </div>
     
     <script>
-        // Filtrado en tiempo real
-        const searchInput = document.getElementById('search-empleado');
-        const filterDepartamento = document.getElementById('filter-departamento');
-        const filterEstado = document.getElementById('filter-estado');
-        const filterAnio = document.getElementById('filter-anio');
-        const rows = document.querySelectorAll('.vacacion-row');
-        
-        function aplicarFiltros() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const departamento = filterDepartamento.value;
-            const estado = filterEstado.value;
-            const anio = filterAnio.value;
-            
-            let visibleCount = 0;
+        // Real-time search filter for vacaciones
+        document.getElementById('searchVacaciones')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#vacacionesTable tbody tr');
             
             rows.forEach(row => {
-                const empleado = row.dataset.empleado;
-                const rowDepartamento = row.dataset.departamento;
-                const rowEstado = row.dataset.estado;
-                const rowAnio = row.dataset.anio;
-                
-                const matchSearch = empleado.includes(searchTerm);
-                const matchDepartamento = !departamento || rowDepartamento === departamento;
-                const matchEstado = !estado || rowEstado === estado;
-                const matchAnio = !anio || rowAnio === anio;
-                
-                if (matchSearch && matchDepartamento && matchEstado && matchAnio) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
-            
-            // Mostrar mensaje si no hay resultados
-            const tbody = document.getElementById('vacaciones-tbody');
-            const noResultsRow = tbody.querySelector('.no-results');
-            
-            if (visibleCount === 0 && rows.length > 0) {
-                if (!noResultsRow) {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td colspan="8">
-                            <div class="no-results">
-                                <div class="no-results-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48">
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                    </svg>
-                                </div>
-                                <p>No se encontraron resultados con los filtros aplicados</p>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-            } else if (noResultsRow && visibleCount > 0) {
-                noResultsRow.remove();
-            }
-        }
-        
-        searchInput.addEventListener('input', aplicarFiltros);
-        filterDepartamento.addEventListener('change', aplicarFiltros);
-        filterEstado.addEventListener('change', aplicarFiltros);
-        filterAnio.addEventListener('change', aplicarFiltros);
-        
-        function limpiarFiltros() {
-            searchInput.value = '';
-            filterDepartamento.value = '';
-            filterEstado.value = '';
-            filterAnio.value = '';
-            aplicarFiltros();
-        }
+        });
     </script>
 </body>
 </html>

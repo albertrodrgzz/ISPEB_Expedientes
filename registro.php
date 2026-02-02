@@ -70,7 +70,8 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             margin: 0;
             padding: 0;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
         
         /* Imagen de fondo institucional */
@@ -96,7 +97,8 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            position: relative;
+            position: sticky;
+            top: 0;
             z-index: 10;
             display: flex;
             align-items: center;
@@ -118,7 +120,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             align-items: center;
             justify-content: center;
             min-height: calc(100vh - 70px);
-            padding: 30px;
+            padding: 30px 15px;
             position: relative;
             z-index: 1;
         }
@@ -140,13 +142,13 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             border: 1px solid rgba(255, 255, 255, 0.8);
             transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
                         grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 20px auto;
         }
         
         /* Card expandida para el paso 2 (formulario completo) */
         .login-container.wide {
             max-width: 1400px;
             grid-template-columns: 400px 1fr;
-            max-height: 90vh;
         }
         
         @keyframes fadeInScale {
@@ -172,6 +174,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             text-align: center;
             position: relative;
             overflow: hidden;
+            min-height: 400px;
         }
         
         /* Patrón geométrico de fondo */
@@ -231,19 +234,17 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             75% { transform: translateY(-20px) translateX(5px); opacity: 1; }
         }
         
-        /* Logo mejorado con múltiples capas */
+        /* Logo mejorado - Más grande y prominente */
         .login-header .logo {
-            width: 90px;
-            height: 90px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            border-radius: 22px;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
-            font-size: 40px;
-            color: white;
+            margin-bottom: 0;
             box-shadow: 
                 0 8px 32px rgba(0, 0, 0, 0.15),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3),
@@ -252,6 +253,13 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             position: relative;
             z-index: 1;
             animation: float-logo 3s ease-in-out infinite;
+            overflow: hidden;
+        }
+        
+        .login-header .logo img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
         }
         
         /* Brillo sutil en el logo */
@@ -272,23 +280,10 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             50% { transform: translateY(-10px) scale(1.02); }
         }
         
-        .login-header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        
+        /* Ocultar textos del header */
+        .login-header h1,
         .login-header p {
-            font-size: 16px;
-            opacity: 0.95;
-            font-weight: 400;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+            display: none;
         }
         
         /* Panel derecho - Formulario */
@@ -297,31 +292,26 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             display: flex;
             flex-direction: column;
             justify-content: center;
-        }
-        
-        /* Scroll solo cuando está en modo wide (paso 2) */
-        .login-container.wide .login-body {
-            justify-content: flex-start;
-            max-height: 90vh;
             overflow-y: auto;
+            max-height: calc(100vh - 150px);
         }
         
         /* Estilo del scrollbar */
-        .login-container.wide .login-body::-webkit-scrollbar {
+        .login-body::-webkit-scrollbar {
             width: 8px;
         }
         
-        .login-container.wide .login-body::-webkit-scrollbar-track {
+        .login-body::-webkit-scrollbar-track {
             background: #f1f5f9;
             border-radius: 10px;
         }
         
-        .login-container.wide .login-body::-webkit-scrollbar-thumb {
+        .login-body::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 10px;
         }
         
-        .login-container.wide .login-body::-webkit-scrollbar-thumb:hover {
+        .login-body::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
         
@@ -532,30 +522,37 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             margin-bottom: 18px;
         }
         
-        @media (max-width: 1100px) {
-            .login-container {
+        /* Media Queries para Responsive */
+        @media (max-width: 1450px) {
+            .login-container.wide {
                 grid-template-columns: 1fr;
-                max-width: 520px;
+                max-width: 700px;
             }
             
             .login-header {
+                min-height: 300px;
                 padding: 40px 30px;
+            }
+        }
+        
+        @media (max-width: 1100px) {
+            .login-container {
+                grid-template-columns: 1fr;
+                max-width: 600px;
+            }
+            
+            .login-header {
+                min-height: 250px;
+                padding: 35px 30px;
             }
             
             .login-body {
                 padding: 40px 35px;
+                max-height: none;
             }
             
             .login-footer {
                 padding: 20px 35px;
-            }
-        }
-        
-        /* Media query adicional para card expandida */
-        @media (max-width: 1450px) {
-            .login-container.wide {
-                grid-template-columns: 1fr;
-                max-width: 600px;
             }
         }
         
@@ -570,31 +567,139 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             
             .login-wrapper {
                 min-height: calc(100vh - 60px);
-                padding: 20px;
+                padding: 20px 10px;
             }
             
-            .form-row {
-                grid-template-columns: 1fr;
+            .login-container {
+                max-width: 100%;
+                border-radius: 16px;
+                margin: 10px;
             }
-        }
-        
-        @media (max-width: 480px) {
-            .login-body {
+            
+            .login-header {
+                min-height: 200px;
                 padding: 30px 25px;
-            }
-            
-            .login-footer {
-                padding: 20px 25px;
             }
             
             .login-header .logo {
                 width: 70px;
                 height: 70px;
                 font-size: 32px;
+                margin-bottom: 20px;
             }
             
             .login-header h1 {
                 font-size: 26px;
+            }
+            
+            .login-header p {
+                font-size: 14px;
+            }
+            
+            .login-body {
+                padding: 30px 25px;
+            }
+            
+            .login-body h2 {
+                font-size: 22px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            
+            .form-group {
+                margin-bottom: 16px;
+            }
+            
+            .login-footer {
+                padding: 20px 25px;
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .login-wrapper {
+                padding: 15px 5px;
+            }
+            
+            .login-container {
+                border-radius: 12px;
+                margin: 5px;
+            }
+            
+            .login-header {
+                min-height: 180px;
+                padding: 25px 20px;
+            }
+            
+            .login-header .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+                margin-bottom: 15px;
+            }
+            
+            .login-header h1 {
+                font-size: 22px;
+            }
+            
+            .login-body {
+                padding: 25px 20px;
+            }
+            
+            .login-body h2 {
+                font-size: 20px;
+            }
+            
+            .login-body .subtitle {
+                font-size: 13px;
+            }
+            
+            .form-group input,
+            .form-group select {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            .btn {
+                padding: 14px 20px;
+                font-size: 15px;
+            }
+            
+            .employee-info {
+                padding: 14px;
+            }
+            
+            .employee-info h3 {
+                font-size: 15px;
+            }
+            
+            .employee-info p {
+                font-size: 13px;
+            }
+            
+            .login-footer {
+                padding: 18px 20px;
+            }
+        }
+        
+        /* Mejoras para pantallas muy pequeñas */
+        @media (max-width: 360px) {
+            .login-body {
+                padding: 20px 15px;
+            }
+            
+            .form-group input,
+            .form-group select {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            
+            .btn {
+                padding: 12px 18px;
+                font-size: 14px;
             }
         }
     </style>
@@ -602,7 +707,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
 <body>
     <!-- Banner de ancho completo -->
     <div class="banner-container">
-        <img src="publico/imagenes/logos-institucionales.jpg" alt="Gobierno Bolivariano - ISPEB - Dirección de Telemática">
+        <img src="publico/imagenes/cintillo.png" alt="Gobierno Bolivariano - ISPEB - Dirección de Telemática">
     </div>
     
     <!-- Contenedor centrado para el registro -->
@@ -614,9 +719,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
                 <div class="particle"></div>
                 <div class="particle"></div>
                 <div class="particle"></div>
-                <div class="logo">📁</div>
-                <h1>ISPEB</h1>
-                <p>Dirección de Telemática</p>
+                <div class="logo"><img src="publico/imagenes/logo-telematica-letras-blancas.png" alt="ISPEB Telemática"></div>
             </div>
             
             <div class="login-body">
@@ -899,10 +1002,8 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
                 const data = await response.json();
                 
                 if (data.success) {
-                    mostrarAlerta('step2', data.message, 'success');
-                    setTimeout(() => {
-                        window.location.href = 'index.php';
-                    }, 2000);
+                    // Redirigir al login con parámetros para mostrar SweetAlert
+                    window.location.href = `index.php?registro_exitoso=1&username=${encodeURIComponent(data.username)}`;
                 } else {
                     mostrarAlerta('step2', data.error, 'error');
                     btnCompletar.disabled = false;

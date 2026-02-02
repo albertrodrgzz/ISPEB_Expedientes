@@ -44,11 +44,13 @@ $stmt = $db->prepare("
     SELECT 
         u.id,
         u.username,
-        u.nivel_acceso,
+        c.nivel_acceso,
         u.estado,
         u.password_hash
     FROM usuarios u
-    WHERE u.cedula = ?
+    INNER JOIN funcionarios f ON u.funcionario_id = f.id
+    INNER JOIN cargos c ON f.cargo_id = c.id
+    WHERE f.cedula = ?
 ");
 $stmt->execute([$funcionario['cedula']]);
 $usuario_existente = $stmt->fetch();
@@ -278,6 +280,11 @@ if ($funcionario['fecha_ingreso']) {
             height: 18px;
             flex-shrink: 0;
             stroke-width: 2;
+            pointer-events: none;
+        }
+        
+        .nav-item span {
+            pointer-events: none;
         }
         
         .nav-item:hover {
@@ -936,6 +943,67 @@ if ($funcionario['fecha_ingreso']) {
                     </nav>
                 </aside>
                 
+                <script>
+                // Define switchTab function early so onclick handlers work
+                const funcionarioId = <?php echo $id; ?>;
+                let currentTab = 'info';
+                
+                function switchTab(tabName, element) {
+                    console.log('switchTab called:', tabName, element);
+                    
+                    // Ocultar todas las pestañas
+                    document.querySelectorAll('.tab-content').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    
+                    // Desactivar todas las tarjetas y nav-items
+                    document.querySelectorAll('.tab-card').forEach(card => {
+                        card.classList.remove('active');
+                    });
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // Activar pestaña seleccionada
+                    const tabElement = document.getElementById('tab-' + tabName);
+                    if (tabElement) {
+                        tabElement.classList.add('active');
+                        console.log('Tab activated:', 'tab-' + tabName);
+                    } else {
+                        console.error('Tab not found:', 'tab-' + tabName);
+                    }
+                    
+                    element.classList.add('active');
+                    
+                    currentTab = tabName;
+                    
+                    // Cargar datos según la pestaña
+                    switch(tabName) {
+                        case 'cargas':
+                            if (typeof cargarCargasFamiliares === 'function') cargarCargasFamiliares();
+                            break;
+                        case 'activos':
+                            if (typeof cargarActivos === 'function') cargarActivos();
+                            break;
+                        case 'vacaciones-calc':
+                            if (typeof calcularVacaciones === 'function') calcularVacaciones();
+                            break;
+                        case 'riesgo':
+                            if (typeof cargarBarraRiesgo === 'function') cargarBarraRiesgo();
+                            break;
+                        case 'nombramientos':
+                            if (typeof cargarNombramientos === 'function') cargarNombramientos();
+                            break;
+                        case 'vacaciones':
+                            if (typeof cargarVacaciones === 'function') cargarVacaciones();
+                            break;
+                        case 'amonestaciones':
+                            if (typeof cargarAmonestaciones === 'function') cargarAmonestaciones();
+                            break;
+                    }
+                }
+                </script>
+                
                 <!-- CONTENIDO -->
                 <main class="expediente-content">
             
@@ -1156,6 +1224,22 @@ if ($funcionario['fecha_ingreso']) {
                     </div>
                 </div>
             </div>
+            
+            <!-- TAB 9: Retiros/Despidos -->
+            <div id="tab-salidas" class="tab-content">
+                <div class="content-card">
+                    <h3 class="section-title">
+                        <span class="section-title-icon">🚪</span>
+                        Retiros y Despidos
+                    </h3>
+                    <div id="salidas-container">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p class="empty-state-text">No hay registros de retiros o despidos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -1208,53 +1292,6 @@ if ($funcionario['fecha_ingreso']) {
     </div>
     
     <script>
-        const funcionarioId = <?php echo $id; ?>;
-        let currentTab = 'info';
-        
-        // Sistema de Pestañas
-        function switchTab(tabName, element) {
-            // Ocultar todas las pestañas
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Desactivar todas las tarjetas
-            document.querySelectorAll('.tab-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            
-            // Activar pestaña seleccionada
-            document.getElementById('tab-' + tabName).classList.add('active');
-            element.classList.add('active');
-            
-            currentTab = tabName;
-            
-            // Cargar datos según la pestaña
-            switch(tabName) {
-                case 'cargas':
-                    cargarCargasFamiliares();
-                    break;
-                case 'activos':
-                    cargarActivos();
-                    break;
-                case 'vacaciones-calc':
-                    calcularVacaciones();
-                    break;
-                case 'riesgo':
-                    cargarBarraRiesgo();
-                    break;
-                case 'nombramientos':
-                    cargarNombramientos();
-                    break;
-                case 'vacaciones':
-                    cargarVacaciones();
-                    break;
-                case 'amonestaciones':
-                    cargarAmonestaciones();
-                    break;
-            }
-        }
-        
         // TAB 2: Cargas Familiares
         function cargarCargasFamiliares() {
             fetch(`ajax/get_cargas_familiares.php?funcionario_id=${funcionarioId}`)
@@ -1322,14 +1359,31 @@ if ($funcionario['fecha_ingreso']) {
                 if (data.success) {
                     cerrarModalCarga();
                     cargarCargasFamiliares();
-                    alert('Carga familiar guardada exitosamente');
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: 'Carga familiar guardada exitosamente',
+                        confirmButtonColor: '#00a8cc',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 } else {
-                    alert('Error: ' + data.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'No se pudo guardar la carga familiar',
+                        confirmButtonColor: '#ef4444'
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al guardar la carga familiar');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Conexión',
+                    text: 'No se pudo guardar la carga familiar. Intente nuevamente.',
+                    confirmButtonColor: '#ef4444'
+                });
             });
         }
         
