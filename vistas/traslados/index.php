@@ -183,6 +183,15 @@ $traslados = $stmt->fetchAll();
                 </div>
             </div>
             
+            
+            <!-- Botón Nuevo Traslado -->
+            <div style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
+                <button type="button" onclick="abrirModalTraslado()" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">➕</span>
+                    Nuevo Traslado
+                </button>
+            </div>
+
             <!-- Tabla -->
             <div class="card">
                 <div class="card-header">
@@ -238,6 +247,9 @@ $traslados = $stmt->fetchAll();
     </div>
     
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!-- Filtros en Tiempo Real -->
     <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
@@ -249,6 +261,214 @@ $traslados = $stmt->fetchAll();
             tableBodySelector: '#traslados-tbody',
             countSelector: '.card-subtitle'
         });
+
+        // Función para abrir modal de nuevo traslado
+        async function abrirModalTraslado() {
+            // Obtener lista de funcionarios activos
+            const funcionariosResponse = await fetch('../funcionarios/ajax/listar.php');
+            const funcionarios = await funcionariosResponse.json();
+            
+            // Obtener lista de departamentos activos
+            const departamentosResponse = await fetch('../admin/ajax/get_departamentos.php');
+            const departamentos = await departamentosResponse.json();
+
+            if (!funcionarios.success || !departamentos.success) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar los datos necesarios'
+                });
+                return;
+            }
+
+            // Crear opciones de funcionarios
+            const funcionariosOptions = funcionarios.data
+                .filter(f => f.estado === 'activo')
+                .map(f => `<option value="${f.id}" data-departamento="${f.departamento_id}">${f.nombres} ${f.apellidos} (${f.cedula})</option>`)
+                .join('');
+
+            // Crear opciones de departamentos
+            const departamentosOptions = departamentos.data
+                .filter(d => d.estado === 'activo')
+                .map(d => `<option value="${d.id}">${d.nombre}</option>`)
+                .join('');
+
+            const { value: formValues } = await Swal.fire({
+                title: '🔄 Registrar Nuevo Traslado',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Funcionario *</label>
+                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <option value="">Seleccione un funcionario...</option>
+                                ${funcionariosOptions}
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Departamento Actual</label>
+                            <input type="text" id="swal-dept-actual" class="swal2-input" style="width: 100%; padding: 10px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px;" readonly placeholder="Se mostrará automáticamente">
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Departamento Destino *</label>
+                            <select id="swal-depto-destino" class="swal2-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <option value="">Seleccione departamento destino...</option>
+                                ${departamentosOptions}
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha del Traslado *</label>
+                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Motivo del Traslado *</label>
+                            <textarea id="swal-motivo" class="swal2-textarea" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 100px;" placeholder="Describa el motivo del traslado..."></textarea>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF (Opcional)</label>
+                            <input type="file" id="swal-archivo" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <small style="color: #718096; font-size: 12px;">Tamaño máximo: 5MB</small>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: 'Registrar Traslado',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#6b7280',
+                didOpen: () => {
+                    // Actualizar departamento actual cuando se selecciona funcionario
+                    const funcionarioSelect = document.getElementById('swal-funcionario');
+                    const deptActualInput = document.getElementById('swal-dept-actual');
+                    
+                    funcionarioSelect.addEventListener('change', function() {
+                        const selectedOption = this.options[this.selectedIndex];
+                        if (selectedOption.value) {
+                            const deptId = selectedOption.getAttribute('data-departamento');
+                            const dept = departamentos.data.find(d => d.id == deptId);
+                            deptActualInput.value = dept ? dept.nombre : '';
+                        } else {
+                            deptActualInput.value = '';
+                        }
+                    });
+                },
+                preConfirm: () => {
+                    const funcionario_id = document.getElementById('swal-funcionario').value;
+                    const departamento_destino_id = document.getElementById('swal-depto-destino').value;
+                    const fecha_evento = document.getElementById('swal-fecha').value;
+                    const motivo = document.getElementById('swal-motivo').value;
+                    const archivo = document.getElementById('swal-archivo').files[0];
+
+                    // Validaciones
+                    if (!funcionario_id) {
+                        Swal.showValidationMessage('Debe seleccionar un funcionario');
+                        return false;
+                    }
+                    if (!departamento_destino_id) {
+                        Swal.showValidationMessage('Debe seleccionar el departamento destino');
+                        return false;
+                    }
+                    if (!fecha_evento) {
+                        Swal.showValidationMessage('Debe ingresar la fecha del traslado');
+                        return false;
+                    }
+                    if (!motivo || motivo.trim().length < 10) {
+                        Swal.showValidationMessage('El motivo debe tener al menos 10 caracteres');
+                        return false;
+                    }
+                    if (archivo && archivo.size > 5 * 1024 * 1024) {
+                        Swal.showValidationMessage('El archivo no puede superar 5MB');
+                        return false;
+                    }
+                    if (archivo && archivo.type !== 'application/pdf') {
+                        Swal.showValidationMessage('Solo se permiten archivos PDF');
+                        return false;
+                    }
+
+                    return {
+                        funcionario_id,
+                        departamento_destino_id,
+                        fecha_evento,
+                        motivo,
+                        archivo
+                    };
+                }
+            });
+
+            if (formValues) {
+                registrarTraslado(formValues);
+            }
+        }
+
+        // Función para registrar el traslado
+        async function registrarTraslado(data) {
+            // Mostrar loading
+            Swal.fire({
+                title: 'Procesando...',
+                html: 'Registrando traslado en el sistema...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                // Preparar FormData
+                const formData = new FormData();
+                formData.append('accion', 'registrar_traslado');
+                formData.append('funcionario_id', data.funcionario_id);
+                formData.append('departamento_destino_id', data.departamento_destino_id);
+                formData.append('fecha_evento', data.fecha_evento);
+                formData.append('motivo', data.motivo);
+                
+                if (data.archivo) {
+                    formData.append('archivo_pdf', data.archivo);
+                }
+
+                // Enviar al backend
+                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Traslado Registrado!',
+                        html: `
+                            <p>El traslado se ha registrado exitosamente.</p>
+                            <p style="margin-top: 12px;"><strong>Nuevo departamento:</strong> ${result.data.departamento_destino}</p>
+                        `,
+                        confirmButtonColor: '#10b981'
+                    });
+
+                    // Recargar página para mostrar el nuevo registro
+                    window.location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al Registrar',
+                        text: result.error || 'Ocurrió un error al procesar el traslado',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Conexión',
+                    text: 'No se pudo conectar con el servidor. Por favor, inténtelo de nuevo.',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        }
     </script>
 </body>
 </html>

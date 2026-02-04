@@ -1000,6 +1000,9 @@ if ($funcionario['fecha_ingreso']) {
                         case 'amonestaciones':
                             if (typeof cargarAmonestaciones === 'function') cargarAmonestaciones();
                             break;
+                        case 'salidas':
+                            if (typeof cargarSalidas === 'function') cargarSalidas();
+                            break;
                     }
                 }
                 </script>
@@ -1228,10 +1231,18 @@ if ($funcionario['fecha_ingreso']) {
             <!-- TAB 9: Retiros/Despidos -->
             <div id="tab-salidas" class="tab-content">
                 <div class="content-card">
-                    <h3 class="section-title">
-                        <span class="section-title-icon">🚪</span>
-                        Retiros y Despidos
-                    </h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3 class="section-title" style="margin: 0;">
+                            <span class="section-title-icon">🚪</span>
+                            Retiros y Despidos
+                        </h3>
+                        <?php if ($funcionario['estado'] === 'activo'): ?>
+                        <button type="button" onclick="procesarSalidaDesdePerfil()" class="btn" style="padding: 10px 20px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                            <span>⚠️</span>
+                            Procesar Salida
+                        </button>
+                        <?php endif; ?>
+                    </div>
                     <div id="salidas-container">
                         <div class="empty-state">
                             <div class="empty-state-icon">📋</div>
@@ -1501,34 +1512,225 @@ if ($funcionario['fecha_ingreso']) {
                 });
         }
         
-        // TAB 6, 7, 8: Historial
+        // TAB 6, 7, 8, 9: Historial
         function cargarNombramientos() {
-            const db = <?php echo json_encode(getDB()); ?>;
-            // Por implementar: consulta a tabla nombramientos
-            document.getElementById('nombramientos-container').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📄</div>
-                    <p class="empty-state-text">No hay nombramientos registrados</p>
-                </div>
-            `;
+            const funcionarioId = <?php echo $id; ?>;
+            const container = document.getElementById('nombramientos-container');
+            
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">Cargando...</div>';
+            
+            fetch(`ajax/obtener_historial.php?funcionario_id=${funcionarioId}&tipo_evento=NOMBRAMIENTO`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.total > 0) {
+                        let html = '<div class="table-responsive"><table class="data-table" style="width: 100%;"><thead><tr>';
+                        html += '<th>Fecha</th><th>Cargo</th><th>Departamento</th><th>Documento</th></tr></thead><tbody>';
+                        
+                        data.data.forEach(item => {
+                            const detalles = item.detalles || {};
+                            html += '<tr>';
+                            html += `<td><strong>${item.fecha_evento_formateada}</strong></td>`;
+                            html += `<td>${detalles.cargo || 'N/A'}</td>`;
+                            html += `<td><span style="padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 12px;">${detalles.departamento || 'N/A'}</span></td>`;
+                            html += '<td>';
+                            if (item.tiene_archivo) {
+                                html += `<a href="../../${item.ruta_archivo_pdf}" target="_blank" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">📥 Ver PDF</a>`;
+                            } else {
+                                html += '-';
+                            }
+                            html += '</td></tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📄</div>
+                                <p class="empty-state-text">No hay nombramientos registrados</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">⚠️</div>
+                            <p class="empty-state-text">Error al cargar nombramientos</p>
+                        </div>
+                    `;
+                });
         }
         
         function cargarVacaciones() {
-            document.getElementById('vacaciones-historial-container').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">🌴</div>
-                    <p class="empty-state-text">No hay vacaciones registradas</p>
-                </div>
-            `;
+            const funcionarioId = <?php echo $id; ?>;
+            const container = document.getElementById('vacaciones-historial-container');
+            
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">Cargando...</div>';
+            
+            fetch(`ajax/obtener_historial.php?funcionario_id=${funcionarioId}&tipo_evento=VACACION`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.total > 0) {
+                        let html = '<div class="table-responsive"><table class="data-table" style="width: 100%;"><thead><tr>';
+                        html += '<th>Fecha Inicio</th><th>Fecha Fin</th><th>Días</th><th>Observaciones</th><th>Documento</th></tr></thead><tbody>';
+                        
+                        data.data.forEach(item => {
+                            const detalles = item.detalles || {};
+                            html += '<tr>';
+                            html += `<td><strong>${item.fecha_evento_formateada}</strong></td>`;
+                            html += `<td><strong>${item.fecha_fin_formateada || '-'}</strong></td>`;
+                            html += `<td><span style="padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 12px;">${detalles.dias_habiles || 0} días</span></td>`;
+                            html += `<td>${detalles.observaciones || '-'}</td>`;
+                            html += '<td>';
+                            if (item.tiene_archivo) {
+                                html += `<a href="../../${item.ruta_archivo_pdf}" target="_blank" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">📥 Ver PDF</a>`;
+                            } else {
+                                html += '-';
+                            }
+                            html += '</td></tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🌴</div>
+                                <p class="empty-state-text">No hay vacaciones registradas</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">⚠️</div>
+                            <p class="empty-state-text">Error al cargar vacaciones</p>
+                        </div>
+                    `;
+                });
         }
         
         function cargarAmonestaciones() {
-            document.getElementById('amonestaciones-container').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">⚡</div>
-                    <p class="empty-state-text">No hay amonestaciones registradas</p>
-                </div>
-            `;
+            const funcionarioId = <?php echo $id; ?>;
+            const container = document.getElementById('amonestaciones-container');
+            
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">Cargando...</div>';
+            
+            fetch(`ajax/obtener_historial.php?funcionario_id=${funcionarioId}&tipo_evento=AMONESTACION`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.total > 0) {
+                        let html = '<div class="table-responsive"><table class="data-table" style="width: 100%;"><thead><tr>';
+                        html += '<th>Fecha</th><th>Tipo Falta</th><th>Motivo</th><th>Sanción</th><th>Documento</th></tr></thead><tbody>';
+                        
+                        data.data.forEach(item => {
+                            const detalles = item.detalles || {};
+                            const tipoFalta = detalles.tipo_falta || 'leve';
+                            let badgeClass = 'background: #fef3c7; color: #92400e;';
+                            if (tipoFalta === 'grave') badgeClass = 'background: #fed7aa; color: #7c2d12;';
+                            if (tipoFalta === 'muy_grave') badgeClass = 'background: #fecaca; color: #991b1b;';
+                            
+                            html += '<tr>';
+                            html += `<td><strong>${item.fecha_evento_formateada}</strong></td>`;
+                            html += `<td><span style="padding: 4px 12px; ${badgeClass} border-radius: 12px; font-size: 12px; text-transform: capitalize;">${tipoFalta.replace('_', ' ')}</span></td>`;
+                            html += `<td style="max-width: 300px;">${detalles.motivo || '-'}</td>`;
+                            html += `<td>${detalles.sancion || '-'}</td>`;
+                            html += '<td>';
+                            if (item.tiene_archivo) {
+                                html += `<a href="../../${item.ruta_archivo_pdf}" target="_blank" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">📥 Ver PDF</a>`;
+                            } else {
+                                html += '-';
+                            }
+                            html += '</td></tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">⚡</div>
+                                <p class="empty-state-text">No hay amonestaciones registradas</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">⚠️</div>
+                            <p class="empty-state-text">Error al cargar amonestaciones</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        function cargarSalidas() {
+            const funcionarioId = <?php echo $id; ?>;
+            const container = document.getElementById('salidas-container');
+            
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">Cargando...</div>';
+            
+            // Buscar tanto despidos como renuncias
+            Promise.all([
+                fetch(`ajax/obtener_historial.php?funcionario_id=${funcionarioId}&tipo_evento=DESPIDO`).then(r => r.json()),
+                fetch(`ajax/obtener_historial.php?funcionario_id=${funcionarioId}&tipo_evento=RENUNCIA`).then(r => r.json())
+            ])
+            .then(([despidos, renuncias]) => {
+                const allSalidas = [];
+                if (despidos.success) allSalidas.push(...despidos.data);
+                if (renuncias.success) allSalidas.push(...renuncias.data);
+                
+                if (allSalidas.length > 0) {
+                    // Ordenar por fecha
+                    allSalidas.sort((a, b) => new Date(b.fecha_evento) - new Date(a.fecha_evento));
+                    
+                    let html = '<div class="table-responsive"><table class="data-table" style="width: 100%;"><thead><tr>';
+                    html += '<th>Tipo</th><th>Fecha</th><th>Motivo</th><th>Cargo al Retiro</th><th>Documento</th></tr></thead><tbody>';
+                    
+                    allSalidas.forEach(item => {
+                        const detalles = item.detalles || {};
+                        const esDespido = item.tipo_evento === 'DESPIDO';
+                        
+                        html += '<tr>';
+                        html += `<td><span style="padding: 4px 12px; background: ${esDespido ? '#fecaca; color: #991b1b' : '#dbeafe; color: #1e40af'}; border-radius: 12px; font-size: 12px;">${item.tipo_evento}</span></td>`;
+                        html += `<td><strong>${item.fecha_evento_formateada}</strong></td>`;
+                        html += `<td style="max-width: 350px;">${detalles.motivo || '-'}</td>`;
+                        html += `<td>${detalles.cargo_al_retiro || '-'}</td>`;
+                        html += '<td>';
+                        if (item.tiene_archivo) {
+                            html += `<a href="../../${item.ruta_archivo_pdf}" target="_blank" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">📥 Ver PDF</a>`;
+                        } else {
+                            html += '-';
+                        }
+                        html += '</td></tr>';
+                    });
+                    
+                    html += '</tbody></table></div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p class="empty-state-text">No hay registros de retiros o despidos</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <p class="empty-state-text">Error al cargar registros de salidas</p>
+                    </div>
+                `;
+            });
         }
         
         // Cerrar modal al hacer clic fuera
@@ -1659,6 +1861,177 @@ if ($funcionario['fecha_ingreso']) {
                 mostrarError('Error de conexión al crear el usuario');
                 console.error(error);
             });
+        }
+        
+        // ==========================================
+        // PROCESAR SALIDA DESDE PERFIL
+        // ==========================================
+        
+        async function procesarSalidaDesdePerfil() {
+            const funcionarioId = <?php echo $id; ?>;
+            const funcionarioNombre = '<?php echo addslashes($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?>';
+            
+            // Selector de tipo de salida
+            const { value: tipoSalida } = await Swal.fire({
+                title: 'Tipo de Baja',
+                html: `
+                    <div style="text-align: left;">
+                        <p style="margin-bottom: 20px; color: #718096;">
+                            <strong>Funcionario:</strong> ${funcionarioNombre}
+                        </p>
+                        <p style="margin-bottom: 16px; font-weight: 600; color: #2d3748;">Seleccione el tipo de baja a procesar:</p>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: '❌ Despido',
+                denyButtonText: '📝 Renuncia',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc2626',
+                denyButtonColor: '#3b82f6',
+                cancelButtonColor: '#6b7280'
+            });
+            
+            if (!tipoSalida) return;
+            
+            const esDespido = tipoSalida === true; // true = confirmed (despido), false = denied (renuncia)
+            const tipoEvento = esDespido ? 'DESPIDO' : 'RENUNCIA';
+            const titulo = esDespido ? '⚠️ Procesar Despido' : '📝 Procesar Renuncia';
+            const colorBoton = esDespido ? '#dc2626' : '#3b82f6';
+            const minCaracteres = esDespido ? 20 : 15;
+            
+            // Formulario de datos
+            const { value: formValues } = await Swal.fire({
+                title: titulo,
+                html: `
+                    ${esDespido ? `
+                    <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                        <div style="display: flex; align-items: center; gap: 10px; color: #991b1b;">
+                            <span style="font-size: 28px;">⚠️</span>
+                            <div style="text-align: left; flex: 1;">
+                                <strong style="display: block; font-size: 14px; margin-bottom: 3px;">ADVERTENCIA</strong>
+                                <p style="margin: 0; font-size: 12px;">Esta acción es <strong>IRREVERSIBLE</strong>. El funcionario será <strong>DESACTIVADO</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : `
+                    <div style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                        <div style="display: flex; align-items: center; gap: 10px; color: #1e40af;">
+                            <span style="font-size: 24px;">ℹ️</span>
+                            <div style="text-align: left; flex: 1;">
+                                <p style="margin: 0; font-size: 12px;">El funcionario será marcado como inactivo en el sistema.</p>
+                            </div>
+                        </div>
+                    </div>
+                    `}
+                    
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 14px; background: #f7fafc; padding: 12px; border-radius: 8px;">
+                            <strong style="color: #2d3748;">Funcionario:</strong> ${funcionarioNombre}
+                        </div>
+                        
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Fecha del ${esDespido ? 'Despido' : 'Renuncia'} *</label>
+                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 100%; padding: 9px;" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Motivo *</label>
+                            <textarea id="swal-motivo" class="swal2-textarea" style="width: 100%; padding: 9px; min-height: 100px;" placeholder="${esDespido ? 'Describa detalladamente el motivo del despido...' : 'Ejemplo: Renuncia voluntaria - Motivos personales'}"></textarea>
+                            <small style="color: #718096; font-size: 12px;">Mínimo ${minCaracteres} caracteres</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Documento PDF (Opcional)</label>
+                            <input type="file" id="swal-archivo" accept=".pdf" class="swal2-file" style="width: 100%; padding: 9px;">
+                            <small style="color: #718096; font-size: 12px;">Tamaño máximo: 5MB</small>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: `Procesar ${esDespido ? 'Despido' : 'Renuncia'}`,
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: colorBoton,
+                cancelButtonColor: '#6b7280',
+                preConfirm: () => {
+                    const fecha_evento = document.getElementById('swal-fecha').value;
+                    const motivo = document.getElementById('swal-motivo').value;
+                    const archivo = document.getElementById('swal-archivo').files[0];
+                    
+                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha'); return false; }
+                    if (!motivo || motivo.trim().length < minCaracteres) { Swal.showValidationMessage(`El motivo debe tener al menos ${minCaracteres} caracteres`); return false; }
+                    if (archivo && archivo.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Archivo muy grande (máx 5MB)'); return false; }
+                    if (archivo && archivo.type !== 'application/pdf') { Swal.showValidationMessage('Solo archivos PDF'); return false; }
+                    
+                    return { fecha_evento, motivo, archivo };
+                }
+            });
+            
+            if (!formValues) return;
+            
+            // Confirmación final para despidos
+            if (esDespido) {
+                const confirmacion = await Swal.fire({
+                    title: '¿Está completamente seguro?',
+                    html: `
+                        <div style="text-align: left; color: #1f2937;">
+                            <p style="margin-bottom: 12px;"><strong>Al confirmar:</strong></p>
+                            <ul style="margin: 0; padding-left: 20px;">
+                                <li style="margin-bottom: 6px;">Funcionario: <strong>INACTIVO</strong></li>
+                                <li style="margin-bottom: 6px;">Usuario: <strong>DESACTIVADO</strong></li>
+                                <li style="margin-bottom: 6px;">Acción: <strong>NO SE PUEDE DESHACER</strong></li>
+                            </ul>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, procesar',
+                    cancelButtonText: 'No, cancelar',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#10b981'
+                });
+                
+                if (!confirmacion.isConfirmed) return;
+            }
+            
+            // Procesar
+            Swal.fire({ title: 'Procesando...', html: `Registrando ${tipoEvento.toLowerCase()}...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                const formData = new FormData();
+                formData.append('accion', 'registrar_despido');
+                formData.append('funcionario_id', funcionarioId);
+                formData.append('tipo_evento', tipoEvento);
+                formData.append('fecha_evento', formValues.fecha_evento);
+                formData.append('motivo', formValues.motivo);
+                if (formValues.archivo) formData.append('archivo_pdf', formValues.archivo);
+                
+                const response = await fetch('ajax/gestionar_historial.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: `${esDespido ? 'Despido' : 'Renuncia'} Procesado`,
+                        html: `
+                            <p>El registro se completó exitosamente.</p>
+                            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 10px; margin-top: 14px; text-align: left;">
+                                <p style="margin: 0; font-size: 13px;"><strong>✓ Funcionario:</strong> Inactivo</p>
+                                <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Usuario:</strong> Desactivado</p>
+                            </div>
+                        `,
+                        confirmButtonColor: '#10b981'
+                    });
+                    window.location.reload();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al procesar', confirmButtonColor: '#ef4444' });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
+            }
         }
     </script>
     

@@ -172,6 +172,15 @@ $despidos = $stmt->fetchAll();
                 </div>
             </div>
             
+            
+            <!-- Botón Procesar Despido -->
+            <div style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
+                <button type="button" onclick="abrirModalDespido()" class="btn" style="padding: 12px 24px; font-size: 16px; display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
+                    <span style="font-size: 20px;">⚠️</span>
+                    Procesar Baja (Despido)
+                </button>
+            </div>
+            
             <!-- Tabla -->
             <div class="card">
                 <div class="card-header">
@@ -225,6 +234,9 @@ $despidos = $stmt->fetchAll();
     </div>
     
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!-- Filtros en Tiempo Real -->
     <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
@@ -235,6 +247,218 @@ $despidos = $stmt->fetchAll();
             tableBodySelector: 'table tbody',
             countSelector: '.card-subtitle'
         });
+
+        // Función para abrir modal de despido
+        async function abrirModalDespido() {
+            // Obtener lista de funcionarios activos
+            const funcionariosResponse = await fetch('../funcionarios/ajax/listar.php');
+            const funcionarios = await funcionariosResponse.json();
+
+            if (!funcionarios.success) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar los funcionarios'
+                });
+                return;
+            }
+
+            // Filtrar solo funcionarios activos
+            const funcionariosActivos = funcionarios.data.filter(f => f.estado === 'activo');
+
+            if (funcionariosActivos.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin Funcionarios',
+                    text: 'No hay funcionarios activos para procesar'
+                });
+                return;
+            }
+
+            // Crear opciones
+            const funcionariosOptions = funcionariosActivos
+                .map(f => `<option value="${f.id}">${f.nombres} ${f.apellidos} (${f.cedula}) - ${f.cargo_nombre || 'Sin cargo'}</option>`)
+                .join('');
+
+            const { value: formValues } = await Swal.fire({
+                title: '⚠️ Procesar Baja por Despido',
+                html: `
+                    <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; color: #991b1b;">
+                            <span style="font-size: 32px;">⚠️</span>
+                            <div style="text-align: left; flex: 1;">
+                                <strong style="display: block; font-size: 16px; margin-bottom: 4px;">ADVERTENCIA IMPORTANTE</strong>
+                                <p style="margin: 0; font-size: 14px;">Esta acción es <strong>IRREVERSIBLE</strong>. El funcionario y su usuario serán <strong>DESACTIVADOS</strong> permanentemente en el sistema.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Funcionario a Despedir *</label>
+                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <option value="">Seleccione un funcionario...</option>
+                                ${funcionariosOptions}
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha del Despido *</label>
+                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Motivo del Despido *</label>
+                            <textarea id="swal-motivo" class="swal2-textarea" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 120px;" placeholder="Describa detalladamente el motivo del despido..."></textarea>
+                            <small style="color: #718096; font-size: 12px;">Este campo es obligatorio y debe tener al menos 20 caracteres.</small>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF (Opcional)</label>
+                            <input type="file" id="swal-archivo" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <small style="color: #718096; font-size: 12px;">Resolución o documento oficial (Tamaño máximo: 5MB)</small>
+                        </div>
+                    </div>
+                `,
+                width: '650px',
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar Despido',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                preConfirm: () => {
+                    const funcionario_id = document.getElementById('swal-funcionario').value;
+                    const fecha_evento = document.getElementById('swal-fecha').value;
+                    const motivo = document.getElementById('swal-motivo').value;
+                    const archivo = document.getElementById('swal-archivo').files[0];
+
+                    // Validaciones
+                    if (!funcionario_id) {
+                        Swal.showValidationMessage('Debe seleccionar un funcionario');
+                        return false;
+                    }
+                    if (!fecha_evento) {
+                        Swal.showValidationMessage('Debe ingresar la fecha del despido');
+                        return false;
+                    }
+                    if (!motivo || motivo.trim().length < 20) {
+                        Swal.showValidationMessage('El motivo debe tener al menos 20 caracteres');
+                        return false;
+                    }
+                    if (archivo && archivo.size > 5 * 1024 * 1024) {
+                        Swal.showValidationMessage('El archivo no puede superar 5MB');
+                        return false;
+                    }
+                    if (archivo && archivo.type !== 'application/pdf') {
+                        Swal.showValidationMessage('Solo se permiten archivos PDF');
+                        return false;
+                    }
+
+                    return {
+                        funcionario_id,
+                        fecha_evento,
+                        motivo,
+                        archivo
+                    };
+                }
+            });
+
+            if (formValues) {
+                // Segunda confirmación con advertencia más fuerte
+                const confirmacion = await Swal.fire({
+                    title: '¿Está completamente seguro?',
+                    html: `
+                        <div style="text-align: left; color: #1f2937;">
+                            <p style="margin-bottom: 12px;"><strong>Al confirmar esta acción:</strong></p>
+                            <ul style="margin: 0; padding-left: 20px;">
+                                <li style="margin-bottom: 8px;">El funcionario será marcado como <strong>INACTIVO</strong></li>
+                                <li style="margin-bottom: 8px;">Su usuario será <strong>DESACTIVADO</strong> y no podrá ingresar al sistema</li>
+                                <li style="margin-bottom: 8px;">Esta acción quedará registrada en el historial administrativo</li>
+                                <li style="margin-bottom: 8px;">La acción <strong>NO SE PUEDE DESHACER</strong></li>
+                            </ul>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, procesar despido',
+                    cancelButtonText: 'No, cancelar',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#10b981'
+                });
+
+                if (confirmacion.isConfirmed) {
+                    registrarDespido(formValues);
+                }
+            }
+        }
+
+        // Función para registrar el despido
+        async function registrarDespido(data) {
+            // Mostrar loading
+            Swal.fire({
+                title: 'Procesando...',
+                html: 'Registrando despido y desactivando funcionario...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                // Preparar FormData
+                const formData = new FormData();
+                formData.append('accion', 'registrar_despido');
+                formData.append('funcionario_id', data.funcionario_id);
+                formData.append('tipo_evento', 'DESPIDO');
+                formData.append('fecha_evento', data.fecha_evento);
+                formData.append('motivo', data.motivo);
+                
+                if (data.archivo) {
+                    formData.append('archivo_pdf', data.archivo);
+                }
+
+                // Enviar al backend
+                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Despido Procesado',
+                        html: `
+                            <p>El despido se ha registrado exitosamente.</p>
+                            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 16px; text-align: left;">
+                                <p style="margin: 0; font-size: 14px;"><strong>✓ Funcionario:</strong> Inactivo</p>
+                                <p style="margin: 8px 0 0 0; font-size: 14px;"><strong>✓ Usuario:</strong> Desactivado</p>
+                            </div>
+                        `,
+                        confirmButtonColor: '#10b981'
+                    });
+
+                    // Recargar página
+                    window.location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al Procesar',
+                        text: result.error || 'Ocurrió un error al registrar el despido',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Conexión',
+                    text: 'No se pudo conectar con el servidor. Por favor, inténtelo de nuevo.',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        }
     </script>
 </body>
 </html>

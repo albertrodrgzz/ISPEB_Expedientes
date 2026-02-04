@@ -23,63 +23,18 @@ SET time_zone = "+00:00";
 CREATE DATABASE IF NOT EXISTS `ispeb_expedientes` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `ispeb_expedientes`;
 
-DELIMITER $$
---
--- Procedimientos
---
-DROP PROCEDURE IF EXISTS `sp_validar_retiro`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_validar_retiro` (IN `p_funcionario_id` INT UNSIGNED)   BEGIN
-    SELECT 
-        COUNT(*) as total_activos,
-        GROUP_CONCAT(
-            CONCAT(tipo, ' - ', marca, ' ', modelo, ' (', serial, ')')
-            SEPARATOR ', '
-        ) as lista_activos
-    FROM activos_tecnologicos
-    WHERE funcionario_id = p_funcionario_id
-    AND estado = 'Asignado';
-END$$
-
-DELIMITER ;
+-- --------------------------------------------------------
+-- Procedimientos eliminados en v3.1:
+-- - sp_validar_retiro: Ya no se validan activos tecnológicos al despedir funcionarios
+-- --------------------------------------------------------
 
 -- --------------------------------------------------------
 
---
--- Estructura de tabla para la tabla `activos_tecnologicos`
---
-
-DROP TABLE IF EXISTS `activos_tecnologicos`;
-CREATE TABLE `activos_tecnologicos` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `funcionario_id` int(10) UNSIGNED DEFAULT NULL,
-  `tipo` enum('Laptop','PC','Radio','Tablet','TelÃÂ©fono','Switch','Router','Otro') NOT NULL,
-  `marca` varchar(100) DEFAULT NULL,
-  `modelo` varchar(100) DEFAULT NULL,
-  `serial` varchar(100) NOT NULL,
-  `estado` enum('Asignado','Disponible','En ReparaciÃÂ³n','Dado de Baja') DEFAULT 'Disponible',
-  `fecha_adquisicion` date DEFAULT NULL,
-  `fecha_asignacion` date DEFAULT NULL,
-  `observaciones` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `activos_tecnologicos`
---
-
-INSERT INTO `activos_tecnologicos` (`id`, `funcionario_id`, `tipo`, `marca`, `modelo`, `serial`, `estado`, `fecha_adquisicion`, `fecha_asignacion`, `observaciones`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'Laptop', 'HP', 'ProBook 450 G8', 'HP-LAP-001', 'Disponible', '2024-01-15', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(2, NULL, 'Laptop', 'Dell', 'Latitude 5420', 'DELL-LAP-002', 'Disponible', '2024-02-20', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(3, NULL, 'PC', 'HP', 'EliteDesk 800 G6', 'HP-PC-001', 'Disponible', '2023-11-10', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(4, NULL, 'PC', 'Dell', 'OptiPlex 7090', 'DELL-PC-002', 'Disponible', '2023-12-05', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(5, NULL, 'Radio', 'Motorola', 'DGP5550', 'MOT-RAD-001', 'Disponible', '2023-08-05', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(6, NULL, 'Radio', 'Motorola', 'DGP5550', 'MOT-RAD-002', 'Disponible', '2023-08-05', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(7, NULL, 'Tablet', 'Samsung', 'Galaxy Tab A8', 'SAM-TAB-001', 'Disponible', '2024-03-12', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(8, NULL, 'Switch', 'Cisco', 'Catalyst 2960', 'CISCO-SW-001', 'Disponible', '2023-06-10', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39'),
-(9, NULL, 'Router', 'Cisco', 'ISR 4331', 'CISCO-RT-001', 'Disponible', '2023-07-15', NULL, NULL, '2026-01-21 04:19:39', '2026-01-21 04:19:39');
-
 -- --------------------------------------------------------
+-- Tabla eliminada en v3.1: activos_tecnologicos
+-- Ya no se gestiona inventario de activos tecnológicos
+-- --------------------------------------------------------
+
 
 --
 -- Estructura de tabla para la tabla `auditoria`
@@ -445,8 +400,9 @@ CREATE TABLE `historial_administrativo` (
   `funcionario_id` int(10) UNSIGNED NOT NULL,
   `tipo_evento` enum('NOMBRAMIENTO','VACACION','AMONESTACION','REMOCION','TRASLADO','DESPIDO','RENUNCIA') NOT NULL,
   `fecha_evento` date NOT NULL,
-  `fecha_fin` date DEFAULT NULL COMMENT 'Para vacaciones: fecha de finalizaciÃÂ³n',
-  `detalles` text DEFAULT NULL COMMENT 'JSON con datos especÃÂ­ficos: motivo, tipo_falta, sancion, etc.',
+  `fecha_fin` date DEFAULT NULL COMMENT 'Para vacaciones: fecha de finalización',
+  `detalles` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'JSON con datos específicos: motivo, tipo_falta, sancion, departamento_origen, departamento_destino, etc.',
+  CONSTRAINT `chk_detalles_json` CHECK (json_valid(`detalles`)),
   `ruta_archivo_pdf` varchar(255) DEFAULT NULL,
   `nombre_archivo_original` varchar(255) DEFAULT NULL,
   `registrado_por` int(10) UNSIGNED DEFAULT NULL,
@@ -681,15 +637,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 
 --
--- Indices de la tabla `activos_tecnologicos`
+-- Indices eliminados en v3.1: activos_tecnologicos
 --
-ALTER TABLE `activos_tecnologicos`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `serial` (`serial`),
-  ADD KEY `idx_funcionario` (`funcionario_id`),
-  ADD KEY `idx_tipo` (`tipo`),
-  ADD KEY `idx_estado` (`estado`),
-  ADD KEY `idx_serial` (`serial`);
 
 --
 -- Indices de la tabla `auditoria`
@@ -791,10 +740,8 @@ ALTER TABLE `usuarios`
 --
 
 --
--- AUTO_INCREMENT de la tabla `activos_tecnologicos`
+-- AUTO_INCREMENT eliminado en v3.1: activos_tecnologicos
 --
-ALTER TABLE `activos_tecnologicos`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `auditoria`
@@ -855,10 +802,8 @@ ALTER TABLE `usuarios`
 --
 
 --
--- Filtros para la tabla `activos_tecnologicos`
+-- Filtros eliminados en v3.1: activos_tecnologicos
 --
-ALTER TABLE `activos_tecnologicos`
-  ADD CONSTRAINT `activos_tecnologicos_ibfk_1` FOREIGN KEY (`funcionario_id`) REFERENCES `funcionarios` (`id`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `auditoria`

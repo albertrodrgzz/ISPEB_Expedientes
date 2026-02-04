@@ -20,6 +20,12 @@ try {
     // Obtener datos del POST
     $data = json_decode(file_get_contents('php://input'), true);
     
+    // ⚠️ SEGURIDAD: Validar token CSRF
+    if (!verificarTokenCSRF($data['csrf_token'] ?? '')) {
+        http_response_code(403);
+        throw new Exception('Token CSRF inválido o ausente. Recargue la página e intente nuevamente.');
+    }
+    
     $funcionario_id = $data['funcionario_id'] ?? null;
     $password = $data['password'] ?? '';
     

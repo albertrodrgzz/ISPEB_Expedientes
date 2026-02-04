@@ -172,6 +172,15 @@ $renuncias = $stmt->fetchAll();
                 </div>
             </div>
             
+            
+            <!-- Botón Procesar Renuncia -->
+            <div style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
+                <button type="button" onclick="abrirModalRenuncia()" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px; display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #6366f1, #3b82f6);">
+                    <span style="font-size: 20px;">📝</span>
+                    Procesar Baja (Renuncia)
+                </button>
+            </div>
+            
             <!-- Tabla -->
             <div class="card">
                 <div class="card-header">
@@ -225,6 +234,9 @@ $renuncias = $stmt->fetchAll();
     </div>
     
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!-- Filtros en Tiempo Real -->
     <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
@@ -235,6 +247,125 @@ $renuncias = $stmt->fetchAll();
             tableBodySelector: 'table tbody',
             countSelector: '.card-subtitle'
         });
+
+        // Función para abrir modal de renuncia
+        async function abrirModalRenuncia() {
+            const funcionariosResponse = await fetch('../funcionarios/ajax/listar.php');
+            const funcionarios = await funcionariosResponse.json();
+
+            if (!funcionarios.success) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los funcionarios' });
+                return;
+            }
+
+            const funcionariosActivos = funcionarios.data.filter(f => f.estado === 'activo');
+            if (funcionariosActivos.length === 0) {
+                Swal.fire({ icon: 'info', title: 'Sin Funcionarios', text: 'No hay funcionarios activos' });
+                return;
+            }
+
+            const funcionariosOptions = funcionariosActivos
+                .map(f => `<option value="${f.id}">${f.nombres} ${f.apellidos} (${f.cedula})</option>`)
+                .join('');
+
+            const { value: formValues } = await Swal.fire({
+                title: '📝 Procesar Renuncia Voluntaria',
+                html: `
+                    <div style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                        <div style="display: flex; align-items: center; gap: 10px; color: #1e40af;">
+                            <span style="font-size: 28px;">ℹ️</span>
+                            <div style="text-align: left; flex: 1;">
+                                <strong style="display: block; font-size: 15px; margin-bottom: 3px;">Información Importante</strong>
+                                <p style="margin: 0; font-size: 13px;">El funcionario será <strong>DESACTIVADO</strong> en el sistema al confirmar esta renuncia.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Funcionario que Renuncia *</label>
+                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 9px; border: 1px solid #e2e8f0; border-radius: 7px;">
+                                <option value="">Seleccione...</option>
+                                ${funcionariosOptions}
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Fecha de Renuncia *</label>
+                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 100%; padding: 9px; border: 1px solid #e2e8f0; border-radius: 7px;" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Motivo / Observaciones *</label>
+                            <textarea id="swal-motivo" class="swal2-textarea" style="width: 100%; padding: 9px; border: 1px solid #e2e8f0; border-radius: 7px; min-height: 100px;" placeholder="Ejemplo: Renuncia voluntaria - Motivos personales"></textarea>
+                            <small style="color: #718096; font-size: 12px;">Mínimo 15 caracteres</small>
+                        </div>
+
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Carta de Renuncia PDF (Opcional)</label>
+                            <input type="file" id="swal-archivo" accept=".pdf" class="swal2-file" style="width: 100%; padding: 9px; border: 1px solid #e2e8f0; border-radius: 7px;">
+                            <small style="color: #718096; font-size: 12px;">Tamaño máximo: 5MB</small>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: 'Procesar Renuncia',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#6b7280',
+                preConfirm: () => {
+                    const funcionario_id = document.getElementById('swal-funcionario').value;
+                    const fecha_evento = document.getElementById('swal-fecha').value;
+                    const motivo = document.getElementById('swal-motivo').value;
+                    const archivo = document.getElementById('swal-archivo').files[0];
+
+                    if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
+                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha'); return false; }
+                    if (!motivo || motivo.trim().length < 15) { Swal.showValidationMessage('El motivo debe tener al menos 15 caracteres'); return false; }
+                    if (archivo && archivo.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Archivo muy grande (máx 5MB)'); return false; }
+                    if (archivo && archivo.type !== 'application/pdf') { Swal.showValidationMessage('Solo archivos PDF'); return false; }
+
+                    return { funcionario_id, fecha_evento, motivo, archivo };
+                }
+            });
+
+            if (formValues) {
+                registrarRenuncia(formValues);
+            }
+        }
+
+        async function registrarRenuncia(data) {
+            Swal.fire({ title: 'Procesando...', html: 'Registrando renuncia...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const formData = new FormData();
+                formData.append('accion', 'registrar_despido');
+                formData.append('funcionario_id', data.funcionario_id);
+                formData.append('tipo_evento', 'RENUNCIA');
+                formData.append('fecha_evento', data.fecha_evento);
+                formData.append('motivo', data.motivo);
+                if (data.archivo) formData.append('archivo_pdf', data.archivo);
+
+                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Renuncia Procesada',
+                        html: '<p>La renuncia se registró exitosamente.</p><div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 10px; margin-top: 14px; text-align: left;"><p style="margin: 0; font-size: 13px;"><strong>✓ Funcionario:</strong> Inactivo</p><p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Usuario:</strong> Desactivado</p></div>',
+                        confirmButtonColor: '#10b981'
+                    });
+                    window.location.reload();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al procesar', confirmButtonColor: '#ef4444' });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo connect ar al servidor', confirmButtonColor: '#ef4444' });
+            }
+        }
     </script>
 </body>
 </html>
