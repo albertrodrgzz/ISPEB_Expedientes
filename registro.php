@@ -34,10 +34,6 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Completar Registro - Sistema de Expedientes ISPEB</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         :root {
             --color-primary: #00a8cc;
@@ -64,7 +60,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: #f5f7fa;
             min-height: 100vh;
             margin: 0;
@@ -293,7 +289,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             flex-direction: column;
             justify-content: center;
             overflow-y: auto;
-            max-height: calc(100vh - 150px);
+            /* Removed max-height to allow content to expand naturally */
         }
         
         /* Estilo del scrollbar */
@@ -548,7 +544,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             
             .login-body {
                 padding: 40px 35px;
-                max-height: none;
+                /* max-height removed globally - no need to override */
             }
             
             .login-footer {
@@ -597,7 +593,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             }
             
             .login-body {
-                padding: 30px 25px;
+                padding: 30px 25px 80px 25px; /* Extra padding-bottom for mobile keyboard */
             }
             
             .login-body h2 {
@@ -646,7 +642,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             }
             
             .login-body {
-                padding: 25px 20px;
+                padding: 25px 20px 100px 20px; /* Increased padding-bottom for small mobile keyboards */
             }
             
             .login-body h2 {
@@ -688,7 +684,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
         /* Mejoras para pantallas muy pequeñas */
         @media (max-width: 360px) {
             .login-body {
-                padding: 20px 15px;
+                padding: 20px 15px 120px 15px; /* Maximum padding-bottom for very small screens */
             }
             
             .form-group input,

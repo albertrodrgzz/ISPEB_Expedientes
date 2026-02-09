@@ -57,7 +57,6 @@ $remociones = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remociones - <?php echo APP_NAME; ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../publico/css/estilos.css">
     <style>
         .stats-grid {
@@ -233,7 +232,7 @@ $remociones = $stmt->fetchAll();
     
     
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <!-- Filtros en Tiempo Real -->
     <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>

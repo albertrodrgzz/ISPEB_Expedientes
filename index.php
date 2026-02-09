@@ -159,10 +159,6 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
     <title>Login - <?php echo APP_NAME; ?></title>
     
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         * {
             margin: 0;
@@ -188,7 +184,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: #f5f7fa;
             min-height: 100vh;
             margin: 0;
@@ -700,7 +696,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
     </div>
     
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     
     <script>
         // Detectar si viene de un registro exitoso

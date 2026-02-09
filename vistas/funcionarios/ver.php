@@ -97,7 +97,6 @@ if ($funcionario['fecha_ingreso']) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expediente: <?php echo htmlspecialchars($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?> - <?php echo APP_NAME; ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../publico/css/estilos.css">
     <style>
         :root {
@@ -2013,7 +2012,7 @@ if ($funcionario['fecha_ingreso']) {
     </script>
     
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="../../publico/js/sweetalert-utils.js"></script>
 
     

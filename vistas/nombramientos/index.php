@@ -66,7 +66,6 @@ $nombramientos = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nombramientos - <?php echo APP_NAME; ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../publico/css/estilos.css">
     <style>
         .stats-grid {
@@ -273,7 +272,7 @@ $nombramientos = $stmt->fetchAll();
     
     
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     
     <script>
         // Real-time search filter for nombramientos
@@ -380,9 +379,10 @@ $nombramientos = $stmt->fetchAll();
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF (Oficio/Gaceta) *</label>
-                            <input type="file" id="swal-pdf" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px;">
-                            <small style="color: #718096; font-size: 12px;">⚠️ Obligatorio - Máximo 5MB</small>
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento (PDF o Imagen) *</label>
+                            <input type="file" id="swal-pdf" accept="application/pdf,image/png,image/jpeg" class="swal2-file" style="width: 100%; padding: 10px;">
+                            <small style="color: #718096; font-size: 12px;">⚠️ Obligatorio - PDF, JPG o PNG - Máximo 5MB</small>
+                            <div id="file-preview" style="margin-top: 12px; display: none;"></div>
                         </div>
                     </div>
                 `,
@@ -403,6 +403,55 @@ $nombramientos = $stmt->fetchAll();
                             document.getElementById('cargo-actual-box').style.display = 'none';
                         }
                     });
+                    
+                    // Preview de archivo (imagen o PDF)
+                    document.getElementById('swal-pdf').addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        const previewContainer = document.getElementById('file-preview');
+                        
+                        if (!file) {
+                            previewContainer.style.display = 'none';
+                            return;
+                        }
+                        
+                        const fileType = file.type;
+                        const fileName = file.name;
+                        const fileSize = (file.size / 1024 / 1024).toFixed(2); // MB
+                        
+                        if (fileType.startsWith('image/')) {
+                            // Preview de imagen
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                previewContainer.innerHTML = `
+                                    <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 14px; text-align: center;">
+                                        <div style="margin-bottom: 10px;">
+                                            <img src="${event.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                        </div>
+                                        <div style="font-size: 12px; color: #166534;">
+                                            <strong>📷 ${fileName}</strong><br>
+                                            Tamaño: ${fileSize} MB
+                                        </div>
+                                    </div>
+                                `;
+                                previewContainer.style.display = 'block';
+                            };
+                            reader.readAsDataURL(file);
+                        } else if (fileType === 'application/pdf') {
+                            // Icono de PDF
+                            previewContainer.innerHTML = `
+                                <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px;">
+                                    <div style="font-size: 48px;">📄</div>
+                                    <div style="flex: 1; font-size: 12px; color: #92400e;">
+                                        <strong>${fileName}</strong><br>
+                                        Tamaño: ${fileSize} MB
+                                    </div>
+                                </div>
+                            `;
+                            previewContainer.style.display = 'block';
+                        } else {
+                            previewContainer.style.display = 'none';
+                        }
+                    });
                 },
                 preConfirm: () => {
                     const funcionario_id = document.getElementById('swal-funcionario').value;
@@ -413,9 +462,14 @@ $nombramientos = $stmt->fetchAll();
                     if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
                     if (!nuevo_cargo_id) { Swal.showValidationMessage('Seleccione el nuevo cargo'); return false; }
                     if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha'); return false; }
-                    if (!archivo_pdf) { Swal.showValidationMessage('El documento PDF es obligatorio'); return false; }
+                    if (!archivo_pdf) { Swal.showValidationMessage('El documento es obligatorio'); return false; }
                     if (archivo_pdf.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Archivo muy grande (máx 5MB)'); return false; }
-                    if (archivo_pdf.type !== 'application/pdf') { Swal.showValidationMessage('Solo archivos PDF'); return false; }
+                    
+                    const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+                    if (!validTypes.includes(archivo_pdf.type)) { 
+                        Swal.showValidationMessage('Solo se permiten archivos PDF, JPG o PNG'); 
+                        return false; 
+                    }
                     
                     return { funcionario_id, nuevo_cargo_id, fecha_evento, archivo_pdf };
                 }

@@ -1,5 +1,5 @@
-<!-- SweetAlert2 CDN (required for logout confirmation) -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert2 Local (offline-ready) -->
+<script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
 
 <!-- Header -->
 <header class="header">

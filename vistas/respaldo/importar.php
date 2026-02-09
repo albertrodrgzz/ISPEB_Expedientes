@@ -27,7 +27,7 @@ $pageTitle = 'Importar Base de Datos';
     <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
     
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
 </head>
 <body>
     <div class="app-container">
