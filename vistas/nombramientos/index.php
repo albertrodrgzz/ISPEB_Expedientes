@@ -209,7 +209,14 @@ $nombramientos = $stmt->fetchAll();
             <!-- Tabla -->
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">📄 Registro de Nombramientos</h2>
+                    <div class="card-header-title">
+                        <h2 class="card-title">📄 Registro de Nombramientos</h2>
+                        <p class="card-subtitle"><?php echo count($nombramientos); ?> nombramientos registrados</p>
+                    </div>
+                    <button onclick="abrirModalNombramiento()" class="btn btn-primary" style="padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 18px;">➕</span>
+                        Nuevo Nombramiento
+                    </button>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="data-table" id="nombramientosTable">
@@ -265,6 +272,9 @@ $nombramientos = $stmt->fetchAll();
     </div>
     
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
         // Real-time search filter for nombramientos
         document.getElementById('searchNombramientos')?.addEventListener('input', function(e) {
@@ -276,6 +286,180 @@ $nombramientos = $stmt->fetchAll();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
         });
+        
+        // Funcionalidad de filtros
+        function limpiarFiltros() {
+            document.getElementById('searchNombramientos').value = '';
+            document.getElementById('filter-departamento').value = '';
+            document.getElementById('filter-estado').value = '';
+            aplicarFiltros();
+        }
+        
+        function aplicarFiltros() {
+            const searchTerm = document.getElementById('searchNombramientos').value.toLowerCase();
+            const departamento = document.getElementById('filter-departamento').value;
+            const estado = document.getElementById('filter-estado').value;
+            const rows = document.querySelectorAll('.nombramiento-row');
+            
+            rows.forEach(row => {
+                const matchSearch = row.dataset.empleado.includes(searchTerm);
+                const matchDept = !departamento || row.dataset.departamento === departamento;
+                const matchEstado = !estado || row.dataset.estado === estado;
+                
+                row.style.display = (matchSearch && matchDept && matchEstado) ? '' : 'none';
+            });
+        }
+        
+        document.getElementById('filter-departamento')?.addEventListener('change', aplicarFiltros);
+        document.getElementById('filter-estado')?.addEventListener('change', aplicarFiltros);
+        
+        // ===================================================
+        // MODAL NUEVO NOMBRAMIENTO
+        // ===================================================
+        
+        async function abrirModalNombramiento() {
+            // Cargar funcionarios y cargos
+            const [funcionariosRes, cargosRes] = await Promise.all([
+                fetch('../funcionarios/ajax/listar.php'),
+                fetch('../admin/ajax/get_cargos.php')
+            ]);
+            
+            const funcionariosData = await funcionariosRes.json();
+            const cargosData = await cargosRes.json();
+            
+            if (!funcionariosData.success || !cargosData.success) {
+                Swal.fire('Error', 'No se pudieron cargar los datos necesarios', 'error');
+                return;
+            }
+            
+            const funcionarios = funcionariosData.data.filter(f => f.estado === 'activo');
+            const cargos = cargosData.data;
+            
+            const { value: formValues } = await Swal.fire({
+                title: '➕ Nuevo Nombramiento',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="background: #eff6ff; border: 2px solid #3b82f6; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                            <div style="display: flex; align-items: center; gap: 10px; color: #1e40af;">
+                                <span style="font-size: 24px;">ℹ️</span>
+                                <p style="margin: 0; font-size: 13px;">El cargo del funcionario se actualizará automáticamente al registrar el nombramiento.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Funcionario *</label>
+                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px;">
+                                <option value="">Seleccione un funcionario...</option>
+                                ${funcionarios.map(f => `
+                                    <option value="${f.id}" data-cargo="${f.nombre_cargo}">
+                                        ${f.nombres} ${f.apellidos} - ${f.cedula} (${f.nombre_cargo})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px; padding: 12px; background: #f7fafc; border-radius: 8px; display: none;" id="cargo-actual-box">
+                            <small style="color: #718096;">Cargo actual: <strong id="cargo-actual-text">-</strong></small>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Nuevo Cargo *</label>
+                            <select id="swal-cargo" class="swal2-input" style="width: 100%; padding: 10px;">
+                                <option value="">Seleccione el nuevo cargo...</option>
+                                ${cargos.map(c => `
+                                    <option value="${c.id}">
+                                        ${c.nombre_cargo} (Nivel ${c.nivel_acceso})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha de Efecto *</label>
+                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 100%; padding: 10px;" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF (Oficio/Gaceta) *</label>
+                            <input type="file" id="swal-pdf" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px;">
+                            <small style="color: #718096; font-size: 12px;">⚠️ Obligatorio - Máximo 5MB</small>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: 'Registrar Nombramiento',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#00a8cc',
+                didOpen: () => {
+                    // Mostrar cargo actual al seleccionar funcionario
+                    document.getElementById('swal-funcionario').addEventListener('change', function() {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const cargoActual = selectedOption.dataset.cargo;
+                        if (cargoActual) {
+                            document.getElementById('cargo-actual-text').textContent = cargoActual;
+                            document.getElementById('cargo-actual-box').style.display = 'block';
+                        } else {
+                            document.getElementById('cargo-actual-box').style.display = 'none';
+                        }
+                    });
+                },
+                preConfirm: () => {
+                    const funcionario_id = document.getElementById('swal-funcionario').value;
+                    const nuevo_cargo_id = document.getElementById('swal-cargo').value;
+                    const fecha_evento = document.getElementById('swal-fecha').value;
+                    const archivo_pdf = document.getElementById('swal-pdf').files[0];
+                    
+                    if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
+                    if (!nuevo_cargo_id) { Swal.showValidationMessage('Seleccione el nuevo cargo'); return false; }
+                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha'); return false; }
+                    if (!archivo_pdf) { Swal.showValidationMessage('El documento PDF es obligatorio'); return false; }
+                    if (archivo_pdf.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Archivo muy grande (máx 5MB)'); return false; }
+                    if (archivo_pdf.type !== 'application/pdf') { Swal.showValidationMessage('Solo archivos PDF'); return false; }
+                    
+                    return { funcionario_id, nuevo_cargo_id, fecha_evento, archivo_pdf };
+                }
+            });
+            
+            if (!formValues) return;
+            
+            // Procesar
+            Swal.fire({ title: 'Procesando...', html: 'Registrando nombramiento...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                const formData = new FormData();
+                formData.append('csrf_token', '<?php echo generarTokenCSRF(); ?>');
+                formData.append('accion', 'registrar_nombramiento');
+                formData.append('funcionario_id', formValues.funcionario_id);
+                formData.append('nuevo_cargo_id', formValues.nuevo_cargo_id);
+                formData.append('fecha_evento', formValues.fecha_evento);
+                formData.append('archivo_pdf', formValues.archivo_pdf);
+                
+                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Nombramiento Registrado',
+                        html: `
+                            <p>El nombramiento se registró exitosamente.</p>
+                            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
+                                <p style="margin: 0; font-size: 13px;"><strong>✓ Cargo anterior:</strong> ${result.data.cargo_anterior}</p>
+                                <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Cargo nuevo:</strong> ${result.data.cargo_nuevo}</p>
+                            </div>
+                        `,
+                        confirmButtonColor: '#10b981'
+                    });
+                    window.location.reload();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al registrar nombramiento', confirmButtonColor: '#ef4444' });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
+            }
+        }
     </script>
 </body>
 </html>

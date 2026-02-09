@@ -175,7 +175,14 @@ $remociones = $stmt->fetchAll();
             <!-- Tabla -->
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">🚫 Registro de Remociones</h2>
+                    <div>
+                        <h2 class="card-title">🚫 Registro de Remociones</h2>
+                        <p class="card-subtitle"><?php echo count($remociones); ?> registros</p>
+                    </div>
+                    <button onclick="abrirModalRemocion()" class="btn btn-primary" style="padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 18px;">🚫</span>
+                        Procesar Remoción
+                    </button>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="data-table">
@@ -225,6 +232,8 @@ $remociones = $stmt->fetchAll();
     </div>
     
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Filtros en Tiempo Real -->
     <script src="../../publico/js/filtros-tiempo-real.js"></script>
     <script>
@@ -235,6 +244,143 @@ $remociones = $stmt->fetchAll();
             tableBodySelector: 'table tbody',
             countSelector: '.card-subtitle'
         });
+        
+        // Limpiar filtros
+        function limpiarFiltros() {
+            document.getElementById('search-empleado').value = '';
+            document.getElementById('filter-departamento').value = '';
+            document.getElementById('filter-anio').value = '';
+            // Trigger filtros
+            const event = new Event('input');
+            document.getElementById('search-empleado').dispatchEvent(event);
+        }
+        
+        // ===========================================
+        // MODAL PROCESAR REMOCION
+        // ===========================================
+        
+        async function abrirModalRemocion() {
+            // Cargar funcionarios activos
+            const response = await fetch('../funcionarios/ajax/listar.php');
+            const data = await response.json();
+            
+            if (!data.success) {
+                Swal.fire('Error', 'No se pudieron cargar los funcionarios', 'error');
+                return;
+            }
+            
+            const funcionarios = data.data.filter(f => f.estado === 'activo');
+            
+            const { value: formValues } = await Swal.fire({
+                title: '🚫 Procesar Remoción de Cargo',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="background: #fee2e2; border: 2px solid #dc2626; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                            <div style="display: flex; align-items: center; gap: 10px; color: #7f1d1d;">
+                                <span style="font-size: 24px;">⚠️</span>
+                                <p style="margin: 0; font-size: 13px;">La remoción implica la separación del funcionario de su cargo. El documento PDF es OBLIGATORIO.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Funcionario a Remover *</label>
+                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px;">
+                                <option value="">Seleccione un funcionario...</option>
+                                ${funcionarios.map(f => `
+                                    <option value="${f.id}">
+                                        ${f.nombres} ${f.apellidos} - ${f.cedula} (${f.nombre_cargo})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Motivo de la Remoción *</label>
+                            <textarea id="swal-motivo" class="swal2-textarea" rows="4" placeholder="Describa el motivo de la remoción..." style="width: 95%; padding: 10px; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha de Efecto *</label>
+                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 95%; padding: 10px;" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF (Resolución/Oficio) *</label>
+                            <input type="file" id="swal-pdf" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px;">
+                            <small style="color: #dc2626; font-size: 12px; font-weight: 600;">⚠️ OBLIGATORIO - Máximo 5MB</small>
+                        </div>
+                        
+                        <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 12px; margin-top: 16px;">
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                                <input type="checkbox" id="swal-mantener-activo" style="width: 18px; height: 18px;">
+                                <span>Mantener funcionario activo (sin asignación de cargo)</span>
+                            </label>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: 'Procesar Remoción',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc2626',
+                preConfirm: () => {
+                    const funcionario_id = document.getElementById('swal-funcionario').value;
+                    const motivo = document.getElementById('swal-motivo').value.trim();
+                    const fecha_evento = document.getElementById('swal-fecha').value;
+                    const archivo_pdf = document.getElementById('swal-pdf').files[0];
+                    const mantener_activo = document.getElementById('swal-mantener-activo').checked;
+                    
+                    if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
+                    if (!motivo) { Swal.showValidationMessage('Ingrese el motivo de la remoción'); return false; }
+                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha'); return false; }
+                    if (!archivo_pdf) { Swal.showValidationMessage('El documento PDF es OBLIGATORIO'); return false; }
+                    if (archivo_pdf.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Archivo muy grande (máx 5MB)'); return false; }
+                    if (archivo_pdf.type !== 'application/pdf') { Swal.showValidationMessage('Solo archivos PDF'); return false; }
+                    
+                    return { funcionario_id, motivo, fecha_evento, archivo_pdf, mantener_activo };
+                }
+            });
+            
+            if (!formValues) return;
+            
+            // Procesar
+            Swal.fire({ title: 'Procesando...', html: 'Registrando remoción...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                const formData = new FormData();
+                formData.append('csrf_token', '<?php echo generarTokenCSRF(); ?>');
+                formData.append('accion', 'registrar_remocion');
+                formData.append('funcionario_id', formValues.funcionario_id);
+                formData.append('motivo', formValues.motivo);
+                formData.append('fecha_evento', formValues.fecha_evento);
+                formData.append('mantener_activo', formValues.mantener_activo ? '1' : '0');
+                formData.append('archivo_pdf', formValues.archivo_pdf);
+                
+                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Remoción Procesada',
+                        html: `
+                            <p>La remoción se procesó correctamente.</p>
+                            <div style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
+                                <p style="margin: 0; font-size: 13px;"><strong>✓ Fecha:</strong> ${formValues.fecha_evento}</p>
+                                <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Estado:</strong> ${formValues.mantener_activo ? 'Activo sin cargo' : 'Inactivo'}</p>
+                            </div>
+                        `,
+                        confirmButtonColor: '#dc2626'
+                    });
+                    window.location.reload();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al procesar remoción', confirmButtonColor: '#ef4444' });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
+            }
+        }
     </script>
 </body>
 </html>

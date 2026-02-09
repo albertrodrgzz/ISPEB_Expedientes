@@ -871,14 +871,6 @@ if ($funcionario['fecha_ingreso']) {
                             <span>Cargas Familiares</span>
                         </div>
                         
-                        <div class="nav-item" onclick="switchTab('activos', this)" data-tab="activos">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                <line x1="8" y1="21" x2="16" y2="21"></line>
-                                <line x1="12" y1="17" x2="12" y2="21"></line>
-                            </svg>
-                            <span>Activos Asignados</span>
-                        </div>
                         
                         <div class="nav-item" onclick="switchTab('vacaciones-calc', this)" data-tab="vacaciones-calc">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1128,23 +1120,8 @@ if ($funcionario['fecha_ingreso']) {
                 </div>
             </div>
             
-            <!-- TAB 3: Activos Asignados -->
-            <div id="tab-activos" class="tab-content">
-                <div class="content-card">
-                    <h3 class="section-title">
-                        <span class="section-title-icon">💻</span>
-                        Activos Tecnológicos Asignados
-                    </h3>
-                    <div id="activos-container">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">⏳</div>
-                            <p class="empty-state-text">Cargando información...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
             
-            <!-- TAB 4: Calculadora de Vacaciones -->
+            <!-- TAB 3: Calculadora de Vacaciones -->
             <div id="tab-vacaciones-calc" class="tab-content">
                 <div class="content-card">
                     <h3 class="section-title">

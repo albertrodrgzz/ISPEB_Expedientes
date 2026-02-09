@@ -74,6 +74,14 @@ try {
             $resultado = registrarAmonestacion($pdo);
             break;
         
+        case 'registrar_nombramiento':
+            $resultado = registrarNombramiento($pdo);
+            break;
+        
+        case 'registrar_remocion':
+            $resultado = registrarRemocion($pdo);
+            break;
+        
         default:
             throw new Exception('Acción no válida: ' . $accion, 400);
     }
@@ -415,12 +423,21 @@ function registrarVacacion($pdo) {
 
         $historial_id = $pdo->lastInsertId();
 
+        // CRÍTICO: Actualizar estado del funcionario a 'vacaciones'
+        $stmt = $pdo->prepare("
+            UPDATE funcionarios 
+            SET estado = 'vacaciones', updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+        $stmt->execute([$funcionario_id]);
+
         // Registrar en auditoría
         registrarAuditoria($pdo, 'REGISTRAR_VACACION', 'historial_administrativo', $historial_id, null, [
             'funcionario_id' => $funcionario_id,
             'fecha_inicio' => $fecha_evento,
             'fecha_fin' => $fecha_fin,
-            'dias_habiles' => $dias_habiles
+            'dias_habiles' => $dias_habiles,
+            'estado_actualizado' => 'vacaciones'
         ]);
 
         // Confirmar transacción
@@ -428,12 +445,13 @@ function registrarVacacion($pdo) {
 
         return [
             'success' => true,
-            'message' => 'Vacación registrada exitosamente',
+            'message' => 'Vacación registrada exitosamente. El estado del funcionario se actualizó a "vacaciones".',
             'data' => [
                 'historial_id' => $historial_id,
                 'dias_habiles' => $dias_habiles,
                 'fecha_inicio' => $fecha_evento,
-                'fecha_fin' => $fecha_fin
+                'fecha_fin' => $fecha_fin,
+                'nuevo_estado' => 'vacaciones'
             ]
         ];
 
@@ -614,4 +632,232 @@ function registrarAuditoria($pdo, $accion, $tabla, $registro_id, $datos_anterior
         $_SERVER['REMOTE_ADDR'] ?? null,
         $_SERVER['HTTP_USER_AGENT'] ?? null
     ]);
+}
+
+/**
+ * Registra un nombramiento (cambio de cargo)
+ */
+function registrarNombramiento($pdo) {
+    // Validar campos requeridos
+    $funcionario_id = filter_var($_POST['funcionario_id'] ?? 0, FILTER_VALIDATE_INT);
+    $nuevo_cargo_id = filter_var($_POST['nuevo_cargo_id'] ?? 0, FILTER_VALIDATE_INT);
+    $fecha_evento = $_POST['fecha_evento'] ?? date('Y-m-d');
+    
+    if (!$funcionario_id || !$nuevo_cargo_id) {
+        throw new Exception('Datos incompletos para registrar nombramiento', 400);
+    }
+    
+    // Iniciar transacción
+    $pdo->beginTransaction();
+    
+    try {
+        // Obtener datos actuales del funcionario y cargo
+        $stmt = $pdo->prepare("
+            SELECT f.*, c.nombre_cargo as cargo_actual, d.nombre as departamento
+            FROM funcionarios f
+            JOIN cargos c ON f.cargo_id = c.id
+            JOIN departamentos d ON f.departamento_id = d.id
+            WHERE f.id = ?
+        ");
+        $stmt->execute([$funcionario_id]);
+        $funcionario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$funcionario) {
+            throw new Exception('Funcionario no encontrado', 404);
+        }
+        
+        if ($funcionario['estado'] === 'inactivo') {
+            throw new Exception('No se pueden registrar nombramientos para un funcionario inactivo', 400);
+        }
+        
+        $cargo_anterior_id = $funcionario['cargo_id'];
+        
+        if ($cargo_anterior_id == $nuevo_cargo_id) {
+            throw new Exception('El nuevo cargo es igual al cargo actual', 400);
+        }
+        
+        // Obtener datos del nuevo cargo
+        $stmt = $pdo->prepare("SELECT nombre_cargo, nivel_acceso FROM cargos WHERE id = ?");
+        $stmt->execute([$nuevo_cargo_id]);
+        $nuevo_cargo = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$nuevo_cargo) {
+            throw new Exception('Cargo no encontrado', 404);
+        }
+        
+        // Preparar JSON con detalles
+        $detalles = json_encode([
+            'cargo' => $nuevo_cargo['nombre_cargo'],
+            'cargo_anterior' => $funcionario['cargo_actual'],
+            'departamento' => $funcionario['departamento'],
+            'nivel_acceso' => $nuevo_cargo['nivel_acceso']
+        ], JSON_UNESCAPED_UNICODE);
+        
+        // Manejar archivo PDF si existe
+        $ruta_archivo = null;
+        $nombre_original = null;
+        
+        if (isset($_FILES['archivo_pdf']) && $_FILES['archivo_pdf']['error'] === UPLOAD_ERR_OK) {
+            $resultado_archivo = guardarArchivoPDF($funcionario_id, 'nombramientos', $_FILES['archivo_pdf']);
+            $ruta_archivo = $resultado_archivo['ruta'];
+            $nombre_original = $resultado_archivo['nombre_original'];
+        }
+        
+        // Insertar en historial_administrativo
+        $stmt = $pdo->prepare("
+            INSERT INTO historial_administrativo (
+                funcionario_id, tipo_evento, fecha_evento,
+                detalles, ruta_archivo_pdf, nombre_archivo_original,
+                registrado_por
+            ) VALUES (?, 'NOMBRAMIENTO', ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $funcionario_id,
+            $fecha_evento,
+            $detalles,
+            $ruta_archivo,
+            $nombre_original,
+            $_SESSION['usuario_id']
+        ]);
+        
+        $historial_id = $pdo->lastInsertId();
+        
+        // CRÍTICO: Actualizar cargo del funcionario
+        $stmt = $pdo->prepare("
+            UPDATE funcionarios 
+            SET cargo_id = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+        $stmt->execute([$nuevo_cargo_id, $funcionario_id]);
+        
+        // Registrar en auditoría
+        registrarAuditoria($pdo, 'REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', $historial_id, [
+            'cargo_anterior' => $funcionario['cargo_actual'],
+            'cargo_id_anterior' => $cargo_anterior_id
+        ], [
+            'funcionario_id' => $funcionario_id,
+            'nuevo_cargo' => $nuevo_cargo['nombre_cargo'],
+            'nuevo_cargo_id' => $nuevo_cargo_id
+        ]);
+        
+        // Confirmar transacción
+        $pdo->commit();
+        
+        return [
+            'success' => true,
+            'message' => 'Nombramiento registrado exitosamente. El cargo del funcionario ha sido actualizado.',
+            'data' => [
+                'historial_id' => $historial_id,
+                'cargo_anterior' => $funcionario['cargo_actual'],
+                'cargo_nuevo' => $nuevo_cargo['nombre_cargo']
+            ]
+        ];
+        
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
+/**
+ * Registra una remoción de cargo
+ */
+function registrarRemocion($pdo) {
+    // Validar campos requeridos
+    $funcionario_id = filter_var($_POST['funcionario_id'] ?? 0, FILTER_VALIDATE_INT);
+    $motivo = trim($_POST['motivo'] ?? '');
+    $fecha_evento = $_POST['fecha_evento'] ?? date('Y-m-d');
+    $mantener_activo = filter_var($_POST['mantener_activo'] ?? true, FILTER_VALIDATE_BOOLEAN);
+    
+    if (!$funcionario_id || empty($motivo)) {
+        throw new Exception('Datos incompletos para registrar remoción', 400);
+    }
+    
+    // Iniciar transacción
+    $pdo->beginTransaction();
+    
+    try {
+        // Obtener datos actuales del funcionario
+        $stmt = $pdo->prepare("
+            SELECT f.*, c.nombre_cargo as cargo_actual, d.nombre as departamento
+            FROM funcionarios f
+            JOIN cargos c ON f.cargo_id = c.id
+            JOIN departamentos d ON f.departamento_id = d.id
+            WHERE f.id = ?
+        ");
+        $stmt->execute([$funcionario_id]);
+        $funcionario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$funcionario) {
+            throw new Exception('Funcionario no encontrado', 404);
+        }
+        
+        if ($funcionario['estado'] === 'inactivo') {
+            throw new Exception('El funcionario ya está inactivo', 400);
+        }
+        
+        // Preparar JSON con detalles
+        $detalles = json_encode([
+            'motivo' => htmlspecialchars($motivo, ENT_QUOTES, 'UTF-8'),
+            'cargo_removido' => $funcionario['cargo_actual'],
+            'departamento' => $funcionario['departamento'],
+            'mantiene_activo' => $mantener_activo
+        ], JSON_UNESCAPED_UNICODE);
+        
+        // Manejar archivo PDF si existe
+        $ruta_archivo = null;
+        $nombre_original = null;
+        
+        if (isset($_FILES['archivo_pdf']) && $_FILES['archivo_pdf']['error'] === UPLOAD_ERR_OK) {
+            $resultado_archivo = guardarArchivoPDF($funcionario_id, 'remociones', $_FILES['archivo_pdf']);
+            $ruta_archivo = $resultado_archivo['ruta'];
+            $nombre_original = $resultado_archivo['nombre_original'];
+        }
+        
+        // Insertar en historial_administrativo
+        $stmt = $pdo->prepare("
+            INSERT INTO historial_administrativo (
+                funcionario_id, tipo_evento, fecha_evento,
+                detalles, ruta_archivo_pdf, nombre_archivo_original,
+                registrado_por
+            ) VALUES (?, 'REMOCION', ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $funcionario_id,
+            $fecha_evento,
+            $detalles,
+            $ruta_archivo,
+            $nombre_original,
+            $_SESSION['usuario_id']
+        ]);
+        
+        $historial_id = $pdo->lastInsertId();
+        
+        // Registrar en auditoría
+        registrarAuditoria($pdo, 'REGISTRAR_REMOCION', 'historial_administrativo', $historial_id, [
+            'cargo_removido' => $funcionario['cargo_actual'],
+            'estado_anterior' => $funcionario['estado']
+        ], [
+            'funcionario_id' => $funcionario_id,
+            'motivo' => $motivo,
+            'mantiene_activo' => $mantener_activo
+        ]);
+        
+        // Confirmar transacción
+        $pdo->commit();
+        
+        return [
+            'success' => true,
+            'message' => 'Remoción registrada exitosamente.',
+            'data' => [
+                'historial_id' => $historial_id,
+                'cargo_removido' => $funcionario['cargo_actual'],
+                'funcionario_mantiene_activo' => $mantener_activo
+            ]
+        ];
+        
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 }

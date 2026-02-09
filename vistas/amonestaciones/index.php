@@ -354,9 +354,16 @@ $amonestaciones = $stmt->fetchAll();
             <!-- Tabla de Amonestaciones -->
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">📋 Registro de Amonestaciones</h2>
+                    <div>
+                        <h2 class="card-title">📋 Registro de Amonestaciones</h2>
+                        <p class="card-subtitle"><?php echo count($amonestaciones); ?> registros</p>
+                    </div>
                     <div style="display: flex; gap: 8px;">
-                        <a href="../reportes/index.php#amonestaciones" class="btn btn-primary" style="text-decoration: none;">
+                        <button onclick="abrirModalAmonestacion()" class="btn btn-primary" style="padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 18px;">⚠️</span>
+                            Registrar Falta
+                        </button>
+                        <a href="../reportes/index.php#amonestaciones" class="btn" style="text-decoration: none; background: #e2e8f0; color: #2d3748;">
                             📄 Generar Reporte
                         </a>
                     </div>
@@ -433,17 +440,189 @@ $amonestaciones = $stmt->fetchAll();
     </div>
     
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
-        // Real-time search filter for amonestaciones
+        // Real-time search filter
         document.getElementById('searchAmonestaciones')?.addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#amonestacionesTable tbody tr');
-            
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
         });
+        
+        // Limpiar filtros
+        function limpiarFiltros() {
+            document.getElementById('searchAmonestaciones').value = '';
+            document.getElementById('filter-departamento').value = '';
+            document.getElementById('filter-tipo-falta').value = '';
+            document.getElementById('filter-anio').value = '';
+            aplicarFiltros();
+        }
+        
+        // Aplicar filtros combinados
+        function aplicarFiltros() {
+            const searchTerm = document.getElementById('searchAmonestaciones').value.toLowerCase();
+            const departamento = document.getElementById('filter-departamento').value;
+            const tipoFalta = document.getElementById('filter-tipo-falta').value;
+            const anio = document.getElementById('filter-anio').value;
+            const rows = document.querySelectorAll('.amonestacion-row');
+            
+            rows.forEach(row => {
+                const matchSearch = row.dataset.empleado.includes(searchTerm);
+                const matchDept = !departamento || row.dataset.departamento === departamento;
+                const matchTipo = !tipoFalta || row.dataset.tipoFalta === tipoFalta;
+                const matchAnio = !anio || row.dataset.anio === anio;
+                
+                row.style.display = (matchSearch && matchDept && matchTipo && matchAnio) ? '' : 'none';
+            });
+        }
+        
+        document.getElementById('filter-departamento')?.addEventListener('change', aplicarFiltros);
+        document.getElementById('filter-tipo-falta')?.addEventListener('change', aplicarFiltros);
+        document.getElementById('filter-anio')?.addEventListener('change', aplicarFiltros);
+        
+        // ===========================================
+        // MODAL REGISTRAR AMONESTACION
+        // ===========================================
+        
+        async function abrirModalAmonestacion() {
+            // Cargar funcionarios activos
+            const response = await fetch('../funcionarios/ajax/listar.php');
+            const data = await response.json();
+            
+            if (!data.success) {
+                Swal.fire('Error', 'No se pudieron cargar los funcionarios', 'error');
+                return;
+            }
+            
+            const funcionarios = data.data.filter(f => f.estado === 'activo');
+            
+            const { value: formValues } = await Swal.fire({
+                title: '⚠️ Registrar Falta Disciplinaria',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                            <div style="display: flex; align-items: center; gap: 10px; color: #991b1b;">
+                                <span style="font-size: 24px;">⚠️</span>
+                                <p style="margin: 0; font-size: 13px;">El documento PDF es OBLIGATORIO para registrar una amonestación.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Funcionario *</label>
+                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px;">
+                                <option value="">Seleccione un funcionario...</option>
+                                ${funcionarios.map(f => `
+                                    <option value="${f.id}">
+                                        ${f.nombres} ${f.apellidos} - ${f.cedula} (${f.nombre_cargo})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Tipo de Falta *</label>
+                            <select id="swal-tipo-falta" class="swal2-input" style="width: 100%; padding: 10px;">
+                                <option value="">Seleccione el tipo...</option>
+                                <option value="leve">🟡 Leve</option>
+                                <option value="grave">🟠 Grave</option>
+                                <option value="muy_grave">🔴 Muy Grave</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Motivo de la Falta *</label>
+                            <textarea id="swal-motivo" class="swal2-textarea" rows="3" placeholder="Describa el motivo de la falta..." style="width: 95%; padding: 10px; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Sanción Aplicada *</label>
+                            <input type="text" id="swal-sancion" class="swal2-input" placeholder="Ej: Amonestación escrita" style="width: 95%; padding: 10px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha del Evento *</label>
+                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 95%; padding: 10px;" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF *</label>
+                            <input type="file" id="swal-pdf" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px;">
+                            <small style="color: #dc2626; font-size: 12px; font-weight: 600;">⚠️ OBLIGATORIO - Máximo 5MB</small>
+                        </div>
+                    </div>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: 'Registrar Amonestación',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc2626',
+                preConfirm: () => {
+                    const funcionario_id = document.getElementById('swal-funcionario').value;
+                    const tipo_falta = document.getElementById('swal-tipo-falta').value;
+                    const motivo = document.getElementById('swal-motivo').value.trim();
+                    const sancion = document.getElementById('swal-sancion').value.trim();
+                    const fecha_evento = document.getElementById('swal-fecha').value;
+                    const archivo_pdf = document.getElementById('swal-pdf').files[0];
+                    
+                    if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
+                    if (!tipo_falta) { Swal.showValidationMessage('Seleccione el tipo de falta'); return false; }
+                    if (!motivo) { Swal.showValidationMessage('Ingrese el motivo'); return false; }
+                    if (!sancion) { Swal.showValidationMessage('Ingrese la sanción aplicada'); return false; }
+                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha'); return false; }
+                    if (!archivo_pdf) { Swal.showValidationMessage('El documento PDF es OBLIGATORIO'); return false; }
+                    if (archivo_pdf.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Archivo muy grande (máx 5MB)'); return false; }
+                    if (archivo_pdf.type !== 'application/pdf') { Swal.showValidationMessage('Solo archivos PDF'); return false; }
+                    
+                    return { funcionario_id, tipo_falta, motivo, sancion, fecha_evento, archivo_pdf };
+                }
+            });
+            
+            if (!formValues) return;
+            
+            // Procesar
+            Swal.fire({ title: 'Procesando...', html: 'Registrando amonestación...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                const formData = new FormData();
+                formData.append('csrf_token', '<?php echo generarTokenCSRF(); ?>');
+                formData.append('accion', 'registrar_amonestacion');
+                formData.append('funcionario_id', formValues.funcionario_id);
+                formData.append('tipo_falta', formValues.tipo_falta);
+                formData.append('motivo', formValues.motivo);
+                formData.append('sancion', formValues.sancion);
+                formData.append('fecha_evento', formValues.fecha_evento);
+                formData.append('archivo_pdf', formValues.archivo_pdf);
+                
+                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Amonestación Registrada',
+                        html: `
+                            <p>La amonestación se registró correctamente.</p>
+                            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
+                                <p style="margin: 0; font-size: 13px;"><strong>✓ Tipo:</strong> ${formValues.tipo_falta}</p>
+                                <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Fecha:</strong> ${formValues.fecha_evento}</p>
+                            </div>
+                        `,
+                        confirmButtonColor: '#dc2626'
+                    });
+                    window.location.reload();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al registrar amonestación', confirmButtonColor: '#ef4444' });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
+            }
+        }
     </script>
 </body>
 </html>

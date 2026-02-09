@@ -351,17 +351,24 @@ $vacaciones = $stmt->fetchAll();
             <!-- Tabla de Vacaciones -->
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        Registro de Vacaciones
-                    </h2>
+                    <div>
+                        <h2 class="card-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            Registro de Vacaciones
+                        </h2>
+                        <p class="card-subtitle"><?php echo count($vacaciones); ?> periodos registrados</p>
+                    </div>
                     <div style="display: flex; gap: 8px;">
-                        <a href="../reportes/index.php#vacaciones" class="btn btn-primary" style="text-decoration: none;">
+                        <button onclick="abrirModalVacaciones()" class="btn btn-primary" style=" padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 18px;">✈️</span>
+                            Registrar Vacaciones
+                        </button>
+                        <a href="../reportes/index.php#vacaciones" class="btn" style="text-decoration: none; background: #e2e8f0; color: #2d3748;">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="vertical-align: middle; margin-right: 6px;">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>
@@ -457,6 +464,9 @@ $vacaciones = $stmt->fetchAll();
         </div>
     </div>
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
         // Real-time search filter for vacaciones
         document.getElementById('searchVacaciones')?.addEventListener('input', function(e) {
@@ -468,6 +478,229 @@ $vacaciones = $stmt->fetchAll();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
         });
+        
+        // Limpiar filtros
+        function limpiarFiltros() {
+            document.getElementById('searchVacaciones').value = '';
+            document.getElementById('filter-departamento').value = '';
+            document.getElementById('filter-estado').value = '';
+            document.getElementById('filter-anio').value = '';
+            aplicarFiltros();
+        }
+        
+        // Aplicar filtros combinados
+        function aplicarFiltros() {
+            const searchTerm = document.getElementById('searchVacaciones').value.toLowerCase();
+            const departamento = document.getElementById('filter-departamento').value;
+            const estado = document.getElementById('filter-estado').value;
+            const anio = document.getElementById('filter-anio').value;
+            const rows = document.querySelectorAll('.vacacion-row');
+            
+            rows.forEach(row => {
+                const matchSearch = row.dataset.empleado.includes(searchTerm);
+                const matchDept = !departamento || row.dataset.departamento === departamento;
+                const matchEstado = !estado || row.dataset.estado === estado;
+                const matchAnio = !anio || row.dataset.anio === anio;
+                
+                row.style.display = (matchSearch && matchDept && matchEstado && matchAnio) ? '' : 'none';
+            });
+        }
+        
+        document.getElementById('filter-departamento')?.addEventListener('change', aplicarFiltros);
+        document.getElementById('filter-estado')?.addEventListener('change', aplicarFiltros);
+        document.getElementById('filter-anio')?.addEventListener('change', aplicarFiltros);
+        
+        // ===========================================
+        // MODAL REGISTRO DE VACACIONES
+        // ===========================================
+        
+        // Calcular días hábiles (lunes a viernes)
+        function calcularDiasHabiles(fechaInicio, fechaFin) {
+            if (!fechaInicio || !fechaFin) return 0;
+            
+            const inicio = new Date(fechaInicio + 'T00:00:00');
+            const fin = new Date(fechaFin + 'T00:00:00');
+            
+            if (fin < inicio) return 0;
+            
+            let count = 0;
+            let current = new Date(inicio);
+            
+            while (current <= fin) {
+                const dayOfWeek = current.getDay();
+                // 0 = domingo, 6 = sábado
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    count++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            
+            return count;
+        }
+        
+        async function abrirModalVacaciones() {
+            // Cargar funcionarios activos
+            const response = await fetch('../funcionarios/ajax/listar.php');
+            const data = await response.json();
+            
+            if (!data.success) {
+                Swal.fire('Error', 'No se pudieron cargar los funcionarios', 'error');
+                return;
+            }
+            
+            const funcionarios = data.data.filter(f => f.estado === 'activo');
+            
+            const { value: formValues } = await Swal.fire({
+                title: '✈️ Registrar Vacaciones',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                            <div style="display: flex; align-items: center; gap: 10px; color: #92400e;">
+                                <span style="font-size: 24px;">ℹ️</span>
+                                <p style="margin: 0; font-size: 13px;">El estado del funcionario cambiará automáticamente a "vacaciones" durante el periodo registrado.</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Funcionario *</label>
+                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px;">
+                                <option value="">Seleccione un funcionario...</option>
+                                ${funcionarios.map(f => `
+                                    <option value="${f.id}">
+                                        ${f.nombres} ${f.apellidos} - ${f.cedula} (${f.nombre_cargo})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha Inicio *</label>
+                                <input type="date" id="swal-fecha-inicio" class="swal2-input" style="width: 100%; padding: 10px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha Fin *</label>
+                                <input type="date" id="swal-fecha-fin" class="swal2-input" style="width: 100%; padding: 10px;">
+                            </div>
+                        </div>
+                        
+                        <div id="dias-habiles-box" style="background: #f0f9ff; border: 2px dashed #0ea5e9; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-weight: 600; color: #0c4a6e;">Días hábiles calculados:</span>
+                                <span id="dias-habiles-valor" style="font-size: 28px; font-weight: 700; color: #0284c7;">0</span>
+                            </div>
+                            <small style="color: #075985; font-size: 12px; display: block; margin-top: 8px;">* Solo cuenta días de lunes a viernes</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Observaciones</label>
+                            <textarea id="swal-observaciones" class="swal2-textarea" rows="3" placeholder="Observaciones adicionales..." style="width: 95%; padding: 10px; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF (Opcional)</label>
+                            <input type="file" id="swal-pdf" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px;">
+                            <small style="color: #718096; font-size: 12px;">Máximo 5MB</small>
+                        </div>
+                    </div>
+                `,
+                width: '650px',
+                showCancelButton: true,
+                confirmButtonText: 'Registrar Vacaciones',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#06d6a0',
+                didOpen: () => {
+                    const fechaInicio = document.getElementById('swal-fecha-inicio');
+                    const fechaFin = document.getElementById('swal-fecha-fin');
+                    const diasBox = document.getElementById('dias-habiles-box');
+                    const diasValor = document.getElementById('dias-habiles-valor');
+                    
+                    function actualizarDias() {
+                        const dias = calcularDiasHabiles(fechaInicio.value, fechaFin.value);
+                        if (dias > 0) {
+                            diasValor.textContent = dias;
+                            diasBox.style.display = 'block';
+                        } else {
+                            diasBox.style.display = 'none';
+                        }
+                    }
+                    
+                    fechaInicio.addEventListener('change', actualizarDias);
+                    fechaFin.addEventListener('change', actualizarDias);
+                },
+                preConfirm: () => {
+                    const funcionario_id = document.getElementById('swal-funcionario').value;
+                    const fecha_evento = document.getElementById('swal-fecha-inicio').value;
+                    const fecha_fin = document.getElementById('swal-fecha-fin').value;
+                    const observaciones = document.getElementById('swal-observaciones').value;
+                    const archivo_pdf = document.getElementById('swal-pdf').files[0];
+                    
+                    if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
+                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha de inicio'); return false; }
+                    if (!fecha_fin) { Swal.showValidationMessage('Ingrese la fecha de fin'); return false; }
+                    
+                    if (new Date(fecha_fin) <= new Date(fecha_evento)) {
+                        Swal.showValidationMessage('La fecha de fin debe ser posterior a la de inicio');
+                        return false;
+                    }
+                    
+                    if (archivo_pdf && archivo_pdf.size > 5 * 1024 * 1024) {
+                        Swal.showValidationMessage('Archivo muy grande (máx 5MB)');
+                        return false;
+                    }
+                    
+                    if (archivo_pdf && archivo_pdf.type !== 'application/pdf') {
+                        Swal.showValidationMessage('Solo archivos PDF');
+                        return false;
+                    }
+                    
+                    return { funcionario_id, fecha_evento, fecha_fin, observaciones, archivo_pdf };
+                }
+            });
+            
+            if (!formValues) return;
+            
+            // Procesar
+            Swal.fire({ title: 'Procesando...', html: 'Registrando vacaciones...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                const formData = new FormData();
+                formData.append('csrf_token', '<?php echo generarTokenCSRF(); ?>');
+                formData.append('accion', 'registrar_vacacion');
+                formData.append('funcionario_id', formValues.funcionario_id);
+                formData.append('fecha_evento', formValues.fecha_evento);
+                formData.append('fecha_fin', formValues.fecha_fin);
+                formData.append('observaciones', formValues.observaciones);
+                if (formValues.archivo_pdf) {
+                    formData.append('archivo_pdf', formValues.archivo_pdf);
+                }
+                
+                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Vacaciones Registradas',
+                        html: `
+                            <p>Las vacaciones se registraron exitosamente.</p>
+                            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
+                                <p style="margin: 0; font-size: 13px;"><strong>✓ Días hábiles:</strong> ${result.data.dias_habiles}</p>
+                                <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Periodo:</strong> ${result.data.fecha_inicio} - ${result.data.fecha_fin}</p>
+                                <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Estado:</strong> ${result.data.nuevo_estado}</p>
+                            </div>
+                        `,
+                        confirmButtonColor: '#10b981'
+                    });
+                    window.location.reload();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al registrar vacaciones', confirmButtonColor: '#ef4444' });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
+            }
+        }
     </script>
 </body>
 </html>
