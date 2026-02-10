@@ -870,22 +870,6 @@ if ($funcionario['fecha_ingreso']) {
                             <span>Cargas Familiares</span>
                         </div>
                         
-                        
-                        <div class="nav-item" onclick="switchTab('vacaciones-calc', this)" data-tab="vacaciones-calc">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="5"></circle>
-                                <line x1="12" y1="1" x2="12" y2="3"></line>
-                                <line x1="12" y1="21" x2="12" y2="23"></line>
-                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                                <line x1="1" y1="12" x2="3" y2="12"></line>
-                                <line x1="21" y1="12" x2="23" y2="12"></line>
-                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                            </svg>
-                            <span>Calculadora Vacaciones</span>
-                        </div>
-                        
                         <div class="nav-item" onclick="switchTab('riesgo', this)" data-tab="riesgo">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -913,7 +897,7 @@ if ($funcionario['fecha_ingreso']) {
                                 <line x1="8" y1="2" x2="8" y2="6"></line>
                                 <line x1="3" y1="10" x2="21" y2="10"></line>
                             </svg>
-                            <span>Historial Vacaciones</span>
+                            <span>Vacaciones</span>
                         </div>
                         
                         <div class="nav-item" onclick="switchTab('amonestaciones', this)" data-tab="amonestaciones">
@@ -964,32 +948,31 @@ if ($funcionario['fecha_ingreso']) {
                         console.error('Tab not found:', 'tab-' + tabName);
                     }
                     
-                    element.classList.add('active');
+                    // Activar nav-item clicado
+                    if (element) {
+                        element.classList.add('active');
+                    }
                     
-                    currentTab = tabName;
+                    // Cargar datos específicos de cada pestaña
+                    console.log('switchTab - tabName:', tabName);
                     
-                    // Cargar datos según la pestaña
                     switch(tabName) {
                         case 'cargas':
                             if (typeof cargarCargasFamiliares === 'function') cargarCargasFamiliares();
                             break;
-                        case 'activos':
-                            if (typeof cargarActivos === 'function') cargarActivos();
-                            break;
-                        case 'vacaciones-calc':
+                        case 'vacaciones':
+                            // Cargar ambas: calculadora y historial
                             if (typeof calcularVacaciones === 'function') calcularVacaciones();
-                            break;
-                        case 'riesgo':
-                            if (typeof cargarBarraRiesgo === 'function') cargarBarraRiesgo();
+                            if (typeof cargarVacaciones === 'function') cargarVacaciones();
                             break;
                         case 'nombramientos':
                             if (typeof cargarNombramientos === 'function') cargarNombramientos();
                             break;
-                        case 'vacaciones':
-                            if (typeof cargarVacaciones === 'function') cargarVacaciones();
-                            break;
                         case 'amonestaciones':
                             if (typeof cargarAmonestaciones === 'function') cargarAmonestaciones();
+                            break;
+                        case 'riesgo':
+                            if (typeof cargarBarraRiesgo === 'function') cargarBarraRiesgo();
                             break;
                         case 'salidas':
                             if (typeof cargarSalidas === 'function') cargarSalidas();
@@ -1120,24 +1103,6 @@ if ($funcionario['fecha_ingreso']) {
             </div>
             
             
-            <!-- TAB 3: Calculadora de Vacaciones -->
-            <div id="tab-vacaciones-calc" class="tab-content">
-                <div class="content-card">
-                    <h3 class="section-title">
-                        <span class="section-title-icon">🏖️</span>
-                        Calculadora de Vacaciones
-                    </h3>
-                    <div class="calculator-card">
-                        <div class="calculator-label">Días de Vacaciones Pendientes</div>
-                        <div class="calculator-result" id="vacaciones-pendientes">--</div>
-                        <div class="calculator-label">
-                            <span id="vacaciones-detalle">Calculando...</span>
-                        </div>
-                    </div>
-                    <div id="vacaciones-alerta"></div>
-                </div>
-            </div>
-            
             <!-- TAB 5: Barra de Riesgo -->
             <div id="tab-riesgo" class="tab-content">
                 <div class="content-card">
@@ -1174,7 +1139,24 @@ if ($funcionario['fecha_ingreso']) {
             
             <!-- TAB 7: Vacaciones -->
             <div id="tab-vacaciones" class="tab-content">
+                <!-- Calculadora de Vacaciones -->
                 <div class="content-card">
+                    <h3 class="section-title">
+                        <span class="section-title-icon">🏖️</span>
+                        Calculadora de Vacaciones
+                    </h3>
+                    <div class="calculator-card">
+                        <div class="calculator-label">Días de Vacaciones Pendientes</div>
+                        <div class="calculator-result" id="vacaciones-pendientes">--</div>
+                        <div class="calculator-label">
+                            <span id="vacaciones-detalle">Calculando...</span>
+                        </div>
+                    </div>
+                    <div id="vacaciones-alerta"></div>
+                </div>
+                
+                <!-- Historial de Vacaciones -->
+                <div class="content-card" style="margin-top: 24px;">
                     <h3 class="section-title">
                         <span class="section-title-icon">🌴</span>
                         Historial de Vacaciones
@@ -1425,32 +1407,55 @@ if ($funcionario['fecha_ingreso']) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        document.getElementById('vacaciones-pendientes').textContent = data.dias_pendientes;
-                        document.getElementById('vacaciones-detalle').textContent = 
-                            `${data.dias_disponibles} disponibles - ${data.dias_usados} usados`;
+                        // Acceder a la estructura correcta: data.data.vacaciones
+                        const vacaciones = data.data.vacaciones;
+                        const alerta = data.data.alerta;
                         
-                        const alertaDiv = document.getElementById('vacaciones-alerta');
-                        let alertClass = 'alert-success';
-                        let alertIcon = '✅';
-                        
-                        if (data.alerta === 'alta') {
-                            alertClass = 'alert-error';
-                            alertIcon = '⚠️';
-                        } else if (data.alerta === 'media') {
-                            alertClass = 'alert-warning';
-                            alertIcon = '⚡';
+                        // Verificar si tiene derecho a vacaciones
+                        if (!vacaciones.tiene_derecho) {
+                            // NO tiene derecho - mostrar mensaje
+                            document.getElementById('vacaciones-pendientes').textContent = '—';
+                            document.getElementById('vacaciones-detalle').innerHTML = 
+                                `<span style="color: #6b7280; font-style: italic;">No califica</span>`;
+                        } else {
+                            // SÍ tiene derecho - mostrar días
+                            document.getElementById('vacaciones-pendientes').textContent = vacaciones.dias_pendientes;
+                            document.getElementById('vacaciones-detalle').textContent = 
+                                `${vacaciones.dias_correspondientes} correspondientes - ${vacaciones.dias_tomados} usados`;
                         }
                         
-                        alertaDiv.innerHTML = `
-                            <div class="alert ${alertClass}">
-                                <span style="font-size: 20px;">${alertIcon}</span>
-                                <span>${data.mensaje}</span>
-                            </div>
-                        `;
+                        const alertaDiv = document.getElementById('vacaciones-alerta');
+                        
+                        if (alerta) {
+                            let alertClass = 'alert-success';
+                            let alertIcon = '✅';
+                            
+                            if (alerta.tipo === 'critico') {
+                                alertClass = 'alert-error';
+                                alertIcon = '⚠️';
+                            } else if (alerta.tipo === 'advertencia') {
+                                alertClass = 'alert-warning';
+                                alertIcon = '⚡';
+                            } else if (alerta.tipo === 'info') {
+                                alertClass = 'alert-info';
+                                alertIcon = 'ℹ️';
+                            }
+                            
+                            alertaDiv.innerHTML = `
+                                <div class="alert ${alertClass}">
+                                    <span style="font-size: 20px;">${alertIcon}</span>
+                                    <span>${alerta.mensaje}</span>
+                                </div>
+                            `;
+                        } else {
+                            alertaDiv.innerHTML = '';
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    document.getElementById('vacaciones-pendientes').textContent = 'Error';
+                    document.getElementById('vacaciones-detalle').textContent = 'No se pudo cargar';
                 });
         }
         
@@ -1490,15 +1495,29 @@ if ($funcionario['fecha_ingreso']) {
         
         // TAB 6, 7, 8, 9: Historial
         function cargarNombramientos() {
-            const funcionarioId = <?php echo $id; ?>;
+            console.log('=== cargarNombramientos EJECUTANDO ===');
+            // funcionarioId ya está declarado globalmente en línea 939
             const container = document.getElementById('nombramientos-container');
+            
+            console.log('Funcionario ID:', funcionarioId);
+            console.log('Container:', container);
             
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">Cargando...</div>';
             
-            fetch(`ajax/obtener_historial.php?funcionario_id=${funcionarioId}&tipo_evento=NOMBRAMIENTO`)
-                .then(response => response.json())
+            const url = `ajax/obtener_historial.php?funcionario_id=${funcionarioId}&tipo_evento=NOMBRAMIENTO`;
+            console.log('Fetching URL:', url);
+            
+            fetch(url)
+                .then(response => {
+                    console.log('Response received:', response.status, response.ok);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Data received:', data);
+                    console.log('Success:', data.success, 'Total:', data.total);
+                    
                     if (data.success && data.total > 0) {
+                        console.log('✅ Rendering table with', data.total, 'items');
                         let html = '<div class="table-responsive"><table class="data-table" style="width: 100%;"><thead><tr>';
                         html += '<th>Fecha</th><th>Cargo</th><th>Departamento</th><th>Documento</th></tr></thead><tbody>';
                         
@@ -1519,7 +1538,9 @@ if ($funcionario['fecha_ingreso']) {
                         
                         html += '</tbody></table></div>';
                         container.innerHTML = html;
+                        console.log('✅ Table rendered successfully');
                     } else {
+                        console.log('⚠️ No data or not successful');
                         container.innerHTML = `
                             <div class="empty-state">
                                 <div class="empty-state-icon">📄</div>
@@ -1529,7 +1550,7 @@ if ($funcionario['fecha_ingreso']) {
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('❌ Error:', error);
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">⚠️</div>
@@ -1540,7 +1561,7 @@ if ($funcionario['fecha_ingreso']) {
         }
         
         function cargarVacaciones() {
-            const funcionarioId = <?php echo $id; ?>;
+            // funcionarioId ya está declarado globalmente
             const container = document.getElementById('vacaciones-historial-container');
             
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">Cargando...</div>';
@@ -1591,7 +1612,7 @@ if ($funcionario['fecha_ingreso']) {
         }
         
         function cargarAmonestaciones() {
-            const funcionarioId = <?php echo $id; ?>;
+            // funcionarioId ya está declarado globalmente
             const container = document.getElementById('amonestaciones-container');
             
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">Cargando...</div>';
@@ -1647,7 +1668,7 @@ if ($funcionario['fecha_ingreso']) {
         }
         
         function cargarSalidas() {
-            const funcionarioId = <?php echo $id; ?>;
+            // funcionarioId ya está declarado globalmente
             const container = document.getElementById('salidas-container');
             
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">Cargando...</div>';
@@ -1720,7 +1741,7 @@ if ($funcionario['fecha_ingreso']) {
         // FUNCIONALIDAD DE CREACIÓN DE USUARIO
         // ==========================================
         
-        const funcionarioId = <?php echo $id; ?>;
+        // funcionarioId ya está declarado globalmente en línea 939
         const funcionarioNombre = '<?php echo addslashes($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?>';
         
         function abrirModalCrearUsuario() {
@@ -1844,7 +1865,7 @@ if ($funcionario['fecha_ingreso']) {
         // ==========================================
         
         async function procesarSalidaDesdePerfil() {
-            const funcionarioId = <?php echo $id; ?>;
+            // funcionarioId ya está declarado globalmente
             const funcionarioNombre = '<?php echo addslashes($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?>';
             
             // Selector de tipo de salida

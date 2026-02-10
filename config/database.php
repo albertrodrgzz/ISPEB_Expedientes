@@ -4,24 +4,15 @@
  * Sistema de Gestión de Expedientes Digitales - ISPEB
  */
 
+// Incluir configuración base (APP_URL, timezone, etc.)
+require_once __DIR__ . '/config.php';
+
 // Configuración de la base de datos
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'ispeb_expedientes');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
-
-// Configuración de la aplicación
-define('APP_NAME', 'Sistema de Expedientes ISPEB');
-define('APP_URL', 'http://localhost/APP3');
-define('UPLOAD_PATH', __DIR__ . '/../subidas/');
-define('MAX_FILE_SIZE', 5242880); // 5MB en bytes
-
-// Zona horaria
-date_default_timezone_set('America/Caracas');
-
-// Modo debug (cambiar a false en producción)
-define('APP_DEBUG', true);
 
 /**
  * Clase Database - Singleton para conexión PDO

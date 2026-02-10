@@ -14,9 +14,20 @@
  * @date 2026-02-09
  */
 
+// IMPORTANTE: Iniciar output buffering ANTES de cualquier otra cosa
+ob_start();
+
+// Suprimir display de errores para AJAX (los errores se logean en archivo)
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL);
+
+// Configuración de respuesta JSON (debe estar antes de cualquier output)
+header('Content-Type: application/json; charset=utf-8');
+
 // Seguridad y configuración
-require_once '../../../config/sesiones.php';
-require_once '../../../config/database.php';
+require_once __DIR__ . '/../../../config/seguridad.php';
+require_once __DIR__ . '/../../../config/database.php';
 
 verificarSesion();
 
@@ -42,8 +53,8 @@ if (!verificarTokenCSRF($_POST['csrf_token'] ?? '')) {
     exit;
 }
 
-// Configuración de respuesta JSON
-header('Content-Type: application/json; charset=utf-8');
+// Inicializar conexión a base de datos
+$pdo = getDB();
 
 try {
     // Validar método POST
@@ -232,20 +243,27 @@ function registrarTraslado($pdo) {
  * ✅ VALIDACIÓN: Acepta PDF o Imagen (JPG/PNG)
  */
 function registrarNombramiento($pdo) {
+    // LOG: Registrar datos recibidos para debugging
+    error_log("=== NOMBRAMIENTO DEBUG ===");
+    error_log("POST data: " . print_r($_POST, true));
+    error_log("FILES data: " . print_r($_FILES, true));
+    
     // Validar campos requeridos
     $funcionario_id = filter_var($_POST['funcionario_id'] ?? 0, FILTER_VALIDATE_INT);
-    $nuevo_cargo_id = filter_var($_POST['nuevo_cargo_id'] ?? 0, FILTER_VALIDATE_INT);
     $fecha_evento = $_POST['fecha_evento'] ?? date('Y-m-d');
     
-    if (!$funcionario_id || !$nuevo_cargo_id) {
-        throw new Exception('Datos incompletos para registrar nombramiento', 400);
+    error_log("Parsed: funcionario_id=$funcionario_id, fecha=$fecha_evento");
+    
+    if (!$funcionario_id) {
+        error_log("VALIDATION FAILED: funcionario_id=$funcionario_id");
+        throw new Exception('Debe seleccionar un funcionario', 400);
     }
     
     // Iniciar transacción
     $pdo->beginTransaction();
     
     try {
-        // Obtener datos actuales del funcionario y cargo
+        // Obtener datos actuales del funcionario
         $stmt = $pdo->prepare("
             SELECT f.*, c.nombre_cargo as cargo_actual, d.nombre as departamento
             FROM funcionarios f
@@ -264,27 +282,11 @@ function registrarNombramiento($pdo) {
             throw new Exception('No se pueden registrar nombramientos para un funcionario inactivo', 400);
         }
         
-        $cargo_anterior_id = $funcionario['cargo_id'];
-        
-        if ($cargo_anterior_id == $nuevo_cargo_id) {
-            throw new Exception('El nuevo cargo es igual al cargo actual', 400);
-        }
-        
-        // Obtener datos del nuevo cargo
-        $stmt = $pdo->prepare("SELECT nombre_cargo, nivel_acceso FROM cargos WHERE id = ?");
-        $stmt->execute([$nuevo_cargo_id]);
-        $nuevo_cargo = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$nuevo_cargo) {
-            throw new Exception('Cargo no encontrado', 404);
-        }
-        
-        // Preparar JSON con detalles
+        // Preparar JSON con detalles (solo información actual, no cambios)
         $detalles = json_encode([
-            'cargo' => $nuevo_cargo['nombre_cargo'],
-            'cargo_anterior' => $funcionario['cargo_actual'],
+            'cargo' => $funcionario['cargo_actual'],
             'departamento' => $funcionario['departamento'],
-            'nivel_acceso' => $nuevo_cargo['nivel_acceso']
+            'motivo' => 'Registro de nombramiento'
         ], JSON_UNESCAPED_UNICODE);
         
         // ✅ VALIDACIÓN: Manejar archivo PDF o Imagen
@@ -316,23 +318,11 @@ function registrarNombramiento($pdo) {
         
         $historial_id = $pdo->lastInsertId();
         
-        // ✅ COHERENCIA: Actualizar cargo del funcionario
-        $stmt = $pdo->prepare("
-            UPDATE funcionarios 
-            SET cargo_id = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ");
-        $stmt->execute([$nuevo_cargo_id, $funcionario_id]);
-        
         // Registrar en auditoría
-        registrarAuditoria($pdo, 'REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', $historial_id, [
-            'cargo_anterior' => $funcionario['cargo_actual'],
-            'cargo_id_anterior' => $cargo_anterior_id
-        ], [
+        registrarAuditoria('REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', $historial_id, null, [
             'funcionario_id' => $funcionario_id,
-            'nuevo_cargo' => $nuevo_cargo['nombre_cargo'],
-            'nuevo_cargo_id' => $nuevo_cargo_id,
-            'cargo_id_actualizado' => $nuevo_cargo_id
+            'cargo_actual' => $funcionario['cargo_actual'],
+            'fecha_evento' => $fecha_evento
         ]);
         
         // Confirmar transacción
@@ -340,14 +330,13 @@ function registrarNombramiento($pdo) {
         
         return [
             'success' => true,
-            'message' => 'Nombramiento registrado exitosamente. El cargo del funcionario ha sido actualizado.',
+            'message' => 'Nombramiento registrado correctamente',
             'data' => [
-                'historial_id' => $historial_id,
-                'cargo_anterior' => $funcionario['cargo_actual'],
-                'cargo_nuevo' => $nuevo_cargo['nombre_cargo']
+                'funcionario' => $funcionario['nombres'] . ' ' . $funcionario['apellidos'],
+                'cargo_actual' => $funcionario['cargo_actual'],
+                'fecha' => date('d/m/Y', strtotime($fecha_evento))
             ]
         ];
-        
     } catch (Exception $e) {
         $pdo->rollBack();
         throw $e;
@@ -361,29 +350,28 @@ function registrarNombramiento($pdo) {
 function registrarVacacion($pdo) {
     // Validar campos requeridos
     $funcionario_id = filter_var($_POST['funcionario_id'] ?? 0, FILTER_VALIDATE_INT);
-    $fecha_evento = $_POST['fecha_evento'] ?? ''; // Fecha de inicio
-    $fecha_fin = $_POST['fecha_fin'] ?? '';
+    $fecha_evento = $_POST['fecha_evento'] ?? ''; // Fecha de inicio de vacaciones
+    $dias_habiles = filter_var($_POST['dias_habiles'] ?? 0, FILTER_VALIDATE_INT);
     $observaciones = trim($_POST['observaciones'] ?? '');
 
-    if (!$funcionario_id || empty($fecha_evento) || empty($fecha_fin)) {
-        throw new Exception('Datos incompletos para registrar vacación', 400);
+    if (!$funcionario_id || empty($fecha_evento) || !$dias_habiles) {
+        throw new Exception('Datos incompletos para registrar vacación (requeridos: funcionario, fecha inicio, días hábiles)', 400);
     }
 
-    // Validar que fecha_fin sea posterior a fecha_evento
-    if (strtotime($fecha_fin) <= strtotime($fecha_evento)) {
-        throw new Exception('La fecha de finalización debe ser posterior a la fecha de inicio', 400);
+    if ($dias_habiles <= 0 || $dias_habiles > 30) {
+        throw new Exception('Los días hábiles deben estar entre 1 y 30', 400);
     }
-
-    // Calcular días hábiles (aproximado: días totales - domingos estimados)
-    $dias_totales = (strtotime($fecha_fin) - strtotime($fecha_evento)) / 86400;
-    $dias_habiles = floor($dias_totales * 5/7); // Estimado
 
     // Iniciar transacción
     $pdo->beginTransaction();
 
     try {
-        // Verificar que el funcionario existe y está activo
-        $stmt = $pdo->prepare("SELECT id, estado FROM funcionarios WHERE id = ?");
+        // Verificar que el funcionario existe y obtener datos
+        $stmt = $pdo->prepare("
+            SELECT f.id, f.estado, f.nombres, f.apellidos, f.fecha_ingreso
+            FROM funcionarios f
+            WHERE f.id = ?
+        ");
         $stmt->execute([$funcionario_id]);
         $funcionario = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -395,13 +383,81 @@ function registrarVacacion($pdo) {
             throw new Exception('No se pueden registrar vacaciones para un funcionario inactivo', 400);
         }
 
-        // Preparar JSON con detalles
+        // ✅ VALIDACIÓN LOTTT: Verificar mínimo 1 año de servicio
+        $fecha_ingreso = new DateTime($funcionario['fecha_ingreso']);
+        $fecha_actual = new DateTime();
+        $años_servicio = $fecha_ingreso->diff($fecha_actual)->y;
+
+        if ($años_servicio < 1) {
+            throw new Exception('El funcionario no cumple con el requisito mínimo de 1 año de servicio para vacaciones', 400);
+        }
+
+        // ✅ CÁLCULO LOTTT: Días totales según antigüedad
+        $dias_totales_lottt = min(15 + ($años_servicio - 1), 30);
+
+        // Contar días ya usados este año
+        $año_actual = date('Y');
+        $stmt = $pdo->prepare("
+            SELECT COALESCE(SUM(JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.dias_habiles'))), 0) as total_usado
+            FROM historial_administrativo
+            WHERE funcionario_id = ?
+            AND tipo_evento = 'VACACION'
+            AND YEAR(fecha_evento) = ?
+        ");
+        $stmt->execute([$funcionario_id, $año_actual]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        $dias_usados = (int)($resultado['total_usado'] ?? 0);
+
+        $dias_disponibles = $dias_totales_lottt - $dias_usados;
+
+        // ✅ VALIDACIÓN: Verificar que no exceda días disponibles
+        if ($dias_habiles > $dias_disponibles) {
+            throw new Exception(
+                "El funcionario solo tiene {$dias_disponibles} días disponibles este año. Ya usó {$dias_usados} de {$dias_totales_lottt} días totales.",
+                400
+            );
+        }
+
+        // ✅ CALCULAR FECHA FIN (solo días hábiles: lunes a viernes)
+        $fecha_inicio = new DateTime($fecha_evento);
+        $dias_contados = 0;
+        $fecha_actual_calculo = clone $fecha_inicio;
+
+        // Avanzar solo días hábiles
+        while ($dias_contados < $dias_habiles) {
+            $fecha_actual_calculo->modify('+1 day');
+            $dia_semana = (int)$fecha_actual_calculo->format('N'); // 1=lunes, 7=domingo
+            
+            if ($dia_semana >= 1 && $dia_semana <= 5) {
+                $dias_contados++;
+            }
+        }
+
+        $fecha_ultimo_dia = $fecha_actual_calculo->format('Y-m-d');
+        
+        // Fecha de retorno es el siguiente día hábil
+        $fecha_retorno = clone $fecha_actual_calculo;
+        $fecha_retorno->modify('+1 day');
+        
+        // Saltar fin de semana si cayera en uno
+        while ((int)$fecha_retorno->format('N') > 5) {
+            $fecha_retorno->modify('+1 day');
+        }
+        
+        $fecha_retorno_str = $fecha_retorno->format('Y-m-d');
+
+        // Preparar JSON con detalles completos
         $detalles = json_encode([
             'dias_habiles' => $dias_habiles,
-            'observaciones' => htmlspecialchars($observaciones, ENT_QUOTES, 'UTF-8')
+            'observaciones' => htmlspecialchars($observaciones, ENT_QUOTES, 'UTF-8'),
+            'años_servicio' => $años_servicio,
+            'dias_totales_año' => $dias_totales_lottt,
+            'dias_disponibles_previo' => $dias_disponibles,
+            'fecha_retorno' => $fecha_retorno_str,
+            'lottt_aplicado' => true
         ], JSON_UNESCAPED_UNICODE);
 
-        // Manejar archivo PDF si existe
+        // Manejar archivo PDF/imagen (REQUERIDO)
         $ruta_archivo = null;
         $nombre_original = null;
 
@@ -409,6 +465,8 @@ function registrarVacacion($pdo) {
             $resultado_archivo = guardarArchivoHistorial($funcionario_id, 'vacaciones', $_FILES['archivo_pdf']);
             $ruta_archivo = $resultado_archivo['ruta'];
             $nombre_original = $resultado_archivo['nombre_original'];
+        } else {
+            throw new Exception('Se requiere adjuntar el documento de aval de la vacación', 400);
         }
 
         // Insertar en historial_administrativo
@@ -422,7 +480,7 @@ function registrarVacacion($pdo) {
         $stmt->execute([
             $funcionario_id,
             $fecha_evento,
-            $fecha_fin,
+            $fecha_ultimo_dia,
             $detalles,
             $ruta_archivo,
             $nombre_original,
@@ -440,11 +498,14 @@ function registrarVacacion($pdo) {
         $stmt->execute([$funcionario_id]);
 
         // Registrar en auditoría
-        registrarAuditoria($pdo, 'REGISTRAR_VACACION', 'historial_administrativo', $historial_id, null, [
+        registrarAuditoria('REGISTRAR_VACACION', 'historial_administrativo', $historial_id, null, [
             'funcionario_id' => $funcionario_id,
             'fecha_inicio' => $fecha_evento,
-            'fecha_fin' => $fecha_fin,
+            'fecha_fin' => $fecha_ultimo_dia,
+            'fecha_retorno' => $fecha_retorno_str,
             'dias_habiles' => $dias_habiles,
+            'lottt_años_servicio' => $años_servicio,
+            'lottt_dias_totales' => $dias_totales_lottt,
             'estado_actualizado' => 'vacaciones'
         ]);
 
@@ -453,13 +514,20 @@ function registrarVacacion($pdo) {
 
         return [
             'success' => true,
-            'message' => 'Vacación registrada exitosamente. El estado del funcionario se actualizó a "vacaciones".',
+            'message' => 'Vacación registrada exitosamente según LOTTT. El estado del funcionario se actualizó a "vacaciones".',
             'data' => [
                 'historial_id' => $historial_id,
                 'dias_habiles' => $dias_habiles,
                 'fecha_inicio' => $fecha_evento,
-                'fecha_fin' => $fecha_fin,
-                'nuevo_estado' => 'vacaciones'
+                'fecha_fin' => $fecha_ultimo_dia,
+                'fecha_retorno' => $fecha_retorno_str,
+                'nuevo_estado' => 'vacaciones',
+                'lottt_info' => [
+                    'años_servicio' => $años_servicio,
+                    'dias_totales_año' => $dias_totales_lottt,
+                    'dias_usados_previo' => $dias_usados,
+                    'dias_disponibles_ahora' => $dias_disponibles - $dias_habiles
+                ]
             ]
         ];
 
@@ -468,6 +536,8 @@ function registrarVacacion($pdo) {
         throw $e;
     }
 }
+
+
 
 /**
  * Registra el retorno de vacaciones
@@ -563,7 +633,7 @@ function registrarRetornoVacacion($pdo) {
 
         return [
             'success' => true,
-message' => 'Retorno de vacaciones registrado exitosamente. El funcionario está nuevamente activo.',
+            'message' => 'Retorno de vacaciones registrado exitosamente. El funcionario está nuevamente activo.',
             'data' => [
                 'historial_id' => $historial_id,
                 'fecha_retorno' => $fecha_evento,
@@ -989,25 +1059,34 @@ function guardarArchivoHistorial($funcionario_id, $tipo, $archivo) {
     ];
 }
 
-/**
- * Registra una acción en la tabla de auditoría
- */
-function registrarAuditoria($pdo, $accion, $tabla, $registro_id, $datos_anteriores, $datos_nuevos) {
-    $stmt = $pdo->prepare("
-        INSERT INTO auditoria (
-            usuario_id, accion, tabla_afectada, registro_id,
-            datos_anteriores, datos_nuevos, ip_address, user_agent
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ");
+// ============================================================================
+// LIMPIEZA FINAL: Asegurar que solo se envíe JSON limpio
+// ============================================================================
 
-    $stmt->execute([
-        $_SESSION['usuario_id'],
-        $accion,
-        $tabla,
-        $registro_id,
-        $datos_anteriores ? json_encode($datos_anteriores, JSON_UNESCAPED_UNICODE) : null,
-        json_encode($datos_nuevos, JSON_UNESCAPED_UNICODE),
-        $_SERVER['REMOTE_ADDR'] ?? null,
-        $_SERVER['HTTP_USER_AGENT'] ?? null
-    ]);
+// Capturar cualquier output inesperado
+$buffer = ob_get_clean();
+
+// Si hay contenido en el buffer que no es JSON válido, loguearlo
+if (!empty($buffer) && strpos($buffer, '{') !== 0) {
+    error_log("OUTPUT NO ESPERADO EN gestionar_historial.php: " . $buffer);
+    
+    // Si ya se envió una respuesta JSON, no hacer nada más
+    // Si no, enviar un error JSON
+    if (strpos($buffer, '"success"') === false) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error interno del servidor. Consulte los logs.',
+            'debug' => substr($buffer, 0, 200) // Primeros 200 chars para debug
+        ]);
+    } else {
+        // Ya hay JSON en el buffer, enviarlo
+        echo $buffer;
+    }
+} else {
+    // Output limpio o ya es JSON
+    echo $buffer;
 }
+
+// Limpiar y enviar output buffer
+ob_end_flush();

@@ -59,7 +59,7 @@ $funcionarios = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - <?php echo APP_NAME; ?></title>
-    <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
     <script src="<?php echo APP_URL; ?>/publico/vendor/chart.js/chart.umd.min.js"></script>
 </head>
 <body>
@@ -224,7 +224,7 @@ $funcionarios = $stmt->fetchAll();
         </div>
     </div>
     
-    <script src="../../publico/js/app.js"></script>
+    <script src="<?php echo APP_URL; ?>/publico/js/app.js"></script>
     <script>
         // Configuración global de Chart.js
         Chart.defaults.font.family = "'Inter', sans-serif";

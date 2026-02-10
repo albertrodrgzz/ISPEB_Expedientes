@@ -9,7 +9,7 @@
  */
 
 // Seguridad y configuración
-require_once '../../../config/sesiones.php';
+require_once '../../../config/seguridad.php';
 require_once '../../../config/database.php';
 
 verificarSesion();
@@ -66,6 +66,9 @@ try {
     }
 
     $sql .= " ORDER BY h.fecha_evento DESC, h.created_at DESC";
+
+    // Obtener conexión a base de datos
+    $pdo = getDB();
 
     // Ejecutar consulta
     $stmt = $pdo->prepare($sql);

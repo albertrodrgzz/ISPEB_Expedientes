@@ -436,7 +436,7 @@ $vacaciones = $stmt->fetchAll();
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="../funcionarios/view.php?id=<?php echo $vac['funcionario_id']; ?>" 
+                                            <a href="../funcionarios/ver.php?id=<?php echo $vac['funcionario_id']; ?>" 
                                                class="btn-icon btn-view" 
                                                title="Ver Empleado">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -538,166 +538,416 @@ $vacaciones = $stmt->fetchAll();
         }
         
         async function abrirModalVacaciones() {
-            // Cargar funcionarios activos
-            const response = await fetch('../funcionarios/ajax/listar.php');
-            const data = await response.json();
-            
-            if (!data.success) {
-                Swal.fire('Error', 'No se pudieron cargar los funcionarios', 'error');
-                return;
-            }
-            
-            const funcionarios = data.data.filter(f => f.estado === 'activo');
-            
-            const { value: formValues } = await Swal.fire({
-                title: '✈️ Registrar Vacaciones',
-                html: `
-                    <div style="text-align: left;">
-                        <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
-                            <div style="display: flex; align-items: center; gap: 10px; color: #92400e;">
-                                <span style="font-size: 24px;">ℹ️</span>
-                                <p style="margin: 0; font-size: 13px;">El estado del funcionario cambiará automáticamente a "vacaciones" durante el periodo registrado.</p>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Funcionario *</label>
-                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px;">
-                                <option value="">Seleccione un funcionario...</option>
-                                ${funcionarios.map(f => `
-                                    <option value="${f.id}">
-                                        ${f.nombres} ${f.apellidos} - ${f.cedula} (${f.nombre_cargo})
-                                    </option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                            <div>
-                                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha Inicio *</label>
-                                <input type="date" id="swal-fecha-inicio" class="swal2-input" style="width: 100%; padding: 10px;">
-                            </div>
-                            <div>
-                                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha Fin *</label>
-                                <input type="date" id="swal-fecha-fin" class="swal2-input" style="width: 100%; padding: 10px;">
-                            </div>
-                        </div>
-                        
-                        <div id="dias-habiles-box" style="background: #f0f9ff; border: 2px dashed #0ea5e9; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none;">
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="font-weight: 600; color: #0c4a6e;">Días hábiles calculados:</span>
-                                <span id="dias-habiles-valor" style="font-size: 28px; font-weight: 700; color: #0284c7;">0</span>
-                            </div>
-                            <small style="color: #075985; font-size: 12px; display: block; margin-top: 8px;">* Solo cuenta días de lunes a viernes</small>
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Observaciones</label>
-                            <textarea id="swal-observaciones" class="swal2-textarea" rows="3" placeholder="Observaciones adicionales..." style="width: 95%; padding: 10px; resize: vertical;"></textarea>
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF (Opcional)</label>
-                            <input type="file" id="swal-pdf" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px;">
-                            <small style="color: #718096; font-size: 12px;">Máximo 5MB</small>
-                        </div>
-                    </div>
-                `,
-                width: '650px',
-                showCancelButton: true,
-                confirmButtonText: 'Registrar Vacaciones',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#06d6a0',
-                didOpen: () => {
-                    const fechaInicio = document.getElementById('swal-fecha-inicio');
-                    const fechaFin = document.getElementById('swal-fecha-fin');
-                    const diasBox = document.getElementById('dias-habiles-box');
-                    const diasValor = document.getElementById('dias-habiles-valor');
-                    
-                    function actualizarDias() {
-                        const dias = calcularDiasHabiles(fechaInicio.value, fechaFin.value);
-                        if (dias > 0) {
-                            diasValor.textContent = dias;
-                            diasBox.style.display = 'block';
-                        } else {
-                            diasBox.style.display = 'none';
-                        }
-                    }
-                    
-                    fechaInicio.addEventListener('change', actualizarDias);
-                    fechaFin.addEventListener('change', actualizarDias);
-                },
-                preConfirm: () => {
-                    const funcionario_id = document.getElementById('swal-funcionario').value;
-                    const fecha_evento = document.getElementById('swal-fecha-inicio').value;
-                    const fecha_fin = document.getElementById('swal-fecha-fin').value;
-                    const observaciones = document.getElementById('swal-observaciones').value;
-                    const archivo_pdf = document.getElementById('swal-pdf').files[0];
-                    
-                    if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
-                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha de inicio'); return false; }
-                    if (!fecha_fin) { Swal.showValidationMessage('Ingrese la fecha de fin'); return false; }
-                    
-                    if (new Date(fecha_fin) <= new Date(fecha_evento)) {
-                        Swal.showValidationMessage('La fecha de fin debe ser posterior a la de inicio');
-                        return false;
-                    }
-                    
-                    if (archivo_pdf && archivo_pdf.size > 5 * 1024 * 1024) {
-                        Swal.showValidationMessage('Archivo muy grande (máx 5MB)');
-                        return false;
-                    }
-                    
-                    if (archivo_pdf && archivo_pdf.type !== 'application/pdf') {
-                        Swal.showValidationMessage('Solo archivos PDF');
-                        return false;
-                    }
-                    
-                    return { funcionario_id, fecha_evento, fecha_fin, observaciones, archivo_pdf };
-                }
-            });
-            
-            if (!formValues) return;
-            
-            // Procesar
-            Swal.fire({ title: 'Procesando...', html: 'Registrando vacaciones...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            
             try {
-                const formData = new FormData();
-                formData.append('csrf_token', '<?php echo generarTokenCSRF(); ?>');
-                formData.append('accion', 'registrar_vacacion');
-                formData.append('funcionario_id', formValues.funcionario_id);
-                formData.append('fecha_evento', formValues.fecha_evento);
-                formData.append('fecha_fin', formValues.fecha_fin);
-                formData.append('observaciones', formValues.observaciones);
-                if (formValues.archivo_pdf) {
-                    formData.append('archivo_pdf', formValues.archivo_pdf);
+                // Cargar funcionarios activos
+                const funcionariosRes = await fetch('../funcionarios/ajax/listar.php');
+                
+                if (!funcionariosRes.ok) {
+                    throw new Error(`HTTP ${funcionariosRes.status}: Error al cargar funcionarios`);
                 }
                 
-                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
-                const result = await response.json();
-                
-                if (result.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Vacaciones Registradas',
-                        html: `
-                            <p>Las vacaciones se registraron exitosamente.</p>
-                            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
-                                <p style="margin: 0; font-size: 13px;"><strong>✓ Días hábiles:</strong> ${result.data.dias_habiles}</p>
-                                <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Periodo:</strong> ${result.data.fecha_inicio} - ${result.data.fecha_fin}</p>
-                                <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Estado:</strong> ${result.data.nuevo_estado}</p>
-                            </div>
-                        `,
-                        confirmButtonColor: '#10b981'
+                // Intentar parsear JSON con mejor manejo de errores
+                let funcionariosData;
+                try {
+                    const responseText = await funcionariosRes.text();
+                    console.log('Respuesta del servidor:', responseText);
+                    funcionariosData = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('Error al parsear JSON:', parseError);
+                    console.error('Respuesta completa:', await funcionariosRes.clone().text());
+                    throw new Error('El servidor devolvió una respuesta inválida (no es JSON válido)');
+                }
+
+                if (!funcionariosData.success) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudieron cargar los funcionarios',
+                        confirmButtonColor: '#ef4444'
                     });
-                    window.location.reload();
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al registrar vacaciones', confirmButtonColor: '#ef4444' });
+                    return;
+                }
+
+                const funcionarios = funcionariosData.data.filter(f => f.estado === 'activo');
+
+                // Variable para almacenar datos LOTTT del funcionario seleccionado
+                let datosVacaciones = null;
+
+                // Modal con diseño HORIZONTAL y profesional (igual que nombramientos)
+                const { value: formValues } = await Swal.fire({
+                    title: '<div style="display: flex; align-items: center; gap: 12px; justify-content: center; font-size: 22px; font-weight: 700; color: #1e293b;"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span>Nueva Vacación</span></div>',
+                    html: `
+                        <style>
+                            .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+                            .form-group { text-align: left; }
+                            .form-label { display: flex; align-items: center; gap: 7px; font-weight: 600; margin-bottom: 9px; color: #334155; font-size: 13px; }
+                            .form-input, .form-select, .form-textarea { width: 100%; padding: 10px 13px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13.5px; transition: all 0.2s; background: white; font-family: inherit; }
+                            .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #06d6a0; outline: none; box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.1); }
+                            .form-textarea { resize: vertical; min-height: 70px; }
+                            .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+                            .file-input-button { width: 100%; padding: 11px 14px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 2px dashed #cbd5e1; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 9px; font-weight: 500; color: #475569; font-size: 13px; }
+                            .file-input-button:hover { border-color: #06d6a0; background: #f0fdfa; color: #06d6a0; }
+                            .file-input-button.has-file { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-color: #06d6a0; color: #059669; }
+                            .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
+                            .info-box { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 3px solid #f59e0b; padding: 11px 14px; border-radius: 8px; margin-top: 10px; }
+                            .info-box-content { display: flex; align-items: start; gap: 9px; font-size: 11.5px; color: #92400e; line-height: 1.5; }
+                            .lottt-card { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #06d6a0; border-radius: 12px; padding: 18px; margin-bottom: 18px; display: none; }
+                            .lottt-title { font-size: 13px; color: #047857; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+                            .lottt-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+                            .lottt-stat { text-align: center; }
+                            .lottt-stat-label { font-size: 11px; color: #059669; font-weight: 500; margin-bottom: 4px; }
+                            .lottt-stat-value { font-size: 24px; font-weight: 700; color: #047857; }
+                            .return-date-card { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 3px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 18px; display: none; }
+                            .return-date-content { display: flex; align-items: center; gap: 10px; color: #1e40af; font-size: 13.5px; font-weight: 600; }
+                            .error-message { background: #fee2e2; border-left: 3px solid #ef4444; padding: 11px 14px; border-radius: 8px; margin-bottom: 18px; display: none; color: #991b1b; font-size: 12px; font-weight: 500; }
+                        </style>
+                        <div style="max-width: 750px; margin: 0 auto;">
+                            <!-- Funcionario -->
+                            <div class="form-group" style="margin-bottom: 18px;">
+                                <label class="form-label">
+                                    <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    Funcionario <span style="color: #ef4444;">*</span>
+                                </label>
+                                <select id="swal-funcionario" class="form-select">
+                                    <option value="">Seleccionar...</option>
+                                    ${funcionarios.map(f => `
+                                        <option value="${f.id}">
+                                            ${f.nombres} ${f.apellidos} - ${f.cedula}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </div>
+
+                            <!-- Mensaje de error -->
+                            <div id="error-message" class="error-message"></div>
+
+                            <!-- Información LOTTT -->
+                            <div id="lottt-card" class="lottt-card">
+                                <div class="lottt-title">📋 Derecho a Vacaciones (LOTTT)</div>
+                                <div class="lottt-stats">
+                                    <div class="lottt-stat">
+                                        <div class="lottt-stat-label">Años Servicio</div>
+                                        <div class="lottt-stat-value" id="años-servicio">-</div>
+                                    </div>
+                                    <div class="lottt-stat">
+                                        <div class="lottt-stat-label">Días Totales</div>
+                                        <div class="lottt-stat-value" id="dias-totales">-</div>
+                                    </div>
+                                    <div class="lottt-stat">
+                                        <div class="lottt-stat-label">Disponibles</div>
+                                        <div class="lottt-stat-value" id="dias-disponibles">-</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fechas y Días -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        Fecha Inicio <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="date" id="swal-fecha-inicio" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                        Días a Tomar <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <select id="swal-dias-selector" class="form-select" disabled>
+                                        <option value="">Primero seleccione funcionario...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de retorno calculada -->
+                            <div id="return-date-card" class="return-date-card">
+                                <div class="return-date-content">
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <div>
+                                        Fecha de retorno al trabajo: 
+                                        <strong id="fecha-retorno-display">-</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Observaciones y Documento -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
+                                        Observaciones
+                                    </label>
+                                    <textarea id="swal-observaciones" class="form-textarea" placeholder="Motivo o comentarios..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                        Documento Aval <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <div class="file-input-wrapper">
+                                        <label class="file-input-button" id="file-label" for="swal-pdf">
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                            <span id="file-label-text">Seleccionar archivo</span>
+                                        </label>
+                                        <input type="file" id="swal-pdf" accept="application/pdf,image/png,image/jpeg,image/jpg">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Info Box -->
+                            <div class="info-box">
+                                <div class="info-box-content">
+                                    <svg width="16" height="16" fill="#f59e0b" viewBox="0 0 24 24" style="flex-shrink: 0;"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div>
+                                        <strong>LOTTT:</strong> 15 días tras 1 año + 1 día/año adicional hasta máx 30 • <strong>Formatos:</strong> PDF, JPG, PNG • <strong>Máx:</strong> 5 MB
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    width: '850px',
+                    showCancelButton: true,
+                    confirmButtonText: '<div style="display: flex; align-items: center; gap: 7px;"><svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>Registrar Vacación</span></div>',
+                    cancelButtonText: '<div style="display: flex; align-items: center; gap: 7px;"><svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><span>Cancelar</span></div>',
+                    confirmButtonColor: '#06d6a0',
+                    cancelButtonColor: '#64748b',
+                    customClass: {
+                        popup: 'swal-modern-popup',
+                        confirmButton: 'swal-btn',
+                        cancelButton: 'swal-btn'
+                    },
+                    didOpen: () => {
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            .swal-modern-popup { border-radius: 20px; padding: 30px !important; }
+                            .swal-btn { border-radius: 10px !important; padding: 11px 24px !important; font-weight: 600 !important; font-size: 14.5px !important; transition: all 0.2s !important; }
+                            .swal-btn:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important; }
+                        `;
+                        document.head.appendChild(style);
+
+                        // Elementos del DOM
+                        const funcionarioSelect = document.getElementById('swal-funcionario');
+                        const errorMessage = document.getElementById('error-message');
+                        const lotttCard = document.getElementById('lottt-card');
+                        const añosServicio = document.getElementById('años-servicio');
+                        const diasTotales = document.getElementById('dias-totales');
+                        const diasDisponibles = document.getElementById('dias-disponibles');
+                        const fechaInicio = document.getElementById('swal-fecha-inicio');
+                        const diasSelector = document.getElementById('swal-dias-selector');
+                        const returnDateCard = document.getElementById('return-date-card');
+                        const fechaRetornoDisplay = document.getElementById('fecha-retorno-display');
+                        const fileInput = document.getElementById('swal-pdf');
+                        const fileLabel = document.getElementById('file-label');
+                        const fileLabelText = document.getElementById('file-label-text');
+
+                        // Función: Cargar datos de vacaciones del funcionario
+                        async function cargarDatosVacaciones(funcionarioId) {
+                            if (!funcionarioId) {
+                                lotttCard.style.display = 'none';
+                                errorMessage.style.display = 'none';
+                                returnDateCard.style.display = 'none';
+                                diasSelector.disabled = true;
+                                diasSelector.innerHTML = '<option value="">Primero seleccione funcionario...</option>';
+                                return;
+                            }
+
+                            try {
+                                console.log(`Cargando datos LOTTT para funcionario ID: ${funcionarioId}`);
+                                const url = `ajax/calcular_dias_vacaciones.php?funcionario_id=${funcionarioId}`;
+                                console.log(`URL: ${url}`);
+                                
+                                const res = await fetch(url);
+                                console.log('Response status:', res.status);
+                                console.log('Response ok:', res.ok);
+                                
+                                const responseText = await res.text();
+                                console.log('Response text:', responseText);
+                                
+                                const data = JSON.parse(responseText);
+
+                                if (!data.success) {
+                                    throw new Error(data.error || 'Error al calcular vacaciones');
+                                }
+
+                                datosVacaciones = data;
+
+                                if (!data.cumple_requisito) {
+                                    // No cumple 1 año
+                                    lotttCard.style.display = 'none';
+                                    errorMessage.textContent = `⚠️ ${data.mensaje}. Fecha cumple 1 año: ${data.data.fecha_cumple_año}`;
+                                    errorMessage.style.display = 'block';
+                                    diasSelector.disabled = true;
+                                    diasSelector.innerHTML = '<option value="">No disponible</option>';
+                                    fechaInicio.disabled = true;
+                                } else {
+                                    // Mostrar datos
+                                    errorMessage.style.display = 'none';
+                                    lotttCard.style.display = 'block';
+                                    añosServicio.textContent = data.data.años_servicio;
+                                    diasTotales.textContent = data.data.dias_totales;
+                                    diasDisponibles.textContent = data.data.dias_disponibles;
+                                    
+                                    fechaInicio.disabled = false;
+
+                                    if (data.data.dias_disponibles === 0) {
+                                        errorMessage.textContent = '⚠️ Este funcionario ya usó todos sus días de vacaciones disponibles este año.';
+                                        errorMessage.style.display = 'block';
+                                        diasSelector.disabled = true;
+                                        diasSelector.innerHTML = '<option value="">Sin días disponibles</option>';
+                                    } else {
+                                        // ✅ Generar opciones del selector
+                                        diasSelector.disabled = false;
+                                        let options = '<option value="">Seleccione días...</option>';
+                                        for (let i = 1; i <= data.data.dias_disponibles; i++) {
+                                            options += `<option value="${i}">${i} día${i > 1 ? 's' : ''}</option>`;
+                                        }
+                                        diasSelector.innerHTML = options;
+                                    }
+                                }
+                            } catch (error) {
+                                console.error(error);
+                                errorMessage.textContent = '❌ Error al cargar datos: ' + error.message;
+                                errorMessage.style.display = 'block';
+                                lotttCard.style.display = 'none';
+                            }
+                        }
+
+                        // Función: Calcular fecha de retorno
+                        async function calcularFechaRetorno() {
+                            const diasValue = parseInt(diasSelector.value);
+                            const fechaValue = fechaInicio.value;
+
+                            if (!diasValue || !fechaValue || diasValue <= 0) {
+                                returnDateCard.style.display = 'none';
+                                return;
+                            }
+
+                            try {
+                                const url = `ajax/calcular_fecha_retorno.php?fecha_inicio=${fechaValue}&dias_habiles=${diasValue}`;
+                                console.log('Calculando fecha retorno - URL:', url);
+                                
+                                const res = await fetch(url);
+                                console.log('Fecha retorno - Response status:', res.status);
+                                console.log('Fecha retorno - Response ok:', res.ok);
+                                
+                                const responseText = await res.text();
+                                console.log('Fecha retorno - Response text:', responseText);
+                                
+                                const data = JSON.parse(responseText);
+
+                                if (data.success) {
+                                    fechaRetornoDisplay.textContent = data.data.fecha_retorno_formateada;
+                                    returnDateCard.style.display = 'block';
+                                }
+                            } catch (error) {
+                                console.error('Error calculando fecha de retorno:', error);
+                                returnDateCard.style.display = 'none';
+                            }
+                        }
+
+                        // File input handler
+                        fileInput.addEventListener('change', (e) => {
+                            if (e.target.files.length > 0) {
+                                const fileName = e.target.files[0].name;
+                                fileLabelText.textContent = fileName.length > 25 ? fileName.substring(0, 22) + '...' : fileName;
+                                fileLabel.classList.add('has-file');
+                            } else {
+                                fileLabelText.textContent = 'Seleccionar archivo';
+                                fileLabel.classList.remove('has-file');
+                            }
+                        });
+
+                        // Event Listeners
+                        funcionarioSelect.addEventListener('change', (e) => cargarDatosVacaciones(e.target.value));
+                        diasSelector.addEventListener('change', calcularFechaRetorno);
+                        fechaInicio.addEventListener('change', calcularFechaRetorno);
+                    },
+                    preConfirm: () => {
+                        const funcionario_id = document.getElementById('swal-funcionario').value;
+                        const fecha_inicio = document.getElementById('swal-fecha-inicio').value;
+                        const dias_solicitar = parseInt(document.getElementById('swal-dias-selector').value);
+                        const observaciones = document.getElementById('swal-observaciones').value;
+                        const archivo_pdf = document.getElementById('swal-pdf').files[0];
+                        
+                        if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
+                        if (!fecha_inicio) { Swal.showValidationMessage('Ingrese la fecha de inicio'); return false; }
+                        if (!dias_solicitar || dias_solicitar <= 0) { Swal.showValidationMessage('Seleccione los días a tomar'); return false; }
+                        if (!archivo_pdf) { Swal.showValidationMessage('Debe adjuntar el documento de aval'); return false; }
+                        
+                        if (datosVacaciones && !datosVacaciones.cumple_requisito) {
+                            Swal.showValidationMessage('El funcionario no cumple con el requisito de 1 año de servicio');
+                            return false;
+                        }
+                        
+                        if (datosVacaciones && dias_solicitar > datosVacaciones.data.dias_disponibles) {
+                            Swal.showValidationMessage(`Solo hay ${datosVacaciones.data.dias_disponibles} días disponibles`);
+                            return false;
+                        }
+                        
+                        if (archivo_pdf && archivo_pdf.size > 5 * 1024 * 1024) {
+                            Swal.showValidationMessage('Archivo muy grande (máx 5MB)');
+                            return false;
+                        }
+                        
+                        return { funcionario_id, fecha_inicio, dias_solicitar, observaciones, archivo_pdf };
+                    }
+                });
+                
+                if (!formValues) return;
+                
+                // Procesar registro
+                Swal.fire({ title: 'Procesando...', html: 'Registrando vacación...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('csrf_token', '<?php echo generarTokenCSRF(); ?>');
+                    formData.append('accion', 'registrar_vacacion');
+                    formData.append('funcionario_id', formValues.funcionario_id);
+                    formData.append('fecha_evento', formValues.fecha_inicio);
+                    formData.append('dias_habiles', formValues.dias_solicitar);
+                    formData.append('observaciones', formValues.observaciones);
+                    formData.append('archivo_pdf', formValues.archivo_pdf);
+                    
+                    console.log('Enviando registro de vacación...');
+                    console.log('Funcionario ID:', formValues.funcionario_id);
+                    console.log('Fecha inicio:', formValues.fecha_inicio);
+                    console.log('Días:', formValues.dias_solicitar);
+                    
+                    const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
+                    console.log('Registro - Response status:', response.status);
+                    console.log('Registro - Response ok:', response.ok);
+                    
+                    const responseText = await response.text();
+                    console.log('Registro - Response text:', responseText);
+                    
+                    const result = JSON.parse(responseText);
+                    
+                    if (result.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Vacación Registrada',
+                            html: `
+                                <p>Las vacaciones se registraron exitosamente.</p>
+                                <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
+                                    <p style="margin: 0; font-size: 13px;"><strong>✓ Días hábiles:</strong> ${formValues.dias_solicitar}</p>
+                                    <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Fecha inicio:</strong> ${formValues.fecha_inicio}</p>
+                                    <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Fecha retorno:</strong> ${result.data?.fecha_retorno || 'Calculada'}</p>
+                                </div>
+                            `,
+                            confirmButtonColor: '#10b981'
+                        });
+                        window.location.reload();
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al registrar vacación', confirmButtonColor: '#ef4444' });
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
                 }
             } catch (error) {
                 console.error(error);
-                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error al abrir el modal', confirmButtonColor: '#ef4444' });
             }
         }
     </script>

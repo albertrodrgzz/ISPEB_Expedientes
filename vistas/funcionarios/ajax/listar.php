@@ -4,12 +4,21 @@
  * Retorna lista de funcionarios para selects y formularios
  */
 
-require_once '../../../config/sesiones.php';
+// IMPORTANTE: Iniciar output buffering ANTES de cualquier otra cosa
+ob_start();
+
+// Suprimir display de errores para AJAX (los errores se logean en archivo)
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL);
+
+// Configuración de respuesta JSON (debe estar antes de cualquier output)
+header('Content-Type: application/json; charset=utf-8');
+
+require_once '../../../config/seguridad.php';
 require_once '../../../config/database.php';
 
 verificarSesion();
-
-header('Content-Type: application/json; charset=utf-8');
 
 try {
     $pdo = getDB();
@@ -45,3 +54,6 @@ try {
         'error' => 'Error al obtener funcionarios: ' . $e->getMessage()
     ], JSON_UNESCAPED_UNICODE);
 }
+
+// Limpiar y enviar output buffer
+ob_end_flush();

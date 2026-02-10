@@ -4,7 +4,7 @@
  * Retorna lista de cargos activos para selects
  */
 
-require_once '../../../config/sesiones.php';
+require_once '../../../config/seguridad.php';
 require_once '../../../config/database.php';
 
 verificarSesion();

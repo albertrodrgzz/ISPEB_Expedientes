@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug - Profile Tab Click</title>
+</head>
+<body>
+    <h1>Instrucciones de Debug</h1>
+    
+    <p>Abre la página del perfil del funcionario y luego abre la consola del navegador (F12).</p>
+    
+    <p>Pega este código en la consola:</p>
+    
+    <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px;">
+// Ver qué pasa cuando haces click en Nombramientos
+console.log('=== DEBUG NOMBRAMIENTOS ===');
+
+// Verificar si la función existe
+console.log('¿Existe cargarNombramientos?', typeof cargarNombramientos);
+
+// Intentar ejecutarla manualmente
+if (typeof cargarNombramientos === 'function') {
+    console.log('✅ Función encontrada, ejecutando...');
+    cargarNombramientos();
+} else {
+    console.log('❌ Función NO encontrada');
+    console.log('Funciones disponibles:', Object.keys(window).filter(k => k.includes('cargar')));
+}
+
+// Ver el estado actual del tab
+const tabElement = document.getElementById('tab-nombramientos');
+console.log('Tab nombramientos:', tabElement);
+console.log('Tab tiene clase active?', tabElement?.classList.contains('active'));
+
+// Ver el contenedor
+const container = document.getElementById('nombramientos-container');
+console.log('Container:', container);
+console.log('Container HTML:', container?.innerHTML);
+    </pre>
+    
+    <h2>¿Qué deberías ver?</h2>
+    <ul>
+        <li>Si dice "Función encontrada" → El problema es que no se ejecuta automáticamente</li>
+        <li>Si dice "Función NO encontrada" → El problema es que la función no está definida</li>
+    </ul>
+    
+    <p><strong>Después de ejecutar ese código, copia y pégame la salida de la consola.</strong></p>
+</body>
+</html>

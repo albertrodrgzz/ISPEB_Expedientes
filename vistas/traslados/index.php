@@ -1,7 +1,9 @@
 <?php
 /**
- * Vista: Módulo de Traslados
- * Gestión y consulta de traslados de personal
+ * Módulo de Traslados
+ * Sistema ISPEB - Gestión de Expedientes Digitales
+ * 
+ * Permite registrar y consultar traslados de funcionarios entre departamentos
  */
 
 require_once __DIR__ . '/../../config/database.php';
@@ -9,31 +11,23 @@ require_once __DIR__ . '/../../config/seguridad.php';
 
 verificarSesion();
 
+// Verificar permisos (nivel 1-2)
 if (!verificarNivel(2)) {
-    $_SESSION['error'] = 'No tiene permisos para acceder al módulo de traslados';
-    header('Location: ../dashboard/index.php');
+    $_SESSION['error'] = 'No tiene permisos para acceder a este módulo';
+    header('Location: ' . APP_URL . '/vistas/dashboard/index.php');
     exit;
 }
 
 $db = getDB();
 
-// Estadísticas
+// Obtener estadísticas
 $stmt = $db->query("SELECT COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'TRASLADO'");
 $total_traslados = $stmt->fetch()['total'];
 
 $stmt = $db->query("SELECT COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'TRASLADO' AND YEAR(fecha_evento) = YEAR(CURDATE())");
 $traslados_anio = $stmt->fetch()['total'];
 
-$stmt = $db->query("SELECT COUNT(DISTINCT funcionario_id) as total FROM historial_administrativo WHERE tipo_evento = 'TRASLADO'");
-$empleados_trasladados = $stmt->fetch()['total'];
-
-$stmt = $db->query("SELECT JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.departamento_destino')) as dept, COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'TRASLADO' GROUP BY dept ORDER BY total DESC LIMIT 1");
-$dept_popular = $stmt->fetch();
-
-// Obtener departamentos para filtros
-$departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetchAll();
-
-// Obtener traslados
+// Obtener registros de traslados
 $stmt = $db->query("
     SELECT 
         ha.id,
@@ -44,13 +38,14 @@ $stmt = $db->query("
         JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.departamento_origen')) as departamento_origen,
         JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.departamento_destino')) as departamento_destino,
         JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.motivo')) as motivo,
-        ha.fecha_evento as fecha_traslado,
-        ha.ruta_archivo_pdf as ruta_archivo,
+        ha.fecha_evento,
+        ha.ruta_archivo_pdf,
+        ha.nombre_archivo_original,
         ha.created_at
     FROM historial_administrativo ha
     INNER JOIN funcionarios f ON ha.funcionario_id = f.id
     WHERE ha.tipo_evento = 'TRASLADO'
-    ORDER BY ha.fecha_evento DESC
+    ORDER BY ha.fecha_evento DESC, ha.created_at DESC
 ");
 $traslados = $stmt->fetchAll();
 ?>
@@ -60,179 +55,261 @@ $traslados = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Traslados - <?php echo APP_NAME; ?></title>
-    <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
+    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+    <script src="<?php echo APP_URL; ?>/publico/js/filtros-tiempo-real.js"></script>
     <style>
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
             gap: 20px;
-            margin-bottom: 32px;
         }
-        
-        .stat-card {
+
+        .header-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .btn-nuevo {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-nuevo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             padding: 24px;
             border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-        }
-        
+
         .stat-card:nth-child(2) {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
-        
-        .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-        
-        .stat-card:nth-child(4) {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-        
+
         .stat-label {
-            font-size: 13px;
-            opacity: 0.95;
+            font-size: 14px;
+            opacity: 0.9;
             margin-bottom: 8px;
-            font-weight: 500;
         }
-        
+
         .stat-value {
             font-size: 36px;
             font-weight: 700;
-            line-height: 1;
         }
-        
-        .filter-panel {
+
+        .content-card {
             background: white;
-            border: 1px solid #e2e8f0;
             border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             padding: 24px;
-            margin-bottom: 32px;
         }
-        
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f7fafc;
+        }
+
+        th {
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #2d3748;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-from {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-to {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .btn-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .btn-link:hover {
+            color: #764ba2;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .no-data-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
         }
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../layout/sidebar.php'; ?>
-    
+    <?php include '../layout/sidebar.php'; ?>
+
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
-        
+        <?php include '../layout/header.php'; ?>
+
         <div class="content-wrapper">
-            <!-- Estadísticas -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Traslados</div>
-                    <div class="stat-value"><?php echo $total_traslados; ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Traslados <?php echo date('Y'); ?></div>
-                    <div class="stat-value"><?php echo $traslados_anio; ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Empleados Trasladados</div>
-                    <div class="stat-value"><?php echo $empleados_trasladados; ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Departamento Más Común</div>
-                    <div class="stat-value" style="font-size: 18px; margin-top: 8px;"><?php echo $dept_popular['dept'] ?? 'N/A'; ?></div>
-                </div>
-            </div>
-            
-            <!-- Filtros -->
-            <div class="filter-panel">
-                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">🔍 Filtros de Búsqueda</h3>
-                <div class="filter-grid">
-                    <div>
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar Empleado</label>
-                        <input type="text" id="search-empleado" class="search-input" placeholder="Nombre, apellido o cédula..." style="width: 100%;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Departamento Origen</label>
-                        <select id="filter-origen" class="search-input" style="width: 100%;">
-                            <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dept): ?>
-                                <option value="<?php echo $dept['nombre']; ?>"><?php echo htmlspecialchars($dept['nombre']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Departamento Destino</label>
-                        <select id="filter-destino" class="search-input" style="width: 100%;">
-                            <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dept): ?>
-                                <option value="<?php echo $dept['nombre']; ?>"><?php echo htmlspecialchars($dept['nombre']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="button" onclick="limpiarFiltros()" class="btn" style="width: 100%; background: #e2e8f0; color: #2d3748;">Limpiar</button>
-                    </div>
-                </div>
-            </div>
-            
-            
-            <!-- Botón Nuevo Traslado -->
-            <div style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
-                <button type="button" onclick="abrirModalTraslado()" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <!-- Header con botón -->
+            <div class="page-header">
+                <h1 class="header-title">🔄 Traslados</h1>
+                <button class="btn-nuevo" onclick="abrirModalTraslado()">
                     <span style="font-size: 20px;">➕</span>
                     Nuevo Traslado
                 </button>
             </div>
 
-            <!-- Tabla -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">🔄 Registro de Traslados</h2>
+            <!-- Estadísticas -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Total Traslados</div>
+                    <div class="stat-value"><?php echo number_format($total_traslados); ?></div>
                 </div>
-                <div style="overflow-x: auto;">
-                    <table class="data-table">
+                <div class="stat-card">
+                    <div class="stat-label">Traslados <?php echo date('Y'); ?></div>
+                    <div class="stat-value"><?php echo number_format($traslados_anio); ?></div>
+                </div>
+            </div>
+
+            <!-- Tabla de registros -->
+            <div class="content-card">
+                <div class="search-bar">
+                    <input type="text" 
+                           id="buscarTraslado" 
+                           class="search-input" 
+                           placeholder="🔍 Buscar por cédula, nombre, departamento...">
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="tablaTraslados">
                         <thead>
                             <tr>
-                                <th>Empleado</th>
-                                <th>Cédula</th>
-                                <th>Departamento Origen</th>
-                                <th>Departamento Destino</th>
                                 <th>Fecha</th>
+                                <th>Funcionario</th>
+                                <th>Cédula</th>
+                                <th>Desde</th>
+                                <th>Hasta</th>
                                 <th>Motivo</th>
-                                <th>Acciones</th>
+                                <th>Documento</th>
                             </tr>
                         </thead>
-                        <tbody id="traslados-tbody">
+                        <tbody>
                             <?php if (empty($traslados)): ?>
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 48px; color: #718096;">
-                                        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🔄</div>
-                                        <p>No hay registros de traslados</p>
+                                    <td colspan="7">
+                                        <div class="no-data">
+                                            <div class="no-data-icon">🔄</div>
+                                            <p>No hay traslados registrados</p>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($traslados as $tras): ?>
-                                    <tr class="traslado-row" 
-                                        data-empleado="<?php echo strtolower($tras['nombres'] . ' ' . $tras['apellidos'] . ' ' . $tras['cedula']); ?>"
-                                        data-origen="<?php echo $tras['departamento_origen']; ?>"
-                                        data-destino="<?php echo $tras['departamento_destino']; ?>">
+                                    <tr>
+                                        <td><?php echo date('d/m/Y', strtotime($tras['fecha_evento'])); ?></td>
                                         <td><strong><?php echo htmlspecialchars($tras['nombres'] . ' ' . $tras['apellidos']); ?></strong></td>
                                         <td><?php echo htmlspecialchars($tras['cedula']); ?></td>
-                                        <td><span style="padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 12px;"><?php echo htmlspecialchars($tras['departamento_origen']); ?></span></td>
-                                        <td><span style="padding: 4px 12px; background: #dcfce7; color: #166534; border-radius: 12px; font-size: 12px;"><?php echo htmlspecialchars($tras['departamento_destino']); ?></span></td>
-                                        <td><?php echo date('d/m/Y', strtotime($tras['fecha_traslado'])); ?></td>
-                                        <td><?php echo htmlspecialchars(substr($tras['motivo'], 0, 50)) . (strlen($tras['motivo']) > 50 ? '...' : ''); ?></td>
                                         <td>
-                                            <a href="../funcionarios/ver.php?id=<?php echo $tras['funcionario_id']; ?>" class="btn" style="padding: 4px 12px; font-size: 12px;">Ver</a>
-                                            <?php if ($tras['ruta_archivo']): ?>
-                                                <a href="../../<?php echo $tras['ruta_archivo']; ?>" target="_blank" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">📥</a>
+                                            <span class="badge badge-from"><?php echo htmlspecialchars($tras['departamento_origen'] ?? '-'); ?></span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-to"><?php echo htmlspecialchars($tras['departamento_destino'] ?? '-'); ?></span>
+                                        </td>
+                                        <td><?php echo htmlspecialchars(substr($tras['motivo'], 0, 40)) . (strlen($tras['motivo']) > 40 ? '...' : ''); ?></td>
+                                        <td>
+                                            <?php if ($tras['ruta_archivo_pdf']): ?>
+                                                <a href="<?php echo APP_URL . '/' . $tras['ruta_archivo_pdf']; ?>" 
+                                                   target="_blank" 
+                                                   class="btn-link">
+                                                    📄 Ver
+                                                </a>
+                                            <?php else: ?>
+                                                <span style="color: #cbd5e0;">Sin archivo</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -244,92 +321,83 @@ $traslados = $stmt->fetchAll();
             </div>
         </div>
     </div>
-    
-    
-    <!-- SweetAlert2 -->
-    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
-    
-    <!-- Filtros en Tiempo Real -->
-    <script src="../../publico/js/filtros-tiempo-real.js"></script>
+
     <script>
-        // Inicializar filtros AJAX para traslados
-        inicializarFiltros({
-            module: 'traslados',
-            searchId: 'search-empleado',
-            filterIds: ['filter-origen', 'filter-destino'],
-            tableBodySelector: '#traslados-tbody',
-            countSelector: '.card-subtitle'
-        });
+        // Inicializar filtro de búsqueda
+        initSimpleTableSearch('buscarTraslado', 'tablaTraslados');
 
-        // Función para abrir modal de nuevo traslado
+        /**
+         * Abre modal para registrar nuevo traslado
+         */
         async function abrirModalTraslado() {
-            // Obtener lista de funcionarios activos
-            const funcionariosResponse = await fetch('../funcionarios/ajax/listar.php');
-            const funcionarios = await funcionariosResponse.json();
-            
-            // Obtener lista de departamentos activos
-            const departamentosResponse = await fetch('../admin/ajax/get_departamentos.php');
-            const departamentos = await departamentosResponse.json();
+            // Cargar funcionarios activos
+            const funcionariosRes = await fetch('<?php echo APP_URL; ?>/vistas/funcionarios/ajax/listar.php');
+            const funcionariosData = await funcionariosRes.json();
 
-            if (!funcionarios.success || !departamentos.success) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudieron cargar los datos necesarios'
-                });
+            if (!funcionariosData.success) {
+                Swal.fire('Error', 'No se pudieron cargar los funcionarios', 'error');
                 return;
             }
 
-            // Crear opciones de funcionarios
-            const funcionariosOptions = funcionarios.data
-                .filter(f => f.estado === 'activo')
-                .map(f => `<option value="${f.id}" data-departamento="${f.departamento_id}">${f.nombres} ${f.apellidos} (${f.cedula})</option>`)
-                .join('');
+            const funcionarios = funcionariosData.data.filter(f => f.estado === 'activo');
 
-            // Crear opciones de departamentos
-            const departamentosOptions = departamentos.data
-                .filter(d => d.estado === 'activo')
-                .map(d => `<option value="${d.id}">${d.nombre}</option>`)
-                .join('');
+            // Cargar departamentos
+            const deptosRes = await fetch('<?php echo APP_URL; ?>/vistas/admin/ajax/get_departamentos.php');
+            const deptosData = await deptosRes.json();
 
+            if (!deptosData.success) {
+                Swal.fire('Error', 'No se pudieron cargar los departamentos', 'error');
+                return;
+            }
+
+            const departamentos = deptosData.data;
+
+            // Mostrar modal
             const { value: formValues } = await Swal.fire({
-                title: '🔄 Registrar Nuevo Traslado',
+                title: '🔄 Nuevo Traslado',
                 html: `
                     <div style="text-align: left;">
                         <div style="margin-bottom: 16px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Funcionario *</label>
-                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 10px;">
                                 <option value="">Seleccione un funcionario...</option>
-                                ${funcionariosOptions}
+                                ${funcionarios.map(f => `
+                                    <option value="${f.id}" data-depto="${f.departamento_id}">
+                                        ${f.nombres} ${f.apellidos} - ${f.cedula}
+                                    </option>
+                                `).join('')}
                             </select>
                         </div>
 
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Departamento Actual</label>
-                            <input type="text" id="swal-dept-actual" class="swal2-input" style="width: 100%; padding: 10px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px;" readonly placeholder="Se mostrará automáticamente">
+                        <div style="margin-bottom: 16px; padding: 12px; background: #f7fafc; border-radius: 8px; display: none;" id="depto-actual-box">
+                            <smallstyle="color: #718096;">Departamento actual: <strong id="depto-actual-text">-</strong></small>
                         </div>
 
                         <div style="margin-bottom: 16px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Departamento Destino *</label>
-                            <select id="swal-depto-destino" class="swal2-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                                <option value="">Seleccione departamento destino...</option>
-                                ${departamentosOptions}
+                            <select id="swal-departamento" class="swal2-input" style="width: 100%; padding: 10px;">
+                                <option value="">Seleccione el departamento destino...</option>
+                                ${departamentos.map(d => `
+                                    <option value="${d.id}">
+                                        ${d.nombre}
+                                    </option>
+                                `).join('')}
                             </select>
                         </div>
 
                         <div style="margin-bottom: 16px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Fecha del Traslado *</label>
-                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;" value="${new Date().toISOString().split('T')[0]}">
+                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 100%; padding: 10px;" value="${new Date().toISOString().split('T')[0]}">
                         </div>
 
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Motivo del Traslado *</label>
-                            <textarea id="swal-motivo" class="swal2-textarea" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 100px;" placeholder="Describa el motivo del traslado..."></textarea>
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Motivo *</label>
+                            <textarea id="swal-motivo" class="swal2-textarea" style="width: 100%; padding: 10px; min-height: 100px;" placeholder="Describa el motivo del traslado..."></textarea>
                         </div>
 
                         <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento PDF (Opcional)</label>
-                            <input type="file" id="swal-archivo" accept=".pdf" class="swal2-file" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Documento (PDF) - Opcional</label>
+                            <input type="file" id="swal-pdf" accept="application/pdf" class="swal2-file" style="width: 100%; padding: 10px;">
                             <small style="color: #718096; font-size: 12px;">Tamaño máximo: 5MB</small>
                         </div>
                     </div>
@@ -338,134 +406,87 @@ $traslados = $stmt->fetchAll();
                 showCancelButton: true,
                 confirmButtonText: 'Registrar Traslado',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#3b82f6',
-                cancelButtonColor: '#6b7280',
+                confirmButtonColor: '#667eea',
                 didOpen: () => {
-                    // Actualizar departamento actual cuando se selecciona funcionario
+                    // Mostrar departamento actual al seleccionar funcionario
                     const funcionarioSelect = document.getElementById('swal-funcionario');
-                    const deptActualInput = document.getElementById('swal-dept-actual');
-                    
+                    const deptoActualBox = document.getElementById('depto-actual-box');
+                    const deptoActualText = document.getElementById('depto-actual-text');
+
                     funcionarioSelect.addEventListener('change', function() {
                         const selectedOption = this.options[this.selectedIndex];
                         if (selectedOption.value) {
-                            const deptId = selectedOption.getAttribute('data-departamento');
-                            const dept = departamentos.data.find(d => d.id == deptId);
-                            deptActualInput.value = dept ? dept.nombre : '';
+                            const deptoId = selectedOption.dataset.depto;
+                            const depto = departamentos.find(d => d.id == deptoId);
+                            if (depto) {
+                                deptoActualText.textContent = depto.nombre;
+                                deptoActualBox.style.display = 'block';
+                            } else {
+                                deptoActualBox.style.display = 'none';
+                            }
                         } else {
-                            deptActualInput.value = '';
+                            deptoActualBox.style.display = 'none';
                         }
                     });
                 },
                 preConfirm: () => {
                     const funcionario_id = document.getElementById('swal-funcionario').value;
-                    const departamento_destino_id = document.getElementById('swal-depto-destino').value;
+                    const departamento_destino_id = document.getElementById('swal-departamento').value;
                     const fecha_evento = document.getElementById('swal-fecha').value;
                     const motivo = document.getElementById('swal-motivo').value;
-                    const archivo = document.getElementById('swal-archivo').files[0];
+                    const archivo_pdf = document.getElementById('swal-pdf').files[0];
 
-                    // Validaciones
-                    if (!funcionario_id) {
-                        Swal.showValidationMessage('Debe seleccionar un funcionario');
-                        return false;
-                    }
-                    if (!departamento_destino_id) {
-                        Swal.showValidationMessage('Debe seleccionar el departamento destino');
-                        return false;
-                    }
-                    if (!fecha_evento) {
-                        Swal.showValidationMessage('Debe ingresar la fecha del traslado');
-                        return false;
-                    }
-                    if (!motivo || motivo.trim().length < 10) {
-                        Swal.showValidationMessage('El motivo debe tener al menos 10 caracteres');
-                        return false;
-                    }
-                    if (archivo && archivo.size > 5 * 1024 * 1024) {
-                        Swal.showValidationMessage('El archivo no puede superar 5MB');
-                        return false;
-                    }
-                    if (archivo && archivo.type !== 'application/pdf') {
-                        Swal.showValidationMessage('Solo se permiten archivos PDF');
-                        return false;
-                    }
+                    if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
+                    if (!departamento_destino_id) { Swal.showValidationMessage('Seleccione el departamento destino'); return false; }
+                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha'); return false; }
+                    if (!motivo || motivo.trim().length < 10) { Swal.showValidationMessage('El motivo debe tener al menos 10 caracteres'); return false; }
+                    if (archivo_pdf && archivo_pdf.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Archivo muy grande (máx 5MB)'); return false; }
+                    if (archivo_pdf && archivo_pdf.type !== 'application/pdf') { Swal.showValidationMessage('Solo se permiten archivos PDF'); return false; }
 
-                    return {
-                        funcionario_id,
-                        departamento_destino_id,
-                        fecha_evento,
-                        motivo,
-                        archivo
-                    };
+                    return { funcionario_id, departamento_destino_id, fecha_evento, motivo, archivo_pdf };
                 }
             });
 
-            if (formValues) {
-                registrarTraslado(formValues);
-            }
-        }
+            if (!formValues) return;
 
-        // Función para registrar el traslado
-        async function registrarTraslado(data) {
-            // Mostrar loading
-            Swal.fire({
-                title: 'Procesando...',
-                html: 'Registrando traslado en el sistema...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+            // Procesar
+            Swal.fire({ title: 'Procesando...', html: 'Registrando traslado...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                // Preparar FormData
                 const formData = new FormData();
+                formData.append('csrf_token', '<?php echo generarTokenCSRF(); ?>');
                 formData.append('accion', 'registrar_traslado');
-                formData.append('funcionario_id', data.funcionario_id);
-                formData.append('departamento_destino_id', data.departamento_destino_id);
-                formData.append('fecha_evento', data.fecha_evento);
-                formData.append('motivo', data.motivo);
-                
-                if (data.archivo) {
-                    formData.append('archivo_pdf', data.archivo);
+                formData.append('funcionario_id', formValues.funcionario_id);
+                formData.append('departamento_destino_id', formValues.departamento_destino_id);
+                formData.append('fecha_evento', formValues.fecha_evento);
+                formData.append('motivo', formValues.motivo);
+
+                if (formValues.archivo_pdf) {
+                    formData.append('archivo_pdf', formValues.archivo_pdf);
                 }
 
-                // Enviar al backend
-                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const response = await fetch('<?php echo APP_URL; ?>/vistas/funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
                 const result = await response.json();
 
                 if (result.success) {
                     await Swal.fire({
                         icon: 'success',
-                        title: '¡Traslado Registrado!',
+                        title: 'Traslado Registrado',
                         html: `
-                            <p>El traslado se ha registrado exitosamente.</p>
-                            <p style="margin-top: 12px;"><strong>Nuevo departamento:</strong> ${result.data.departamento_destino}</p>
+                            <p>${result.message}</p>
+                            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
+                                <p style="margin: 0; font-size: 13px;"><strong>✓ Nuevo departamento:</strong> ${result.data.departamento_nuevo}</p>
+                            </div>
                         `,
                         confirmButtonColor: '#10b981'
                     });
-
-                    // Recargar página para mostrar el nuevo registro
                     window.location.reload();
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error al Registrar',
-                        text: result.error || 'Ocurrió un error al procesar el traslado',
-                        confirmButtonColor: '#ef4444'
-                    });
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al registrar traslado', confirmButtonColor: '#ef4444' });
                 }
             } catch (error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de Conexión',
-                    text: 'No se pudo conectar con el servidor. Por favor, inténtelo de nuevo.',
-                    confirmButtonColor: '#ef4444'
-                });
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
             }
         }
     </script>
