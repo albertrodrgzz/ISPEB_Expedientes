@@ -246,3 +246,404 @@
     fill: none;
     stroke-width: 2;
 }
+
+/* ===== MODERN FILE INPUT ===== */
+.file-input-modern {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.file-input-hidden {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.file-input-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, var(--color-bg) 0%, #E2E8F0 100%);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--color-text-light);
+    font-size: 14px;
+    font-weight: 500;
+    user-select: none;
+}
+
+.file-input-label:hover {
+    background: linear-gradient(135deg, #E2E8F0 0%, #CBD5E1 100%);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.file-input-label svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+
+.file-input-label .file-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-input-label.has-file {
+    background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.file-input-label.has-file svg {
+    stroke: var(--color-success);
+}
+/* ===== BOTÓN VOLVER MODERNO ===== */
+.btn-secondary,
+a.btn-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    background: rgba(15, 76, 129, 0.08) !important;
+    border: 1px solid rgba(15, 76, 129, 0.2) !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--color-primary) !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.btn-secondary:hover,
+a.btn-secondary:hover {
+    background: rgba(15, 76, 129, 0.12) !important;
+    border-color: var(--color-primary) !important;
+    transform: translateX(-3px) !important;
+    box-shadow: 0 2px 8px rgba(15, 76, 129, 0.15) !important;
+}
+
+.btn-secondary svg,
+a.btn-secondary svg {
+    width: 18px !important;
+    height: 18px !important;
+    stroke: var(--color-primary) !important;
+    fill: none !important;
+    stroke-width: 2 !important;
+}
+
+/* ===== RESPONSIVE: MODERN COMPONENTS ===== */
+
+
+
+/* KPI Grid Responsive */
+
+@media (max-width: 480px) {
+
+    .kpi-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 12px;
+
+    }
+
+    
+
+    .kpi-card {
+
+        padding: 16px 20px;
+
+    }
+
+    
+
+    .kpi-icon {
+
+        width: 48px;
+
+        height: 48px;
+
+    }
+
+    
+
+    .kpi-icon svg {
+
+        width: 24px;
+
+        height: 24px;
+
+    }
+
+    
+
+    .kpi-value {
+
+        font-size: 24px;
+
+    }
+
+    
+
+    .kpi-label {
+
+        font-size: 12px;
+
+    }
+
+}
+
+
+
+@media (min-width: 481px) and (max-width: 768px) {
+
+    .kpi-grid {
+
+        grid-template-columns: repeat(2, 1fr);
+
+        gap: 16px;
+
+    }
+
+}
+
+
+
+@media (min-width: 769px) and (max-width: 1024px) {
+
+    .kpi-grid {
+
+        grid-template-columns: repeat(2, 1fr);
+
+    }
+
+}
+
+
+
+/* Page Header Responsive */
+
+@media (max-width: 768px) {
+
+    .page-header {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 16px;
+
+    }
+
+    
+
+    .page-header h1 {
+
+        font-size: 22px;
+
+    }
+
+    
+
+    .page-header .btn-primary {
+
+        width: 100%;
+
+        justify-content: center;
+
+    }
+
+}
+
+
+
+/* Card Responsive */
+
+@media (max-width: 480px) {
+
+    .card-modern {
+
+        border-radius: var(--radius-md);
+
+        margin-bottom: 16px;
+
+    }
+
+    
+
+    .card-body {
+
+        padding: 16px;
+
+    }
+
+}
+
+
+
+/* Table Responsive */
+
+@media (max-width: 768px) {
+
+    .table-modern {
+
+        font-size: 13px;
+
+    }
+
+    
+
+    .table-modern thead th,
+
+    .table-modern tbody td {
+
+        padding: 12px 10px;
+
+    }
+
+    
+
+    .table-modern thead th {
+
+        font-size: 11px;
+
+    }
+
+    
+
+    .user-avatar {
+
+        width: 32px;
+
+        height: 32px;
+
+        font-size: 12px;
+
+    }
+
+    
+
+    .user-name {
+
+        font-size: 13px;
+
+    }
+
+    
+
+    .user-id {
+
+        font-size: 11px;
+
+    }
+
+}
+
+
+
+/* Button Responsive */
+
+@media (max-width: 480px) {
+
+    .btn-primary,
+
+    .btn-secondary {
+
+        padding: 10px 16px !important;
+
+        font-size: 13px !important;
+
+    }
+
+    
+
+    .btn-icon {
+
+        width: 32px !important;
+
+        height: 32px !important;
+
+    }
+
+    
+
+    .btn-icon svg {
+
+        width: 16px !important;
+
+        height: 16px !important;
+
+    }
+
+}
+
+
+
+/* Form Responsive */
+
+@media (max-width: 768px) {
+
+    .search-input,
+
+    select.search-input {
+
+        font-size: 14px;
+
+        padding: 10px 14px;
+
+    }
+
+}
+
+
+
+/* Empty State Responsive */
+
+@media (max-width: 480px) {
+
+    .empty-state {
+
+        padding: 40px 16px;
+
+    }
+
+    
+
+    .empty-state-icon svg {
+
+        width: 48px !important;
+
+        height: 48px !important;
+
+    }
+
+    
+
+    .empty-state-title {
+
+        font-size: 16px;
+
+    }
+
+    
+
+    .empty-state-description {
+
+        font-size: 13px;
+
+    }
+
+}

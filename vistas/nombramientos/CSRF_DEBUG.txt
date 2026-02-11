@@ -1,0 +1,6 @@
+    <script>
+    const CSRF_TOKEN = '<?= $_SESSION["csrf_token"] ?? "" ?>';
+    console.log('Token CSRF cargado:', CSRF_TOKEN);
+    
+    let funcionariosData = [];
+    let cargosData = [];

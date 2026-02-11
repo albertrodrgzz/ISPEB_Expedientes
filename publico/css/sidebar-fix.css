@@ -1,45 +1,65 @@
 /**
- * SIDEBAR FIX - Forzar texto blanco y mejoras visuales
- * Este archivo se carga después de estilos.css para sobrescribir
+ * SIDEBAR FIX - Diseño profesional y compacto
  */
 
-/* ===== FORZAR TEXTO BLANCO EN TODO EL SIDEBAR ===== */
-
-/* Sidebar base */
-.sidebar {
-    color: #FFFFFF !important;
-}
-
-/* Gradiente más claro abajo */
+/* ===== SIDEBAR BASE ===== */
 .sidebar {
     background: linear-gradient(160deg,
             #0F4C81 0%,
-            #118AB2 40%,
-            #00A8E8 70%,
-            #4EC2E8 100%
-            /* MÁS CLARO AL FINAL */
-        ) !important;
+            #1565A0 50%,
+            #0288D1 100%) !important;
+    color: #FFFFFF !important;
 }
 
-/* Overlay más suave */
+/* Overlay sutil */
 .sidebar::before {
     background: linear-gradient(180deg,
-            rgba(0, 0, 0, 0.10) 0%,
-            /* Arriba ligeramente oscuro */
-            rgba(0, 0, 0, 0.02) 100%
-            /* Abajo casi transparente */
-        ) !important;
+            rgba(0, 0, 0, 0.05) 0%,
+            rgba(0, 0, 0, 0.01) 100%) !important;
 }
 
-/* Títulos de sección */
+/* ===== HEADER COMPACTO ===== */
+.sidebar-header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    padding: 16px 20px !important;
+    min-height: auto !important;
+    height: auto !important;
+}
+
+.sidebar-header .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-header .logo-image {
+    max-width: 160px !important;
+    height: auto !important;
+    max-height: 40px !important;
+    object-fit: contain !important;
+    filter: brightness(1) !important;
+}
+
+/* ===== SECCIONES Y TÍTULOS ===== */
 .nav-section-title {
     color: #FFFFFF !important;
-    opacity: 0.85 !important;
+    opacity: 0.7 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.8px !important;
+    text-transform: uppercase !important;
+    padding: 12px 20px 8px !important;
 }
 
-/* Nav items - BLANCO FORZADO */
+/* ===== NAV ITEMS - MÁS COMPACTOS ===== */
 .nav-item {
     color: #FFFFFF !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    margin: 2px 12px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
 }
 
 .nav-item * {
@@ -49,19 +69,28 @@
 .nav-item svg {
     stroke: #FFFFFF !important;
     fill: none !important;
+    width: 18px !important;
+    height: 18px !important;
 }
 
-/* Nav text específico */
 .nav-text {
     color: #FFFFFF !important;
+    font-size: 14px !important;
 }
 
-/* HOVER mejorado */
+.nav-icon {
+    width: 18px !important;
+    min-width: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* ===== HOVER SUAVE ===== */
 .nav-item:hover {
-    background: rgba(255, 255, 255, 0.28) !important;
+    background: rgba(255, 255, 255, 0.15) !important;
     color: #FFFFFF !important;
-    transform: translateX(6px) scale(1.03) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+    transform: translateX(4px) !important;
 }
 
 .nav-item:hover * {
@@ -72,15 +101,13 @@
     stroke: #FFFFFF !important;
 }
 
-/* ACTIVE mejorado */
+/* ===== ACTIVE DESTACADO ===== */
 .nav-item.active {
-    background: rgba(255, 255, 255, 0.35) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
     color: #FFFFFF !important;
     font-weight: 600 !important;
-    transform: translateX(6px) scale(1.03) !important;
-    box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    transform: translateX(4px) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 .nav-item.active * {
@@ -91,21 +118,32 @@
     stroke: #FFFFFF !important;
 }
 
-/* Submenú */
+/* ===== SUBMENÚ ===== */
 .nav-subitem {
     color: #FFFFFF !important;
+    padding: 8px 20px 8px 48px !important;
+    font-size: 13px !important;
+    opacity: 0.9 !important;
 }
 
 .nav-subitem:hover {
     color: #FFFFFF !important;
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .nav-subitem.active {
     color: #FFFFFF !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+    background: rgba(255, 255, 255, 0.15) !important;
 }
 
-/* Logo header */
-.sidebar-header {
-    background: rgba(0, 0, 0, 0.08) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+/* ===== SPACING OPTIMIZADO ===== */
+.nav-section {
+    margin-bottom: 20px !important;
+}
+
+.sidebar-nav {
+    padding: 12px 0 !important;
 }

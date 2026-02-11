@@ -2,8 +2,6 @@
 /**
  * Módulo de Nombramientos
  * Sistema SIGED - Gestión de Expedientes Digitales
- * 
- * Ejemplo perfecto de diseño Enterprise con SweetAlert2 inteligente
  */
 
 require_once __DIR__ . '/../../config/database.php';
@@ -11,6 +9,8 @@ require_once __DIR__ . '/../../config/seguridad.php';
 require_once __DIR__ . '/../../config/icons.php';
 
 verificarSesion();
+generarTokenCSRF(); // Generar token CSRF para el formulario
+
 
 // Verificar permisos (nivel 1-2)
 if (!verificarNivel(2)) {
@@ -40,18 +40,16 @@ $stmt = $db->query("
         JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.departamento')) as departamento,
         ha.fecha_evento,
         ha.ruta_archivo_pdf,
-        ha.nombre_archivo_original,
         ha.created_at
     FROM historial_administrativo ha
     INNER JOIN funcionarios f ON ha.funcionario_id = f.id
     WHERE ha.tipo_evento = 'NOMBRAMIENTO'
-    ORDER BY ha.fecha_evento DESC, ha.created_at DESC
+    ORDER BY ha.fecha_evento DESC
 ");
 $nombramientos = $stmt->fetchAll();
 
-// Obtener departamentos para el select del modal
-$stmt_departamentos = $db->query("SELECT id, nombre FROM departamentos ORDER BY nombre ASC");
-$departamentos = $stmt_departamentos->fetchAll();
+// Obtener departamentos ACTIVOS únicamente
+$departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado = 'activo' ORDER BY nombre")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -173,16 +171,32 @@ $departamentos = $stmt_departamentos->fetchAll();
     </div>
 
     <script>
-    /**
-     * SWEETALERT2 INTELIGENTE - EJEMPLO PERFECTO
-     * Autoselección de cargo actual al elegir funcionario
-     */
+    // CSRF Token - Debug
+    const CSRF_TOKEN = '<?= $_SESSION["csrf_token"] ?? "TOKEN_VACIO" ?>';
+    console.log('🔐 CSRF Token:', CSRF_TOKEN);
+    console.log('🔐 Longitud:', CSRF_TOKEN.length);
     
     let funcionariosData = [];
     let cargosData = [];
 
+    // Helper para actualizar nombre de archivo en input moderno
+    function updateFileName(input) {
+        const label = input.parentElement.querySelector('.file-input-label');
+        const fileNameSpan = label.querySelector('.file-name');
+        
+        if (input.files && input.files.length > 0) {
+            const fileName = input.files[0].name;
+            const fileSize = (input.files[0].size / 1024 / 1024).toFixed(2);
+            fileNameSpan.textContent = `${fileName} (${fileSize} MB)`;
+            label.classList.add('has-file');
+        } else {
+            fileNameSpan.textContent = 'Seleccionar archivo PDF...';
+            label.classList.remove('has-file');
+        }
+    }
+
     /**
-     * Abrir modal de Nombramiento con SweetAlert2 inteligente
+     * Abrir modal de Nombramiento con SweetAlert2
      */
     async function abrirModalNombramiento() {
         // Precargar datos
@@ -246,13 +260,20 @@ $departamentos = $stmt_departamentos->fetchAll();
                     <div class="swal-form-group">
                         <label class="swal-label">
                             <?= Icon::get('file-text') ?>
-                            Documento PDF
+                            Documento PDF (Opcional)
                         </label>
-                        <input type="file" id="swal-pdf" class="swal2-file" accept=".pdf">
-                        <div class="swal-helper">
-                            <?= Icon::get('info') ?>
-                            Opcional - Solo archivos PDF
+                        <div class="file-input-modern">
+                            <input type="file" 
+                                   id="swal-pdf" 
+                                   accept=".pdf" 
+                                   class="file-input-hidden"
+                                   onchange="updateFileName(this)">
+                            <label for="swal-pdf" class="file-input-label">
+                                <?= Icon::get('upload') ?>
+                                <span class="file-name">Seleccionar archivo PDF...</span>
+                            </label>
                         </div>
+                        <small class="swal-hint">Máximo 5MB</small>
                     </div>
                 </div>
             `,
@@ -261,11 +282,8 @@ $departamentos = $stmt_departamentos->fetchAll();
             confirmButtonText: 'Registrar Nombramiento',
             cancelButtonText: 'Cancelar',
             didOpen: () => {
-                // Poblar selects
                 poblarSelectFuncionarios();
                 poblarSelectCargos();
-                
-                // Configurar autoselección inteligente
                 configurarAutoseleccion();
             },
             preConfirm: () => {
@@ -275,7 +293,6 @@ $departamentos = $stmt_departamentos->fetchAll();
                 const fecha = document.getElementById('swal-fecha').value;
                 const pdf = document.getElementById('swal-pdf').files[0];
 
-                // Validación
                 if (!funcionario_id) {
                     Swal.showValidationMessage('Debe seleccionar un funcionario');
                     return false;
@@ -341,7 +358,7 @@ $departamentos = $stmt_departamentos->fetchAll();
     }
 
     /**
-     * Poblar select de funcionarios con data-cargo-id
+     * Poblar select de funcionarios
      */
     function poblarSelectFuncionarios() {
         const select = document.getElementById('swal-funcionario');
@@ -350,7 +367,6 @@ $departamentos = $stmt_departamentos->fetchAll();
             const option = document.createElement('option');
             option.value = func.id;
             option.textContent = `${func.nombres} ${func.apellidos} - ${func.cedula}`;
-            option.dataset.cargoId = func.cargo_id; // CLAVE: data-cargo-id
             select.appendChild(option);
         });
     }
@@ -370,30 +386,39 @@ $departamentos = $stmt_departamentos->fetchAll();
     }
 
     /**
-     * LÓGICA INTELIGENTE: Autoselección de cargo actual
+     * Configurar autoselección inteligente de cargo y departamento
      */
     function configurarAutoseleccion() {
-        const selectFuncionario = document.getElementById('swal-funcionario');
-        const selectCargo = document.getElementById('swal-cargo');
+        const funcionarioSelect = document.getElementById('swal-funcionario');
+        const cargoSelect = document.getElementById('swal-cargo');
+        const departamentoSelect = document.getElementById('swal-departamento');
         const cargoHint = document.getElementById('cargo-hint');
-
-        selectFuncionario.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const cargoIdActual = selectedOption.dataset.cargoId;
-
-            if (cargoIdActual) {
-                // Autoseleccionar cargo actual
-                selectCargo.value = cargoIdActual;
-                
-                // Mostrar hint informativo con clase
-                cargoHint.classList.add('show');
-                
-                // Ocultar hint después de 3 segundos
-                setTimeout(() => {
-                    cargoHint.classList.remove('show');
-                }, 3000);
+        
+        funcionarioSelect.addEventListener('change', function() {
+            const funcionarioId = this.value;
+            if (!funcionarioId) return;
+            
+            const funcionario = funcionariosData.find(f => f.id == funcionarioId);
+            if (!funcionario) return;
+            
+            // Preseleccionar cargo actual
+            if (funcionario.cargo_id) {
+                cargoSelect.value = funcionario.cargo_id;
+                const cargoNombre = cargosData.find(c => c.id == funcionario.cargo_id)?.nombre_cargo || 'N/A';
+                cargoHint.innerHTML = `ℹ️ Cargo actual: <strong>${cargoNombre}</strong>`;
             } else {
-                cargoHint.classList.remove('show');
+                cargoHint.innerHTML = 'ℹ️ Seleccione el nuevo cargo';
+            }
+            
+            // Preseleccionar departamento actual
+            if (funcionario.departamento_nombre) {
+                const options = departamentoSelect.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].textContent.trim() === funcionario.departamento_nombre) {
+                        departamentoSelect.selectedIndex = i;
+                        break;
+                    }
+                }
             }
         });
     }
@@ -403,13 +428,16 @@ $departamentos = $stmt_departamentos->fetchAll();
      */
     async function registrarNombramiento(data) {
         const formData = new FormData();
+        formData.append('accion', 'registrar_nombramiento');
+        formData.append('csrf_token', CSRF_TOKEN);
+        console.log('📤 Enviando CSRF:', CSRF_TOKEN);
         formData.append('funcionario_id', data.funcionario_id);
         formData.append('cargo_id', data.cargo_id);
         formData.append('departamento', data.departamento);
-        formData.append('fecha', data.fecha);
+        formData.append('fecha_evento', data.fecha);
         
         if (data.pdf) {
-            formData.append('pdf', data.pdf);
+            formData.append('archivo_pdf', data.pdf);
         }
 
         try {
@@ -422,7 +450,7 @@ $departamentos = $stmt_departamentos->fetchAll();
                 }
             });
 
-            const response = await fetch('<?= APP_URL ?>/vistas/nombramientos/ajax/registrar.php', {
+            const response = await fetch('<?= APP_URL ?>/vistas/funcionarios/ajax/gestionar_historial.php', {
                 method: 'POST',
                 body: formData
             });
@@ -451,16 +479,9 @@ $departamentos = $stmt_departamentos->fetchAll();
         }
     }
 
-    /**
-     * Inicializar filtros de búsqueda en tiempo real
-     */
+    // Inicializar filtro de búsqueda en tiempo real
     document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('buscarNombramiento');
-        const table = document.getElementById('tablaNombramientos');
-        
-        if (searchInput && table) {
-            initFiltroTiempoReal('buscarNombramiento', 'tablaNombramientos');
-        }
+        initSimpleTableSearch('buscarNombramiento', 'tablaNombramientos');
     });
     </script>
 </body>
