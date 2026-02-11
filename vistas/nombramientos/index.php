@@ -60,6 +60,7 @@ $departamentos = $stmt_departamentos->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nombramientos - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
     <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="<?= APP_URL ?>/publico/js/filtros-tiempo-real.js"></script>

@@ -1,11 +1,12 @@
 <?php
 /**
- * Vista: Módulo de Renuncias
- * Gestión y consulta de renuncias de personal
+ * Módulo de Renuncias
+ * Sistema SIGED - Gestión de Expedientes Digitales
  */
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/seguridad.php';
+require_once __DIR__ . '/../../config/icons.php';
 
 verificarSesion();
 
@@ -26,9 +27,6 @@ $renuncias_anio = $stmt->fetch()['total'];
 
 $stmt = $db->query("SELECT COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'RENUNCIA' AND MONTH(fecha_evento) = MONTH(CURDATE()) AND YEAR(fecha_evento) = YEAR(CURDATE())");
 $renuncias_mes = $stmt->fetch()['total'];
-
-// Obtener departamentos
-$departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetchAll();
 
 // Obtener renuncias
 $stmt = $db->query("
@@ -56,170 +54,120 @@ $renuncias = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Renuncias - <?php echo APP_NAME; ?></title>
-    <link rel="stylesheet" href="../../publico/css/estilos.css">
-    <style>
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-        }
-        
-        .stat-card:nth-child(2) {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        
-        .stat-label {
-            font-size: 13px;
-            opacity: 0.95;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .stat-value {
-            font-size: 36px;
-            font-weight: 700;
-            line-height: 1;
-        }
-        
-        .filter-panel {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 32px;
-        }
-        
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-    </style>
+    <title>Renuncias - <?= APP_NAME ?></title>
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
+    <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+    <script src="<?= APP_URL ?>/publico/js/filtros-tiempo-real.js"></script>
 </head>
 <body>
-    <?php include __DIR__ . '/../layout/sidebar.php'; ?>
+    <?php include '../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php include '../layout/header.php'; ?>
         
-        <div class="content-wrapper">
-            <!-- Estadísticas -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Renuncias</div>
-                    <div class="stat-value"><?php echo $total_renuncias; ?></div>
+        <!-- Header con botón -->
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1 style="font-size: 28px; font-weight: 700; color: var(--color-text); margin: 0; display: flex; align-items: center; gap: 12px;">
+                <?= Icon::get('log-out') ?>
+                Renuncias
+            </h1>
+            <button class="btn-primary" onclick="abrirModalRenuncia()">
+                <?= Icon::get('plus') ?>
+                Procesar Renuncia
+            </button>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid" style="margin-bottom: 30px;">
+            <div class="kpi-card">
+                <div class="kpi-icon gradient-blue">
+                    <?= Icon::get('log-out') ?>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Renuncias <?php echo date('Y'); ?></div>
-                    <div class="stat-value"><?php echo $renuncias_anio; ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Renuncias Este Mes</div>
-                    <div class="stat-value"><?php echo $renuncias_mes; ?></div>
-                </div>
-            </div>
-            
-            <!-- Filtros -->
-            <div class="filter-panel">
-                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">🔍 Filtros de Búsqueda</h3>
-                <div class="filter-grid">
-                    <div>
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar Empleado</label>
-                        <input type="text" id="search-empleado" class="search-input" placeholder="Nombre, apellido o cédula..." style="width: 100%;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Departamento</label>
-                        <select id="filter-departamento" class="search-input" style="width: 100%;">
-                            <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dept): ?>
-                                <option value="<?php echo $dept['nombre']; ?>"><?php echo htmlspecialchars($dept['nombre']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Año</label>
-                        <select id="filter-anio" class="search-input" style="width: 100%;">
-                            <option value="">Todos</option>
-                            <?php for ($i = date('Y'); $i >= date('Y') - 5; $i--): ?>
-                                <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
-                            <?php endfor; ?>
-                        </select>
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="button" onclick="limpiarFiltros()" class="btn" style="width: 100%; background: #e2e8f0; color: #2d3748;">Limpiar</button>
-                    </div>
+                <div class="kpi-details">
+                    <div class="kpi-value"><?= number_format($total_renuncias) ?></div>
+                    <div class="kpi-label">Total Renuncias</div>
                 </div>
             </div>
-            
-            
-            <!-- Botón Procesar Renuncia -->
-            <div style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
-                <button type="button" onclick="abrirModalRenuncia()" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px; display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #6366f1, #3b82f6);">
-                    <span style="font-size: 20px;">📝</span>
-                    Procesar Baja (Renuncia)
-                </button>
-            </div>
-            
-            <!-- Tabla -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">📝 Registro de Renuncias</h2>
+            <div class="kpi-card">
+                <div class="kpi-icon gradient-cyan">
+                    <?= Icon::get('calendar') ?>
                 </div>
-                <div style="overflow-x: auto;">
-                    <table class="data-table">
+                <div class="kpi-details">
+                    <div class="kpi-value"><?= number_format($renuncias_anio) ?></div>
+                    <div class="kpi-label">Renuncias <?= date('Y') ?></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon gradient-orange">
+                    <?= Icon::get('clock') ?>
+                </div>
+                <div class="kpi-details">
+                    <div class="kpi-value"><?= number_format($renuncias_mes) ?></div>
+                    <div class="kpi-label">Renuncias Este Mes</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de registros -->
+        <div class="card-modern">
+            <div class="card-body">
+                <div style="margin-bottom: 20px;">
+                    <input type="text" 
+                           id="buscarRenuncia" 
+                           class="search-input" 
+                           placeholder="Buscar por cédula, nombre, departamento...">
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="tablaRenuncias" class="table-modern">
                         <thead>
                             <tr>
-                                <th>Empleado</th>
+                                <th>Funcionario</th>
                                 <th>Cédula</th>
                                 <th>Departamento</th>
                                 <th>Fecha Renuncia</th>
                                 <th>Motivo</th>
-                                <th>Acciones</th>
+                                <th style="text-align: center; width: 120px;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($renuncias)): ?>
                                 <tr>
-                                    <td colspan="6" style="text-align: center; padding: 48px; color: #718096;">
-                                        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📝</div>
-                                        <p>No hay registros de renuncias</p>
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <div class="empty-state-icon">
+                                                <?= Icon::get('log-out', 'width: 64px; height: 64px; opacity: 0.3;') ?>
+                                            </div>
+                                            <div class="empty-state-title">No hay renuncias registradas</div>
+                                            <p class="empty-state-description">Las renuncias aparecerán aquí una vez que sean procesadas</p>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($renuncias as $ren): ?>
-                                    <tr class="renuncia-row" 
-                                        data-empleado="<?php echo strtolower($ren['nombres'] . ' ' . $ren['apellidos'] . ' ' . $ren['cedula']); ?>"
-                                        data-departamento="<?php echo $ren['departamento']; ?>"
-                                        data-anio="<?php echo date('Y', strtotime($ren['fecha_renuncia'])); ?>">
-                                        <td><strong><?php echo htmlspecialchars($ren['nombres'] . ' ' . $ren['apellidos']); ?></strong></td>
-                                        <td><?php echo htmlspecialchars($ren['cedula']); ?></td>
-                                        <td><span style="padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 12px; font-size: 12px;"><?php echo htmlspecialchars($ren['departamento']); ?></span></td>
-                                        <td><?php echo date('d/m/Y', strtotime($ren['fecha_renuncia'])); ?></td>
-                                        <td><?php echo htmlspecialchars(substr($ren['motivo'], 0, 60)) . (strlen($ren['motivo']) > 60 ? '...' : ''); ?></td>
+                                    <tr>
+                                        <td><strong><?= htmlspecialchars($ren['nombres'] . ' ' . $ren['apellidos']) ?></strong></td>
+                                        <td><?= htmlspecialchars($ren['cedula']) ?></td>
                                         <td>
-                                            <a href="../funcionarios/ver.php?id=<?php echo $ren['funcionario_id']; ?>" class="btn" style="padding: 4px 12px; font-size: 12px;">Ver</a>
+                                            <span class="badge badge-secondary"><?= htmlspecialchars($ren['departamento'] ?? 'N/A') ?></span>
+                                        </td>
+                                        <td><?= date('d/m/Y', strtotime($ren['fecha_renuncia'])) ?></td>
+                                        <td><?= htmlspecialchars(substr($ren['motivo'], 0, 50)) . (strlen($ren['motivo']) > 50 ? '...' : '') ?></td>
+                                        <td style="text-align: center;">
+                                            <a href="../funcionarios/ver.php?id=<?= $ren['funcionario_id'] ?>" 
+                                               class="btn-icon" 
+                                               title="Ver funcionario">
+                                                <?= Icon::get('eye') ?>
+                                            </a>
                                             <?php if ($ren['ruta_archivo']): ?>
-                                                <a href="../../<?php echo $ren['ruta_archivo']; ?>" target="_blank" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">📥</a>
+                                                <a href="<?= APP_URL . '/' . $ren['ruta_archivo'] ?>" 
+                                                   target="_blank" 
+                                                   class="btn-icon" 
+                                                   title="Ver documento">
+                                                    <?= Icon::get('file-text') ?>
+                                                </a>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -231,140 +179,184 @@ $renuncias = $stmt->fetchAll();
             </div>
         </div>
     </div>
-    
-    
-    <!-- SweetAlert2 -->
-    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
-    
-    <!-- Filtros en Tiempo Real -->
-    <script src="../../publico/js/filtros-tiempo-real.js"></script>
+
     <script>
-        inicializarFiltros({
-            module: 'renuncias',
-            searchId: 'search-empleado',
-            filterIds: ['filter-departamento', 'filter-anio'],
-            tableBodySelector: 'table tbody',
-            countSelector: '.card-subtitle'
+    // Filtro en tiempo real
+    inicializarFiltros({
+        module: 'renuncias',
+        searchId: 'buscarRenuncia',
+        tableBodySelector: '#tablaRenuncias tbody',
+        countSelector: null
+    });
+
+    /**
+     * MODAL DE PROCESAMIENTO DE RENUNCIA
+     */
+    async function abrirModalRenuncia() {
+        const funcionariosResponse = await fetch('<?= APP_URL ?>/vistas/funcionarios/ajax/listar.php');
+        const funcionarios = await funcionariosResponse.json();
+
+        if (!funcionarios.success) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los funcionarios' });
+            return;
+        }
+
+        const funcionariosActivos = funcionarios.data.filter(f => f.estado === 'activo');
+        if (funcionariosActivos.length === 0) {
+            Swal.fire({ icon: 'info', title: 'Sin Funcionarios', text: 'No hay funcionarios activos' });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Procesar Renuncia',
+            html: `
+                <div class="swal-hint" style="background: #eff6ff; border: 2px solid #93c5fd; padding: 14px; margin-bottom: 18px;">
+                    ${Icon.get('alert-circle')} <strong>Importante:</strong> El funcionario será DESACTIVADO en el sistema al confirmar esta renuncia.
+                </div>
+                
+                <div class="swal-form-grid">
+                    <div class="swal-field" style="grid-column: 1 / -1;">
+                        <label class="swal-label">
+                            ${Icon.get('user')}
+                            Funcionario que Renuncia *
+                        </label>
+                        <select id="swal-funcionario" class="swal2-select" style="width: 100%;">
+                            <option value="">Seleccione...</option>
+                            ${funcionariosActivos.map(f => `
+                                <option value="${f.id}">${f.nombres} ${f.apellidos} (${f.cedula})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+
+                    <div class="swal-field">
+                        <label class="swal-label">
+                            ${Icon.get('calendar')}
+                            Fecha de Renuncia *
+                        </label>
+                        <input type="date" id="swal-fecha" class="swal2-input" style="width: 95%;" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+
+                    <div class="swal-field">
+                        <label class="swal-label">
+                            ${Icon.get('file-text')}
+                            Carta de Renuncia (Opcional)
+                        </label>
+                        <input type="file" id="swal-archivo" accept=".pdf" class="swal2-file" style="width: 100%;">
+                        <small style="color: #64748B; font-size: 12px;">Máximo 5MB</small>
+                    </div>
+
+                    <div class="swal-field" style="grid-column: 1 / -1;">
+                        <label class="swal-label">
+                            ${Icon.get('file-text')}
+                            Motivo / Observaciones *
+                        </label>
+                        <textarea id="swal-motivo" class="swal2-textarea" rows="3" placeholder="Ejemplo: Renuncia voluntaria - Motivos personales" style="width: 95%;"></textarea>
+                        <small style="color: #64748B; font-size: 12px;">Mínimo 15 caracteres</small>
+                    </div>
+                </div>
+            `,
+            width: '600px',
+            showCancelButton: true,
+            confirmButtonText: 'Procesar Renuncia',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const funcionario_id = document.getElementById('swal-funcionario').value;
+                const fecha_evento = document.getElementById('swal-fecha').value;
+                const motivo = document.getElementById('swal-motivo').value.trim();
+                const archivo = document.getElementById('swal-archivo').files[0];
+
+                if (!funcionario_id) {
+                    Swal.showValidationMessage('Seleccione un funcionario');
+                    return false;
+                }
+                if (!fecha_evento) {
+                    Swal.showValidationMessage('Ingrese la fecha');
+                    return false;
+                }
+                if (!motivo || motivo.length < 15) {
+                    Swal.showValidationMessage('El motivo debe tener al menos 15 caracteres');
+                    return false;
+                }
+                if (archivo && archivo.size > 5 * 1024 * 1024) {
+                    Swal.showValidationMessage('Archivo muy grande (máx 5MB)');
+                    return false;
+                }
+
+                return { funcionario_id, fecha_evento, motivo, archivo };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                registrarRenuncia(result.value);
+            }
+        });
+    }
+
+    async function registrarRenuncia(data) {
+        Swal.fire({
+            title: 'Procesando...',
+            html: 'Registrando renuncia...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
         });
 
-        // Función para abrir modal de renuncia
-        async function abrirModalRenuncia() {
-            const funcionariosResponse = await fetch('../funcionarios/ajax/listar.php');
-            const funcionarios = await funcionariosResponse.json();
+        try {
+            const formData = new FormData();
+            formData.append('accion', 'registrar_despido');
+            formData.append('funcionario_id', data.funcionario_id);
+            formData.append('tipo_evento', 'RENUNCIA');
+            formData.append('fecha_evento', data.fecha_evento);
+            formData.append('motivo', data.motivo);
+            if (data.archivo) formData.append('archivo_pdf', data.archivo);
 
-            if (!funcionarios.success) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los funcionarios' });
-                return;
-            }
-
-            const funcionariosActivos = funcionarios.data.filter(f => f.estado === 'activo');
-            if (funcionariosActivos.length === 0) {
-                Swal.fire({ icon: 'info', title: 'Sin Funcionarios', text: 'No hay funcionarios activos' });
-                return;
-            }
-
-            const funcionariosOptions = funcionariosActivos
-                .map(f => `<option value="${f.id}">${f.nombres} ${f.apellidos} (${f.cedula})</option>`)
-                .join('');
-
-            const { value: formValues } = await Swal.fire({
-                title: '📝 Procesar Renuncia Voluntaria',
-                html: `
-                    <div style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
-                        <div style="display: flex; align-items: center; gap: 10px; color: #1e40af;">
-                            <span style="font-size: 28px;">ℹ️</span>
-                            <div style="text-align: left; flex: 1;">
-                                <strong style="display: block; font-size: 15px; margin-bottom: 3px;">Información Importante</strong>
-                                <p style="margin: 0; font-size: 13px;">El funcionario será <strong>DESACTIVADO</strong> en el sistema al confirmar esta renuncia.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="text-align: left;">
-                        <div style="margin-bottom: 14px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Funcionario que Renuncia *</label>
-                            <select id="swal-funcionario" class="swal2-input" style="width: 100%; padding: 9px; border: 1px solid #e2e8f0; border-radius: 7px;">
-                                <option value="">Seleccione...</option>
-                                ${funcionariosOptions}
-                            </select>
-                        </div>
-
-                        <div style="margin-bottom: 14px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Fecha de Renuncia *</label>
-                            <input type="date" id="swal-fecha" class="swal2-input" style="width: 100%; padding: 9px; border: 1px solid #e2e8f0; border-radius: 7px;" value="${new Date().toISOString().split('T')[0]}">
-                        </div>
-
-                        <div style="margin-bottom: 14px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Motivo / Observaciones *</label>
-                            <textarea id="swal-motivo" class="swal2-textarea" style="width: 100%; padding: 9px; border: 1px solid #e2e8f0; border-radius: 7px; min-height: 100px;" placeholder="Ejemplo: Renuncia voluntaria - Motivos personales"></textarea>
-                            <small style="color: #718096; font-size: 12px;">Mínimo 15 caracteres</small>
-                        </div>
-
-                        <div style="margin-bottom: 14px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 7px; color: #2d3748;">Carta de Renuncia PDF (Opcional)</label>
-                            <input type="file" id="swal-archivo" accept=".pdf" class="swal2-file" style="width: 100%; padding: 9px; border: 1px solid #e2e8f0; border-radius: 7px;">
-                            <small style="color: #718096; font-size: 12px;">Tamaño máximo: 5MB</small>
-                        </div>
-                    </div>
-                `,
-                width: '600px',
-                showCancelButton: true,
-                confirmButtonText: 'Procesar Renuncia',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#3b82f6',
-                cancelButtonColor: '#6b7280',
-                preConfirm: () => {
-                    const funcionario_id = document.getElementById('swal-funcionario').value;
-                    const fecha_evento = document.getElementById('swal-fecha').value;
-                    const motivo = document.getElementById('swal-motivo').value;
-                    const archivo = document.getElementById('swal-archivo').files[0];
-
-                    if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
-                    if (!fecha_evento) { Swal.showValidationMessage('Ingrese la fecha'); return false; }
-                    if (!motivo || motivo.trim().length < 15) { Swal.showValidationMessage('El motivo debe tener al menos 15 caracteres'); return false; }
-                    if (archivo && archivo.size > 5 * 1024 * 1024) { Swal.showValidationMessage('Archivo muy grande (máx 5MB)'); return false; }
-                    if (archivo && archivo.type !== 'application/pdf') { Swal.showValidationMessage('Solo archivos PDF'); return false; }
-
-                    return { funcionario_id, fecha_evento, motivo, archivo };
-                }
+            const response = await fetch('../funcionarios/ajax/gestionar_historial.php', {
+                method: 'POST',
+                body: formData
             });
 
-            if (formValues) {
-                registrarRenuncia(formValues);
+            const result = await response.json();
+
+            if (result.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Renuncia Procesada',
+                    html: `
+                        <p>La renuncia se registró exitosamente.</p>
+                        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
+                            <p style="margin: 0; font-size: 13px;"><strong>✓ Funcionario:</strong> Inactivo</p>
+                            <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Usuario:</strong> Desactivado</p>
+                        </div>
+                    `
+                });
+                window.location.reload();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.error || 'Error al procesar'
+                });
             }
+        } catch (error) {
+            console.error(error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Conexión',
+                text: 'No se pudo conectar al servidor'
+            });
         }
+    }
 
-        async function registrarRenuncia(data) {
-            Swal.fire({ title: 'Procesando...', html: 'Registrando renuncia...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-            try {
-                const formData = new FormData();
-                formData.append('accion', 'registrar_despido');
-                formData.append('funcionario_id', data.funcionario_id);
-                formData.append('tipo_evento', 'RENUNCIA');
-                formData.append('fecha_evento', data.fecha_evento);
-                formData.append('motivo', data.motivo);
-                if (data.archivo) formData.append('archivo_pdf', data.archivo);
-
-                const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
-                const result = await response.json();
-
-                if (result.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Renuncia Procesada',
-                        html: '<p>La renuncia se registró exitosamente.</p><div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 10px; margin-top: 14px; text-align: left;"><p style="margin: 0; font-size: 13px;"><strong>✓ Funcionario:</strong> Inactivo</p><p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Usuario:</strong> Desactivado</p></div>',
-                        confirmButtonColor: '#10b981'
-                    });
-                    window.location.reload();
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al procesar', confirmButtonColor: '#ef4444' });
-                }
-            } catch (error) {
-                console.error(error);
-                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo connect ar al servidor', confirmButtonColor: '#ef4444' });
-            }
+    // Helper para generar iconos en JS
+    const Icon = {
+        get: (name, style = '') => {
+            const icons = {
+                'user': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="' + style + '" width="18" height="18"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+                'calendar': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="' + style + '" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+                'file-text': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="' + style + '" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>',
+                'alert-circle': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="' + style + '" width="18" height="18"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
+            };
+            return icons[name] || '';
         }
+    };
     </script>
 </body>
 </html>
