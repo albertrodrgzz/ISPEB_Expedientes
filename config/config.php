@@ -58,12 +58,12 @@ if (!defined('APP_URL')) {
 
 // Nombre de la aplicación
 if (!defined('APP_NAME')) {
-    define('APP_NAME', 'Sistema de Expedientes ISPEB');
+    define('APP_NAME', 'SIGEX');
 }
 
 // Versión de la aplicación
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '3.2.0');
+    define('APP_VERSION', '3.5.0');
 }
 
 // ===================================================

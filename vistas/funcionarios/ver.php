@@ -249,13 +249,13 @@ if ($funcionario['fecha_ingreso']) {
             width: fit-content;
         }
         
-        .nav-menu {
+        .expediente-nav-menu {
             margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid #e2e8f0;
         }
         
-        .nav-item {
+        .expediente-nav-item {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -274,7 +274,7 @@ if ($funcionario['fecha_ingreso']) {
             border-left: 3px solid transparent;
         }
         
-        .nav-item svg {
+        .expediente-nav-item svg {
             width: 18px;
             height: 18px;
             flex-shrink: 0;
@@ -282,23 +282,23 @@ if ($funcionario['fecha_ingreso']) {
             pointer-events: none;
         }
         
-        .nav-item span {
+        .expediente-nav-item span {
             pointer-events: none;
         }
         
-        .nav-item:hover {
+        .expediente-nav-item:hover {
             background: #f7fafc;
             color: #2d3748;
         }
         
-        .nav-item.active {
+        .expediente-nav-item.active {
             background: linear-gradient(135deg, #00a8cc 0%, #0088aa 100%);
             color: white;
             border-left-color: #005f73;
             font-weight: 600;
         }
         
-        .nav-item.active svg {
+        .expediente-nav-item.active svg {
             color: white;
         }
         
@@ -320,7 +320,7 @@ if ($funcionario['fecha_ingreso']) {
                 margin-bottom: 20px;
             }
             
-            .nav-menu {
+            .expediente-nav-menu {
                 display: flex;
                 overflow-x: auto;
                 gap: 8px;
@@ -329,7 +329,7 @@ if ($funcionario['fecha_ingreso']) {
                 margin-top: 16px;
             }
             
-            .nav-item {
+            .expediente-nav-item {
                 flex-shrink: 0;
                 min-width: 140px;
                 font-size: 13px;
@@ -773,7 +773,13 @@ if ($funcionario['fecha_ingreso']) {
     <div class="main-content">
         <header class="header">
             <div class="header-left">
-                <a href="index.php" class="btn" style="margin-right: 16px;">← Volver</a>
+                <a href="index.php" class="btn-secondary" style="margin-right: 16px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <?php 
+                    require_once __DIR__ . '/../../config/icons.php';
+                    echo Icon::get('arrow-left'); 
+                    ?>
+                    Volver
+                </a>
                 <h1 class="page-title">Expediente Digital</h1>
             </div>
             <div class="header-right">
@@ -851,7 +857,7 @@ if ($funcionario['fecha_ingreso']) {
                     </div>
                     
                     <!-- Menú de Navegación -->
-                    <nav class="nav-menu">
+                    <nav class="expediente-nav-menu">
                         <div class="nav-item active" onclick="switchTab('info', this)" data-tab="info">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -935,7 +941,7 @@ if ($funcionario['fecha_ingreso']) {
                     document.querySelectorAll('.tab-card').forEach(card => {
                         card.classList.remove('active');
                     });
-                    document.querySelectorAll('.nav-item').forEach(item => {
+                    document.querySelectorAll('.expediente-nav-item').forEach(item => {
                         item.classList.remove('active');
                     });
                     

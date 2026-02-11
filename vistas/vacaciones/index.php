@@ -64,6 +64,7 @@ $stmt = $db->query("
 ");
 $vacaciones = $stmt->fetchAll();
 ?>
+<?php require_once __DIR__ . '/../../config/icons.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -71,6 +72,7 @@ $vacaciones = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vacaciones - <?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="../../publico/css/swal-modern.css">
     <style>
         .stats-grid {
             display: grid;
@@ -303,7 +305,7 @@ $vacaciones = $stmt->fetchAll();
                 <div class="filter-grid">
                     <div class="form-group" style="margin: 0;">
                         <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar</label>
-                        <input type="text" id="searchVacaciones" class="search-input" placeholder="🔍 Buscar vacación..." style="width: 100%;">
+                        <input type="text" id="searchVacaciones" class="search-input" placeholder="Buscar vacación..." style="width: 100%;">
                     </div>
                     
                     <div class="form-group" style="margin: 0;">
@@ -364,7 +366,7 @@ $vacaciones = $stmt->fetchAll();
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button onclick="abrirModalVacaciones()" class="btn btn-primary" style=" padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 18px;">✈️</span>
+                            <?php echo Icon::get('sun'); ?>
                             Registrar Vacaciones
                         </button>
                         <a href="../reportes/index.php#vacaciones" class="btn" style="text-decoration: none; background: #e2e8f0; color: #2d3748;">

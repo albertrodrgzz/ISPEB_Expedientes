@@ -49,6 +49,7 @@ $stmt = $db->query("
 ");
 $traslados = $stmt->fetchAll();
 ?>
+<?php require_once __DIR__ . '/../../config/icons.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -56,6 +57,7 @@ $traslados = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Traslados - <?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/swal-modern.css">
     <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="<?php echo APP_URL; ?>/publico/js/filtros-tiempo-real.js"></script>
     <style>
@@ -237,9 +239,9 @@ $traslados = $stmt->fetchAll();
         <div class="content-wrapper">
             <!-- Header con botón -->
             <div class="page-header">
-                <h1 class="header-title">🔄 Traslados</h1>
+                <h1 class="header-title"><?php echo Icon::get('arrow-right-circle'); ?> Traslados</h1>
                 <button class="btn-nuevo" onclick="abrirModalTraslado()">
-                    <span style="font-size: 20px;">➕</span>
+                    <?php echo Icon::get('plus'); ?>
                     Nuevo Traslado
                 </button>
             </div>
@@ -262,7 +264,7 @@ $traslados = $stmt->fetchAll();
                     <input type="text" 
                            id="buscarTraslado" 
                            class="search-input" 
-                           placeholder="🔍 Buscar por cédula, nombre, departamento...">
+                           placeholder="Buscar por cédula, nombre, departamento...">
                 </div>
 
                 <div class="table-wrapper">
@@ -283,7 +285,7 @@ $traslados = $stmt->fetchAll();
                                 <tr>
                                     <td colspan="7">
                                         <div class="no-data">
-                                            <div class="no-data-icon">🔄</div>
+                                            <div class="no-data-icon"><?php echo Icon::get('arrow-right-circle'); ?></div>
                                             <p>No hay traslados registrados</p>
                                         </div>
                                     </td>
@@ -306,7 +308,7 @@ $traslados = $stmt->fetchAll();
                                                 <a href="<?php echo APP_URL . '/' . $tras['ruta_archivo_pdf']; ?>" 
                                                    target="_blank" 
                                                    class="btn-link">
-                                                    📄 Ver
+                                                    <?php echo Icon::get('file-text'); ?> Ver
                                                 </a>
                                             <?php else: ?>
                                                 <span style="color: #cbd5e0;">Sin archivo</span>

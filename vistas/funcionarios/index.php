@@ -27,6 +27,7 @@ $db = getDB();
 $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetchAll();
 $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")->fetchAll();
 ?>
+<?php require_once __DIR__ . '/../../config/icons.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -34,6 +35,7 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Directorio de Funcionarios - <?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="../../publico/css/swal-modern.css">
 </head>
 <body>
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
@@ -68,7 +70,7 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
                                 id="searchFuncionarios" 
                                 name="buscar" 
                                 class="search-input" 
-                                placeholder="🔍 Buscar funcionario..."
+                                placeholder="Buscar funcionario..."
                                 value="<?php echo htmlspecialchars($filtros['buscar']); ?>"
                                 style="width: 100%;"
                             >
@@ -188,11 +190,11 @@ $cargos = $db->query("SELECT * FROM cargos ORDER BY nivel_acceso, nombre_cargo")
                                         <td>
                                             <div style="display: flex; gap: 8px;">
                                                 <a href="ver.php?id=<?php echo $func['id']; ?>" class="btn-icon" title="Ver expediente">
-                                                    👁️
+                                                    <?php echo Icon::get('eye'); ?>
                                                 </a>
                                                 <?php if (verificarDepartamento($func['id'])): ?>
                                                     <a href="editar.php?id=<?php echo $func['id']; ?>" class="btn-icon" title="Editar">
-                                                        ✏️
+                                                        <?php echo Icon::get('edit'); ?>
                                                     </a>
                                                 <?php endif; ?>
                                             </div>

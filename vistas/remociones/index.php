@@ -51,6 +51,7 @@ $stmt = $db->query("
 ");
 $remociones = $stmt->fetchAll();
 ?>
+<?php require_once __DIR__ . '/../../config/icons.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -58,6 +59,7 @@ $remociones = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remociones - <?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="../../publico/css/swal-modern.css">
     <style>
         .stats-grid {
             display: grid;
@@ -141,7 +143,7 @@ $remociones = $stmt->fetchAll();
             
             <!-- Filtros -->
             <div class="filter-panel">
-                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">🔍 Filtros de Búsqueda</h3>
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;"><?php echo Icon::get('search'); ?> Filtros de Búsqueda</h3>
                 <div class="filter-grid">
                     <div>
                         <label style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar Empleado</label>
@@ -175,11 +177,11 @@ $remociones = $stmt->fetchAll();
             <div class="card">
                 <div class="card-header">
                     <div>
-                        <h2 class="card-title">🚫 Registro de Remociones</h2>
+                        <h2 class="card-title"><?php echo Icon::get('x-circle'); ?> Registro de Remociones</h2>
                         <p class="card-subtitle"><?php echo count($remociones); ?> registros</p>
                     </div>
                     <button onclick="abrirModalRemocion()" class="btn btn-primary" style="padding: 10px 20px; display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 18px;">🚫</span>
+                        <?php echo Icon::get('x-circle'); ?>
                         Procesar Remoción
                     </button>
                 </div>
@@ -199,7 +201,7 @@ $remociones = $stmt->fetchAll();
                             <?php if (empty($remociones)): ?>
                                 <tr>
                                     <td colspan="6" style="text-align: center; padding: 48px; color: #718096;">
-                                        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🚫</div>
+                                        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"><?php echo Icon::get('x-circle'); ?></div>
                                         <p>No hay registros de remociones</p>
                                     </td>
                                 </tr>
@@ -217,7 +219,7 @@ $remociones = $stmt->fetchAll();
                                         <td>
                                             <a href="../funcionarios/ver.php?id=<?php echo $rem['funcionario_id']; ?>" class="btn" style="padding: 4px 12px; font-size: 12px;">Ver</a>
                                             <?php if ($rem['ruta_archivo']): ?>
-                                                <a href="../../<?php echo $rem['ruta_archivo']; ?>" target="_blank" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">📥</a>
+                                                <a href="../../<?php echo $rem['ruta_archivo']; ?>" target="_blank" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;"><?php echo Icon::get('download'); ?></a>
                                             <?php endif; ?>
                                         </td>
                                     </tr>

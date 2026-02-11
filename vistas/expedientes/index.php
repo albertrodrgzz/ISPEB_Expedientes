@@ -104,6 +104,7 @@ $documentos = $stmt->fetchAll();
 // Obtener lista de funcionarios para filtro
 $funcionarios = $db->query("SELECT id, CONCAT(nombres, ' ', apellidos) AS nombre_completo FROM funcionarios ORDER BY nombres, apellidos")->fetchAll();
 ?>
+<?php require_once __DIR__ . '/../../config/icons.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -111,6 +112,7 @@ $funcionarios = $db->query("SELECT id, CONCAT(nombres, ' ', apellidos) AS nombre
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expedientes Digitales - <?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="../../publico/css/swal-modern.css">
     <style>
         .stats-grid {
             display: grid;
@@ -355,11 +357,11 @@ $funcionarios = $db->query("SELECT id, CONCAT(nombres, ' ', apellidos) AS nombre
                                         <td>
                                             <div style="display: flex; gap: 8px;">
                                                 <a href="../funcionarios/ver.php?id=<?php echo $doc['funcionario_id']; ?>" class="btn-icon" title="Ver expediente completo">
-                                                    👁️
+                                                    <?php echo Icon::get('eye'); ?>
                                                 </a>
                                                 <?php if ($doc['ruta_archivo']): ?>
                                                     <a href="../../<?php echo htmlspecialchars($doc['ruta_archivo']); ?>" class="btn-icon" title="Descargar documento" target="_blank">
-                                                        📥
+                                                        <?php echo Icon::get('download'); ?>
                                                     </a>
                                                 <?php endif; ?>
                                             </div>

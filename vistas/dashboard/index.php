@@ -71,9 +71,9 @@ $funcionarios = $stmt->fetchAll();
         <div class="content-wrapper">
             <!-- KPIs -->
             <div class="kpi-grid">
-                <div class="kpi-card">
+                <div class="kpi-card kpi-primary">
                     <div class="kpi-icon">
-                        <span>👥</span>
+                        <?php require_once __DIR__ . '/../../config/icons.php'; echo Icon::get('users'); ?>
                     </div>
                     <div class="kpi-content">
                         <div class="kpi-label">Total Personal</div>
@@ -81,9 +81,9 @@ $funcionarios = $stmt->fetchAll();
                     </div>
                 </div>
                 
-                <div class="kpi-card">
+                <div class="kpi-card kpi-success">
                     <div class="kpi-icon">
-                        <span>✓</span>
+                        <?php echo Icon::get('check-circle'); ?>
                     </div>
                     <div class="kpi-content">
                         <div class="kpi-label">Activos</div>
@@ -91,9 +91,9 @@ $funcionarios = $stmt->fetchAll();
                     </div>
                 </div>
                 
-                <div class="kpi-card">
+                <div class="kpi-card kpi-warning">
                     <div class="kpi-icon">
-                        <span>☀</span>
+                        <?php echo Icon::get('sun'); ?>
                     </div>
                     <div class="kpi-content">
                         <div class="kpi-label">De Vacaciones</div>
@@ -101,12 +101,12 @@ $funcionarios = $stmt->fetchAll();
                     </div>
                 </div>
                 
-                <div class="kpi-card">
+                <div class="kpi-card kpi-info">
                     <div class="kpi-icon">
-                        <span>⚠</span>
+                        <?php echo Icon::get('bell'); ?>
                     </div>
                     <div class="kpi-content">
-                        <div class="kpi-label">Por Vencer</div>
+                        <div class="kpi-label">Nombr. Recientes</div>
                         <div class="kpi-value"><?php echo $por_vencer; ?></div>
                     </div>
                 </div>
@@ -147,7 +147,7 @@ $funcionarios = $stmt->fetchAll();
                         <p class="card-subtitle">Últimos funcionarios registrados en el sistema</p>
                     </div>
                     <div class="card-actions">
-                        <input type="text" id="buscar" class="search-input" placeholder="🔍 Buscar funcionario...">
+                        <input type="text" id="buscar" class="search-input" placeholder="Buscar funcionario...">
                         <?php if (verificarNivel(2)): ?>
                             <a href="../funcionarios/crear.php" class="btn btn-primary">
                                 <span>+</span> Nuevo
@@ -212,7 +212,7 @@ $funcionarios = $stmt->fetchAll();
                                     </td>
                                     <td>
                                         <a href="../funcionarios/ver.php?id=<?php echo $func['id']; ?>" class="btn-icon" title="Ver expediente">
-                                            →
+                                            <?php echo Icon::get('arrow-right'); ?>
                                         </a>
                                     </td>
                                 </tr>

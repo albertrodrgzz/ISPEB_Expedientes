@@ -52,6 +52,7 @@ $stmt = $db->query("
 ");
 $amonestaciones = $stmt->fetchAll();
 ?>
+<?php require_once __DIR__ . '/../../config/icons.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -59,6 +60,7 @@ $amonestaciones = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amonestaciones - <?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/swal-modern.css">
     <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="<?php echo APP_URL; ?>/publico/js/filtros-tiempo-real.js"></script>
     <style>
@@ -250,9 +252,9 @@ $amonestaciones = $stmt->fetchAll();
         <div class="content-wrapper">
             <!-- Header con botón -->
             <div class="page-header">
-                <h1 class="header-title">⚠️ Amonestaciones</h1>
+                <h1 class="header-title"><?php echo Icon::get('alert-circle'); ?> Amonestaciones</h1>
                 <button class="btn-nuevo" onclick="abrirModalAmonestacion()">
-                    <span style="font-size: 20px;">➕</span>
+                    <?php echo Icon::get('plus'); ?>
                     Registrar Falta
                 </button>
             </div>
@@ -279,7 +281,7 @@ $amonestaciones = $stmt->fetchAll();
                     <input type="text" 
                            id="buscarAmonestacion" 
                            class="search-input" 
-                           placeholder="🔍 Buscar por cédula, nombre...">
+                           placeholder="Buscar por cédula, nombre...">
                 </div>
 
                 <div class="table-wrapper">
@@ -300,7 +302,7 @@ $amonestaciones = $stmt->fetchAll();
                                 <tr>
                                     <td colspan="7">
                                         <div class="no-data">
-                                            <div class="no-data-icon">⚠️</div>
+                                            <div class="no-data-icon"><?php echo Icon::get('alert-circle'); ?></div>
                                             <p>No hay amonestaciones registradas</p>
                                         </div>
                                     </td>
@@ -334,7 +336,7 @@ $amonestaciones = $stmt->fetchAll();
                                                 <a href="<?php echo APP_URL . '/' . $amon['ruta_archivo_pdf']; ?>" 
                                                    target="_blank" 
                                                    class="btn-link">
-                                                    📄 Ver
+                                                    <?php echo Icon::get('file-text'); ?> Ver
                                                 </a>
                                             <?php else: ?>
                                                 <span style="color: #cbd5e0;">Sin archivo</span>

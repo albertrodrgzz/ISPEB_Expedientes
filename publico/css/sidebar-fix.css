@@ -1,0 +1,111 @@
+/**
+ * SIDEBAR FIX - Forzar texto blanco y mejoras visuales
+ * Este archivo se carga después de estilos.css para sobrescribir
+ */
+
+/* ===== FORZAR TEXTO BLANCO EN TODO EL SIDEBAR ===== */
+
+/* Sidebar base */
+.sidebar {
+    color: #FFFFFF !important;
+}
+
+/* Gradiente más claro abajo */
+.sidebar {
+    background: linear-gradient(160deg,
+            #0F4C81 0%,
+            #118AB2 40%,
+            #00A8E8 70%,
+            #4EC2E8 100%
+            /* MÁS CLARO AL FINAL */
+        ) !important;
+}
+
+/* Overlay más suave */
+.sidebar::before {
+    background: linear-gradient(180deg,
+            rgba(0, 0, 0, 0.10) 0%,
+            /* Arriba ligeramente oscuro */
+            rgba(0, 0, 0, 0.02) 100%
+            /* Abajo casi transparente */
+        ) !important;
+}
+
+/* Títulos de sección */
+.nav-section-title {
+    color: #FFFFFF !important;
+    opacity: 0.85 !important;
+}
+
+/* Nav items - BLANCO FORZADO */
+.nav-item {
+    color: #FFFFFF !important;
+}
+
+.nav-item * {
+    color: #FFFFFF !important;
+}
+
+.nav-item svg {
+    stroke: #FFFFFF !important;
+    fill: none !important;
+}
+
+/* Nav text específico */
+.nav-text {
+    color: #FFFFFF !important;
+}
+
+/* HOVER mejorado */
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.28) !important;
+    color: #FFFFFF !important;
+    transform: translateX(6px) scale(1.03) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.nav-item:hover * {
+    color: #FFFFFF !important;
+}
+
+.nav-item:hover svg {
+    stroke: #FFFFFF !important;
+}
+
+/* ACTIVE mejorado */
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.35) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    transform: translateX(6px) scale(1.03) !important;
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+.nav-item.active * {
+    color: #FFFFFF !important;
+}
+
+.nav-item.active svg {
+    stroke: #FFFFFF !important;
+}
+
+/* Submenú */
+.nav-subitem {
+    color: #FFFFFF !important;
+}
+
+.nav-subitem:hover {
+    color: #FFFFFF !important;
+}
+
+.nav-subitem.active {
+    color: #FFFFFF !important;
+}
+
+/* Logo header */
+.sidebar-header {
+    background: rgba(0, 0, 0, 0.08) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}

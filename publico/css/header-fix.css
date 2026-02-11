@@ -1,0 +1,83 @@
+/**
+ * HEADER FIX - Diseño moderno para sidebar flotante
+ */
+
+/* Header modernizado para sidebar flotante */
+.header {
+    position: fixed;
+    top: 16px !important;
+    /* Alineado con sidebar flotante */
+    left: calc(var(--sidebar-width) + 8px) !important;
+    /* Espacio del sidebar + gap */
+    right: 16px !important;
+    /* Margen derecho */
+    height: 68px !important;
+
+    background: white !important;
+    backdrop-filter: blur(10px);
+
+    /* Bordes redondeados igual que sidebar */
+    border-radius: 16px !important;
+
+    /* Sombra profesional flotante */
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.08),
+        0 1px 3px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+
+    /* Borde no, solo sombra */
+    border: none !important;
+    border-bottom: none !important;
+
+    padding: 0 28px !important;
+
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Page title más moderno */
+.page-title {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--color-text) !important;
+    letter-spacing: -0.5px !important;
+}
+
+/* User avatar con gradiente */
+.user-avatar {
+    background: linear-gradient(135deg, #0F4C81 0%, #00A8E8 100%) !important;
+    box-shadow:
+        0 2px 8px rgba(15, 76, 129, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+/* User profile hover */
+.user-profile:hover {
+    background: rgba(15, 76, 129, 0.04) !important;
+    transform: translateY(-1px);
+}
+
+/* Logout button mejorado */
+.btn-logout {
+    background: linear-gradient(135deg, #FEE2E2 0%, #FCA5A5 100%) !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15) !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-logout:hover {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+    transform: translateY(-2px) scale(1.05) !important;
+}
+
+.btn-logout:hover svg {
+    stroke: white !important;
+}
+
+/* Main content ajustado para header flotante */
+.main-content {
+    margin-top: 100px !important;
+    /* Más espacio para header flotante */
+    margin-left: calc(var(--sidebar-width) + 8px) !important;
+    margin-right: 16px !important;
+    padding: 24px !important;
+}

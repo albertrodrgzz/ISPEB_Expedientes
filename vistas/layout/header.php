@@ -1,5 +1,22 @@
+<?php
+/**
+ * HEADER - SIGED Enterprise
+ * Sistema de Gestión de Expedientes Digitales
+ */
+
+require_once __DIR__ . '/../../config/icons.php';
+?>
+
+<!-- Cargar fuente Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- CSS Fix para header flotante moderno -->
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/header-fix.css">
+
 <!-- SweetAlert2 Local (offline-ready) -->
-<script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+<script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
 
 <!-- Header -->
 <header class="header">
@@ -7,29 +24,25 @@
         <h1 class="page-title">Vista General</h1>
     </div>
     
-    <div class="header-right" style="display: flex; align-items: center; gap: 20px;">
+    <div class="header-right">
         <!-- User Profile (Clickable) -->
-        <a href="<?php echo APP_URL; ?>/vistas/perfil/" class="user-profile" style="display: flex; align-items: center; gap: 12px; text-decoration: none; cursor: pointer; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-            <div class="user-avatar-small" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
-                <?php echo strtoupper(substr($_SESSION['nombres'], 0, 2)); ?>
+        <a href="<?= APP_URL ?>/vistas/perfil/" class="user-profile" title="Mi perfil">
+            <div class="user-avatar">
+                <?= strtoupper(substr($_SESSION['nombres'], 0, 2)) ?>
             </div>
             <div class="user-info">
-                <div class="user-name-small" style="font-weight: 600; font-size: 14px; color: #1a202c;">
-                    <?php echo htmlspecialchars($_SESSION['nombres']); ?>
+                <div class="user-name">
+                    <?= htmlspecialchars($_SESSION['nombres']) ?>
                 </div>
-                <div class="user-role" style="font-size: 12px; color: #718096;">
-                    <?php echo htmlspecialchars($_SESSION['cargo']); ?>
+                <div class="user-role">
+                    <?= htmlspecialchars($_SESSION['cargo']) ?>
                 </div>
             </div>
         </a>
         
-        <!-- Logout Button (with confirmation) -->
-        <button onclick="confirmarCerrarSesion()" class="logout-btn" title="Cerrar sesión" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ef476f, #f78c6b); color: white; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; border: none; cursor: pointer;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
+        <!-- Logout Button -->
+        <button onclick="confirmarCerrarSesion()" class="btn-logout" title="Cerrar sesión">
+            <?= Icon::get('logout') ?>
         </button>
     </div>
 </header>
@@ -46,8 +59,6 @@ function confirmarCerrarSesion() {
         showCancelButton: true,
         confirmButtonText: 'Sí, cerrar sesión',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#ef476f',
-        cancelButtonColor: '#6c757d',
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
@@ -62,7 +73,7 @@ function confirmarCerrarSesion() {
             });
             
             // Redirigir al logout
-            window.location.href = '<?php echo APP_URL; ?>/config/logout.php';
+            window.location.href = '<?= APP_URL ?>/config/logout.php';
         }
     });
 }
