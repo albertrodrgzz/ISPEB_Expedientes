@@ -68,8 +68,8 @@ $renuncias = $stmt->fetchAll();
         <?php include '../layout/header.php'; ?>
         
         <!-- Header con botón -->
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1 style="font-size: 28px; font-weight: 700; color: var(--color-text); margin: 0; display: flex; align-items: center; gap: 12px;">
+        <div class="page-header">
+            <h1>
                 <?= Icon::get('log-out') ?>
                 Renuncias
             </h1>
@@ -80,7 +80,7 @@ $renuncias = $stmt->fetchAll();
         </div>
 
         <!-- KPI Cards -->
-        <div class="kpi-grid" style="margin-bottom: 30px;">
+        <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-icon gradient-blue">
                     <?= Icon::get('log-out') ?>
@@ -114,10 +114,16 @@ $renuncias = $stmt->fetchAll();
         <div class="card-modern">
             <div class="card-body">
                 <div style="margin-bottom: 20px;">
-                    <input type="text" 
-                           id="buscarRenuncia" 
-                           class="search-input" 
-                           placeholder="Buscar por cédula, nombre, departamento...">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: var(--color-text-light); margin-bottom: 6px; text-transform: uppercase;">
+                            <?= Icon::get('search', 'width: 14px; height: 14px; display: inline; vertical-align: middle;') ?>
+                            Buscar Renuncia
+                        </label>
+                        <input type="text" 
+                               id="buscarRenuncia" 
+                               class="search-input" 
+                               placeholder="Cédula, nombre, departamento...">
+                    </div>
                 </div>
 
                 <div class="table-wrapper">
@@ -148,7 +154,9 @@ $renuncias = $stmt->fetchAll();
                             <?php else: ?>
                                 <?php foreach ($renuncias as $ren): ?>
                                     <tr>
-                                        <td><strong><?= htmlspecialchars($ren['nombres'] . ' ' . $ren['apellidos']) ?></strong></td>
+                                        <td>
+                                            <div style="font-weight: 600; color: var(--color-text);"><?= htmlspecialchars($ren['nombres'] . ' ' . $ren['apellidos']) ?></div>
+                                        </td>
                                         <td><?= htmlspecialchars($ren['cedula']) ?></td>
                                         <td>
                                             <span class="badge badge-secondary"><?= htmlspecialchars($ren['departamento'] ?? 'N/A') ?></span>
@@ -156,19 +164,21 @@ $renuncias = $stmt->fetchAll();
                                         <td><?= date('d/m/Y', strtotime($ren['fecha_renuncia'])) ?></td>
                                         <td><?= htmlspecialchars(substr($ren['motivo'], 0, 50)) . (strlen($ren['motivo']) > 50 ? '...' : '') ?></td>
                                         <td style="text-align: center;">
-                                            <a href="../funcionarios/ver.php?id=<?= $ren['funcionario_id'] ?>" 
-                                               class="btn-icon" 
-                                               title="Ver funcionario">
-                                                <?= Icon::get('eye') ?>
-                                            </a>
-                                            <?php if ($ren['ruta_archivo']): ?>
-                                                <a href="<?= APP_URL . '/' . $ren['ruta_archivo'] ?>" 
-                                                   target="_blank" 
+                                            <div style="display: flex; justify-content: center; gap: 8px;">
+                                                <a href="../funcionarios/ver.php?id=<?= $ren['funcionario_id'] ?>" 
                                                    class="btn-icon" 
-                                                   title="Ver documento">
-                                                    <?= Icon::get('file-text') ?>
+                                                   title="Ver funcionario">
+                                                    <?= Icon::get('eye') ?>
                                                 </a>
-                                            <?php endif; ?>
+                                                <?php if ($ren['ruta_archivo']): ?>
+                                                    <a href="<?= APP_URL . '/' . $ren['ruta_archivo'] ?>" 
+                                                       target="_blank" 
+                                                       class="btn-icon" 
+                                                       title="Ver documento">
+                                                        <?= Icon::get('file-text') ?>
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

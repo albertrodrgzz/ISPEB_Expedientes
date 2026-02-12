@@ -70,8 +70,8 @@ $amonestaciones = $stmt->fetchAll();
         <?php include '../layout/header.php'; ?>
         
         <!-- Header con botón -->
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1 style="font-size: 28px; font-weight: 700; color: var(--color-text); margin: 0; display: flex; align-items: center; gap: 12px;">
+        <div class="page-header">
+            <h1>
                 <?= Icon::get('alert-circle') ?>
                 Amonestaciones
             </h1>
@@ -82,7 +82,7 @@ $amonestaciones = $stmt->fetchAll();
         </div>
 
         <!-- KPI Cards -->
-        <div class="kpi-grid" style="margin-bottom: 30px;">
+        <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-icon gradient-red">
                     <?= Icon::get('alert-circle') ?>
@@ -116,10 +116,16 @@ $amonestaciones = $stmt->fetchAll();
         <div class="card-modern">
             <div class="card-body">
                 <div style="margin-bottom: 20px;">
-                    <input type="text" 
-                           id="buscarAmonestacion" 
-                           class="search-input" 
-                           placeholder="Buscar por cédula, nombre...">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: var(--color-text-light); margin-bottom: 6px; text-transform: uppercase;">
+                            <?= Icon::get('search', 'width: 14px; height: 14px; display: inline; vertical-align: middle;') ?>
+                            Buscar Amonestación
+                        </label>
+                        <input type="text" 
+                               id="buscarAmonestacion" 
+                               class="search-input" 
+                               placeholder="Nombre, cédula, motivo...">
+                    </div>
                 </div>
 
                 <div class="table-wrapper">
@@ -152,7 +158,9 @@ $amonestaciones = $stmt->fetchAll();
                                 <?php foreach ($amonestaciones as $amon): ?>
                                     <tr>
                                         <td><?= date('d/m/Y', strtotime($amon['fecha_evento'])) ?></td>
-                                        <td><strong><?= htmlspecialchars($amon['nombres'] . ' ' . $amon['apellidos']) ?></strong></td>
+                                        <td>
+                                            <div style="font-weight: 600; color: var(--color-text);"><?= htmlspecialchars($amon['nombres'] . ' ' . $amon['apellidos']) ?></div>
+                                        </td>
                                         <td><?= htmlspecialchars($amon['cedula']) ?></td>
                                         <td>
                                             <?php

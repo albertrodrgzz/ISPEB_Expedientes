@@ -66,143 +66,113 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
             <?php endif; ?>
         </div>
         
-        <!-- KPI Cards -->
+        <!-- KPI Cards (Dashboard Style) -->
         <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-blue">
+            <div class="kpi-card kpi-primary">
+                <div class="kpi-icon">
                     <?= Icon::get('users') ?>
                 </div>
-                <div class="kpi-details">
-                    <div class="kpi-value"><?= $total_funcionarios ?></div>
+                <div class="kpi-content">
                     <div class="kpi-label">Total Funcionarios</div>
+                    <div class="kpi-value"><?= $total_funcionarios ?></div>
                 </div>
             </div>
             
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-green">
+            <div class="kpi-card kpi-success">
+                <div class="kpi-icon">
                     <?= Icon::get('check-circle') ?>
                 </div>
-                <div class="kpi-details">
-                    <div class="kpi-value"><?= $funcionarios_activos ?></div>
+                <div class="kpi-content">
                     <div class="kpi-label">Activos</div>
+                    <div class="kpi-value"><?= $funcionarios_activos ?></div>
                 </div>
             </div>
             
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-cyan">
+            <div class="kpi-card kpi-warning">
+                <div class="kpi-icon">
                     <?= Icon::get('sun') ?>
                 </div>
-                <div class="kpi-details">
-                    <div class="kpi-value"><?= $funcionarios_vacaciones ?></div>
+                <div class="kpi-content">
                     <div class="kpi-label">En Vacaciones</div>
+                    <div class="kpi-value"><?= $funcionarios_vacaciones ?></div>
                 </div>
             </div>
             
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-orange">
-                    <?= Icon::get('user-plus') ?>
+            <div class="kpi-card kpi-info">
+                <div class="kpi-icon">
+                    <?= Icon::get('star') ?>
                 </div>
-                <div class="kpi-details">
-                    <div class="kpi-value"><?= $funcionarios_nuevos ?></div>
+                <div class="kpi-content">
                     <div class="kpi-label">Nuevos (30 días)</div>
+                    <div class="kpi-value"><?= $funcionarios_nuevos ?></div>
                 </div>
             </div>
         </div>
         
-        <!-- Filters Card -->
-        <div class="card-modern" style="margin-bottom: 24px;">
-            <div class="card-body">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <?= Icon::get('filter', 'width: 20px; height: 20px; stroke: var(--color-primary);') ?>
-                    <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: var(--color-text);">Filtros de Búsqueda</h3>
-                </div>
-                
-                <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
-                    <div class="form-group" style="margin: 0;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: var(--color-text-light); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <?= Icon::get('search', 'width: 14px; height: 14px; display: inline; vertical-align: middle;') ?>
-                            Buscar
-                        </label>
-                        <input 
-                            type="text" 
-                            id="searchFuncionarios" 
-                            name="buscar" 
-                            class="search-input" 
-                            placeholder="Nombre, cédula..."
-                            value="<?= htmlspecialchars($filtros['buscar']) ?>"
-                        >
+        <!-- Filtros Completos Horizontal -->
+        <div class="card-modern">
+            <div class="card-body" style="padding: 20px;">
+                <div class="filters-grid" style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1fr 100px; gap: 16px; align-items: end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">BUSCAR</label>
+                        <input type="text" id="buscarFuncionario" class="form-control" placeholder="Nombre, cédula..." style="padding: 8px 12px; height: 38px; font-size: 14px;">
                     </div>
                     
-                    <div class="form-group" style="margin: 0;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: var(--color-text-light); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <?= Icon::get('building', 'width: 14px; height: 14px; display: inline; vertical-align: middle;') ?>
-                            Departamento
-                        </label>
-                        <select name="departamento_id" class="search-input">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">DEPARTAMENTO</label>
+                        <select id="filtroDepartamento" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
                             <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dept): ?>
-                                <option value="<?= $dept['id'] ?>" <?= $filtros['departamento_id'] == $dept['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($dept['nombre']) ?>
+                            <?php foreach ($departamentos as $dep): ?>
+                                <option value="<?= $dep['nombre'] ?>" <?= $filtros['departamento_id'] == $dep['id'] ? 'selected' : '' ?>>
+                                    <?= $dep['nombre'] ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     
-                    <div class="form-group" style="margin: 0;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: var(--color-text-light); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <?= Icon::get('briefcase', 'width: 14px; height: 14px; display: inline; vertical-align: middle;') ?>
-                            Cargo
-                        </label>
-                        <select name="cargo_id" class="search-input">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">CARGO</label>
+                        <select id="filtroCargo" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
                             <option value="">Todos</option>
                             <?php foreach ($cargos as $cargo): ?>
-                                <option value="<?= $cargo['id'] ?>" <?= $filtros['cargo_id'] == $cargo['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($cargo['nombre_cargo']) ?>
+                                <option value="<?= $cargo['nombre_cargo'] ?>" <?= $filtros['cargo_id'] == $cargo['id'] ? 'selected' : '' ?>>
+                                    <?= $cargo['nombre_cargo'] ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     
-                    <div class="form-group" style="margin: 0;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; color: var(--color-text-light); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <?= Icon::get('activity', 'width: 14px; height: 14px; display: inline; vertical-align: middle;') ?>
-                            Estado
-                        </label>
-                        <select name="estado" class="search-input">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">ESTADO</label>
+                        <select id="filtroEstado" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
                             <option value="">Todos</option>
-                            <option value="activo" <?= $filtros['estado'] == 'activo' ? 'selected' : '' ?>>Activo</option>
-                            <option value="vacaciones" <?= $filtros['estado'] == 'vacaciones' ? 'selected' : '' ?>>Vacaciones</option>
-                            <option value="reposo" <?= $filtros['estado'] == 'reposo' ? 'selected' : '' ?>>Reposo</option>
-                            <option value="inactivo" <?= $filtros['estado'] == 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
+                            <option value="activo" <?= $filtros['estado'] === 'activo' ? 'selected' : '' ?>>Activo</option>
+                            <option value="vacaciones" <?= $filtros['estado'] === 'vacaciones' ? 'selected' : '' ?>>Vacaciones</option>
+                            <option value="inactivo" <?= $filtros['estado'] === 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
                         </select>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <button type="submit" class="btn-primary" style="width: 100%;">
-                            <?= Icon::get('search') ?>
-                            Buscar
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <button id="btnLimpiar" class="btn-secondary" style="height: 38px; width: 100%; display: flex; align-items: center; justify-content: center; padding: 0;">
+                            <?= Icon::get('x', 'width: 16px; height: 16px; margin-right: 4px;') ?> Limpiar
                         </button>
-                        <a href="index.php" class="btn-secondary" style="width: 100%; justify-content: center;">
-                            <?= Icon::get('x') ?>
-                            Limpiar
-                        </a>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
         
-        <!-- Table Card -->
+        <!-- Tabla -->
         <div class="card-modern">
             <div class="card-body">
                 <div class="table-wrapper">
-                    <table class="table-modern" id="funcionariosTable">
+                    <table id="tablaFuncionarios" class="table-modern">
                         <thead>
                             <tr>
                                 <th>Funcionario</th>
                                 <th>Cargo</th>
                                 <th>Departamento</th>
                                 <th>Antigüedad</th>
-                                <th>Estado</th>
+                                <th style="text-align: center;">Estado</th>
                                 <th style="text-align: center;">Acciones</th>
                             </tr>
                         </thead>
@@ -212,63 +182,73 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
                                     <td colspan="6">
                                         <div class="empty-state">
                                             <div class="empty-state-icon">
-                                                <?= Icon::get('users', 'width: 64px; height: 64px; opacity: 0.3;') ?>
+                                                <?= Icon::get('users', 'opacity: 0.3; width: 64px; height: 64px;') ?>
                                             </div>
-                                            <div class="empty-state-title">No hay funcionarios</div>
-                                            <p class="empty-state-description">
-                                                No se encontraron funcionarios con los filtros seleccionados.
-                                            </p>
+                                            <div class="empty-state-title">No se encontraron funcionarios</div>
+                                            <p class="empty-state-description">Intenta ajustar los filtros de búsqueda</p>
                                         </div>
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($funcionarios as $func): ?>
-                                    <tr>
+                                <?php foreach ($funcionarios as $f): ?>
+                                    <?php
+                                    // Calcular antigüedad para mostrar
+                                    $antiguedad_texto = '0 años';
+                                    if ($f['fecha_ingreso']) {
+                                        $fi = new DateTime($f['fecha_ingreso']);
+                                        $now = new DateTime();
+                                        $diff = $now->diff($fi);
+                                        $antiguedad_texto = $diff->y . ' años';
+                                    }
+                                    
+                                    // Datos para filtrado JS
+                                    $dataDept = strtolower($f['nombre_departamento'] ?? $f['departamento']);
+                                    $dataCargo = strtolower($f['nombre_cargo']);
+                                    $dataEstado = strtolower($f['estado']);
+                                    ?>
+                                    <tr data-departamento="<?= $dataDept ?>" data-cargo="<?= $dataCargo ?>" data-estado="<?= $dataEstado ?>">
                                         <td>
-                                            <div class="user-cell">
-                                                <div class="user-avatar">
-                                                    <?= strtoupper(substr($func['nombres'], 0, 1) . substr($func['apellidos'], 0, 1)) ?>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div class="avatar-circle" style="
+                                                    width: 40px; 
+                                                    height: 40px; 
+                                                    border-radius: 50%; 
+                                                    background: var(--color-primary); 
+                                                    color: white; 
+                                                    display: flex; 
+                                                    align-items: center; 
+                                                    justify-content: center; 
+                                                    font-weight: 700;
+                                                    font-size: 14px;
+                                                ">
+                                                    <?= strtoupper(substr($f['nombres'], 0, 1) . substr($f['apellidos'], 0, 1)) ?>
                                                 </div>
                                                 <div>
-                                                    <div class="user-name"><?= htmlspecialchars($func['nombre_completo']) ?></div>
-                                                    <div class="user-id"><?= htmlspecialchars($func['cedula']) ?></div>
+                                                    <div style="font-weight: 600; color: var(--color-text);"><?= htmlspecialchars($f['nombres'] . ' ' . $f['apellidos']) ?></div>
+                                                    <div style="font-size: 12px; color: var(--color-text-light);"><?= htmlspecialchars($f['cedula']) ?></div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td><?= htmlspecialchars($func['nombre_cargo']) ?></td>
-                                        <td><?= htmlspecialchars($func['departamento']) ?></td>
-                                        <td><?= $func['antiguedad_anos'] ?> año<?= $func['antiguedad_anos'] != 1 ? 's' : '' ?></td>
-                                        <td>
+                                        <td><?= htmlspecialchars($f['nombre_cargo']) ?></td>
+                                        <td><?= htmlspecialchars($f['nombre_departamento'] ?? $f['departamento']) ?></td>
+                                        <td><?= $antiguedad_texto ?></td>
+                                        <td style="text-align: center;">
                                             <?php
-                                            $badge_class = 'badge-success';
-                                            $estado_texto = 'Activo';
-                                            
-                                            switch ($func['estado']) {
-                                                case 'vacaciones':
-                                                    $badge_class = 'badge-warning';
-                                                    $estado_texto = 'Vacaciones';
-                                                    break;
-                                                case 'reposo':
-                                                    $badge_class = 'badge-info';
-                                                    $estado_texto = 'Reposo';
-                                                    break;
-                                                case 'inactivo':
-                                                    $badge_class = 'badge-danger';
-                                                    $estado_texto = 'Inactivo';
-                                                    break;
-                                            }
+                                            $estadoClass = 'badge-success';
+                                            if ($f['estado'] === 'vacaciones') $estadoClass = 'badge-warning';
+                                            if ($f['estado'] === 'inactivo') $estadoClass = 'badge-danger';
                                             ?>
-                                            <span class="badge <?= $badge_class ?>">
-                                                <?= $estado_texto ?>
+                                            <span class="badge <?= $estadoClass ?>">
+                                                <?= ucfirst($f['estado']) ?>
                                             </span>
                                         </td>
                                         <td style="text-align: center;">
-                                            <div style="display: inline-flex; gap: 8px;">
-                                                <a href="ver.php?id=<?= $func['id'] ?>" class="btn-icon" title="Ver expediente">
+                                            <div style="display: flex; justify-content: center; gap: 8px;">
+                                                <a href="ver.php?id=<?= $f['id'] ?>" class="btn-icon" title="Ver Expediente">
                                                     <?= Icon::get('eye') ?>
                                                 </a>
-                                                <?php if (verificarDepartamento($func['id'])): ?>
-                                                    <a href="editar.php?id=<?= $func['id'] ?>" class="btn-icon" title="Editar">
+                                                <?php if (verificarNivel(2)): ?>
+                                                    <a href="editar.php?id=<?= $f['id'] ?>" class="btn-icon" title="Editar">
                                                         <?= Icon::get('edit') ?>
                                                     </a>
                                                 <?php endif; ?>
@@ -285,16 +265,63 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
     </div>
     
     <script>
-        // Real-time search filter
-        document.getElementById('searchFuncionarios')?.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#funcionariosTable tbody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Inicializando filtros en tiempo real...');
+        
+        // Verificar si la librería cargó
+        if (typeof initTableFilters === 'function') {
+            const filters = initTableFilters({
+                tableId: 'tablaFuncionarios',
+                searchInputId: 'buscarFuncionario',
+                selectFilters: [
+                    { id: 'filtroDepartamento', dataAttribute: 'departamento' },
+                    { id: 'filtroCargo', dataAttribute: 'cargo' },
+                    { id: 'filtroEstado', dataAttribute: 'estado' }
+                ]
             });
-        });
+            
+            // Botón limpiar
+            document.getElementById('btnLimpiar').addEventListener('click', function() {
+                if (filters && typeof filters.clearFilters === 'function') {
+                    filters.clearFilters();
+                } else {
+                    // Fallback manual
+                    document.getElementById('buscarFuncionario').value = '';
+                    document.getElementById('filtroDepartamento').value = '';
+                    document.getElementById('filtroCargo').value = '';
+                    document.getElementById('filtroEstado').value = '';
+                    // Disparar evento para actualizar
+                    const event = new Event('input');
+                    document.getElementById('buscarFuncionario').dispatchEvent(event);
+                }
+            });
+            
+        } else {
+            console.error('La función initTableFilters no está definida. Verifique filtros-tiempo-real.js');
+        }
+    });
+
+    /* Responsive adjustments for filters */
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @media (max-width: 1024px) {
+            .filters-grid {
+                grid-template-columns: 1fr 1fr !important;
+            }
+            .filters-grid > div:last-child {
+                grid-column: span 2;
+            }
+        }
+        @media (max-width: 640px) {
+            .filters-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .filters-grid > div:last-child {
+                grid-column: span 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
     </script>
 </body>
 </html>

@@ -647,3 +647,77 @@ a.btn-secondary svg {
     }
 
 }
+
+/* ===== VIBRANT GRADIENTS FOR KPI CARDS (DASHBOARD STYLE) ===== */
+
+
+
+.gradient-blue {
+
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+
+    box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+
+}
+
+
+
+.gradient-cyan {
+
+    background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%) !important;
+
+    box-shadow: 0 4px 15px rgba(0, 176, 155, 0.3);
+
+}
+
+
+
+.gradient-green {
+
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+
+}
+
+
+
+.gradient-orange {
+
+    background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%) !important;
+
+    box-shadow: 0 4px 15px rgba(252, 74, 26, 0.3);
+
+}
+
+
+
+.gradient-red {
+
+    background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%) !important;
+
+    box-shadow: 0 4px 15px rgba(203, 45, 62, 0.3);
+
+}
+
+
+
+/* Ensure white text on gradients */
+
+.gradient-blue, .gradient-cyan, .gradient-green, .gradient-orange, .gradient-red {
+
+    color: white !important;
+
+}
+
+
+
+/* Fix for Icon colors inside gradients */
+
+.gradient-blue svg, .gradient-cyan svg, .gradient-green svg, .gradient-orange svg, .gradient-red svg {
+
+    stroke: white !important;
+
+    color: white !important;
+
+}
