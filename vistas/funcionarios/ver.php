@@ -1,6 +1,6 @@
 <?php
 /**
- * Vista: Expediente Digital - Diseño Profesional (Versión Blindada v5.0)
+ * Vista: Expediente Digital - Diseño Profesional (Versión Unificada v6.0)
  */
 
 require_once __DIR__ . '/../../config/database.php';
@@ -173,9 +173,9 @@ if ($funcionario['fecha_ingreso']) {
             font-weight: 500;
         }
         
-        /* ESTILOS DEL MODAL (Corregidos) */
+        /* ESTILOS DEL MODAL */
         .modal {
-            display: none; /* Oculto por defecto */
+            display: none;
             position: fixed;
             z-index: 2000;
             left: 0;
@@ -183,15 +183,13 @@ if ($funcionario['fecha_ingreso']) {
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.5); /* Fondo oscuro transparente */
+            background-color: rgba(0,0,0,0.5);
             backdrop-filter: blur(2px);
             align-items: center;
             justify-content: center;
         }
 
-        .modal.active {
-            display: flex; /* Mostrar como flexbox para centrar */
-        }
+        .modal.active { display: flex; }
 
         .modal-content {
             background-color: #fff;
@@ -289,13 +287,12 @@ if ($funcionario['fecha_ingreso']) {
                         ['id' => 'tab-cargas', 'label' => 'Cargas Familiares', 'icon' => 'users'],
                         ['id' => 'tab-nombramientos', 'label' => 'Historial Nombramientos', 'icon' => 'file-text'],
                         ['id' => 'tab-vacaciones', 'label' => 'Historial Vacaciones', 'icon' => 'sun'],
-                        ['id' => 'tab-riesgo', 'label' => 'Barra de Riesgo', 'icon' => 'activity'],
-                        ['id' => 'tab-amonestaciones', 'label' => 'Amonestaciones', 'icon' => 'alert-circle'],
+                        ['id' => 'tab-amonestaciones', 'label' => 'Amonestaciones y Riesgo', 'icon' => 'alert-triangle'], // Unificado
                         ['id' => 'tab-salidas', 'label' => 'Retiros/Despidos', 'icon' => 'log-out'],
                     ];
                     
                     foreach($menu_items as $item): 
-                        $isActive = ($item['id'] === 'tab-info'); // La primera activa por defecto
+                        $isActive = ($item['id'] === 'tab-info');
                     ?>
                         <button onclick="showTab('<?= $item['id'] ?>', this)" 
                            class="profile-nav-link <?= $isActive ? 'active' : '' ?>"
@@ -497,33 +494,29 @@ if ($funcionario['fecha_ingreso']) {
                     </div>
                 </div>
                 
-                <div id="tab-riesgo" class="tab-content">
-                    <div class="card-modern">
-                        <div class="card-body">
-                            <div class="section-header">
-                                <?= Icon::get('activity', 'width: 24px; height: 24px; color: var(--color-primary);') ?>
-                                <h2>Nivel de Riesgo</h2>
-                            </div>
-                            
-                            <div style="margin: 32px 0;">
-                                <div style="width: 100%; height: 40px; background: #e2e8f0; border-radius: 20px; overflow: hidden; position: relative;">
-                                    <div id="risk-fill" style="width: 0%; height: 100%; background: #10b981; transition: width 1s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">
-                                        <span id="risk-text">Cargando...</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="risk-mensaje"></div>
-                        </div>
-                    </div>
-                </div>
-                
                 <div id="tab-amonestaciones" class="tab-content">
                     <div class="card-modern">
                         <div class="card-body">
                             <div class="section-header">
-                                <?= Icon::get('alert-circle', 'width: 24px; height: 24px; color: var(--color-primary);') ?>
-                                <h2>Historial de Amonestaciones</h2>
+                                <?= Icon::get('alert-triangle', 'width: 24px; height: 24px; color: var(--color-primary);') ?>
+                                <h2>Amonestaciones y Riesgo Laboral</h2>
                             </div>
+
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h4 style="margin: 0; font-size: 14px; color: #64748b; font-weight: 600;">NIVEL DE RIESGO (Causa de Despido: 3 Amonestaciones)</h4>
+                                    <span id="risk-counter" style="font-weight: 800; font-size: 14px; color: #64748b;">0 / 3</span>
+                                </div>
+                                <div style="width: 100%; height: 30px; background: #e2e8f0; border-radius: 15px; overflow: hidden; position: relative;">
+                                    <div id="risk-fill" style="width: 0%; height: 100%; background: #10b981; transition: width 1s ease, background 0.5s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px;">
+                                        </div>
+                                </div>
+                                <div id="risk-mensaje" style="margin-top: 10px; font-size: 13px; font-weight: 500; color: #64748b;">
+                                    Calculando nivel de riesgo...
+                                </div>
+                            </div>
+
+                            <h3 style="font-size: 16px; margin-bottom: 15px; color: #0f4c81; border-bottom: 1px solid #eee; padding-bottom: 10px;">Historial de Faltas</h3>
                             <div id="amonestaciones-container">
                                 <div class="empty-state">
                                     <div class="empty-state-icon"><?= Icon::get('alert-circle', 'opacity: 0.3; width: 48px; height: 48px;') ?></div>
@@ -613,36 +606,32 @@ if ($funcionario['fecha_ingreso']) {
         const funcionarioId = <?= $id ?>;
         const currentYear = new Date().getFullYear();
 
-        // Función para cambiar de pestaña (Blindada para usar onclick en línea)
+        // Función para cambiar de pestaña
         function showTab(tabName, element) {
-            // Ocultar todos los contenidos
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.style.display = 'none';
                 tab.classList.remove('active');
             });
             
-            // Desactivar todos los botones del menú
             document.querySelectorAll('.profile-nav-link').forEach(item => {
                 item.classList.remove('active');
                 item.style.background = 'transparent';
                 item.style.color = '#64748B';
             });
             
-            // Mostrar contenido seleccionado
             const activeTab = document.getElementById(tabName);
             if(activeTab) {
                 activeTab.style.display = 'block';
                 activeTab.classList.add('active');
             }
             
-            // Activar botón visualmente
             if(element) {
                 element.classList.add('active');
                 element.style.background = '#E0F2FE';
                 element.style.color = '#0F4C81';
             }
             
-            // Cargar datos específicos si es necesario
+            // Cargar datos específicos
             const realTabName = tabName.replace('tab-', '');
             switch(realTabName) {
                 case 'cargas': if(typeof cargarCargasFamiliares === 'function') cargarCargasFamiliares(); break;
@@ -651,8 +640,10 @@ if ($funcionario['fecha_ingreso']) {
                     if(typeof calcularVacaciones === 'function') calcularVacaciones(); 
                     if(typeof cargarVacaciones === 'function') cargarVacaciones();
                     break;
-                case 'riesgo': if(typeof cargarBarraRiesgo === 'function') cargarBarraRiesgo(); break;
-                case 'amonestaciones': if(typeof cargarAmonestaciones === 'function') cargarAmonestaciones(); break;
+                case 'amonestaciones': 
+                    if(typeof cargarAmonestaciones === 'function') cargarAmonestaciones(); 
+                    if(typeof cargarBarraRiesgo === 'function') cargarBarraRiesgo(); // Carga también la barra
+                    break;
                 case 'salidas': if(typeof cargarSalidas === 'function') cargarSalidas(); break;
             }
         }
@@ -764,21 +755,73 @@ if ($funcionario['fecha_ingreso']) {
              });
         }
         
+        // ============================================
+        // Lógica de Barra de Riesgo (3 Strikes)
+        // ============================================
         function cargarBarraRiesgo() {
             fetch(`ajax/contar_amonestaciones.php?funcionario_id=${funcionarioId}`)
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    const pct = Math.min((data.total / 5) * 100, 100);
+                    const conteo = data.data.conteo.total; // Obtenemos el total de amonestaciones
                     const fill = document.getElementById('risk-fill');
-                    fill.style.width = pct + '%';
-                    fill.textContent = `${data.total} Amonestaciones`;
-                    if(data.total == 0) fill.style.background = '#10b981';
-                    else if(data.total < 3) fill.style.background = '#f59e0b';
-                    else fill.style.background = '#ef4444'; 
+                    const mensaje = document.getElementById('risk-mensaje');
+                    const counter = document.getElementById('risk-counter');
+                    
+                    // Cálculo basado en 3 strikes
+                    let porcentaje = 0;
+                    let color = '#10b981'; // Verde
+                    let textoBarra = '';
+                    let textoMensaje = 'Historial limpio. Sin riesgo.';
+
+                    if (conteo === 0) {
+                        porcentaje = 5; // Un poquito visible
+                        textoBarra = '';
+                    } else if (conteo === 1) {
+                        porcentaje = 33;
+                        color = '#fbbf24'; // Amarillo/Ambar
+                        textoBarra = 'Precaución';
+                        textoMensaje = '1 Falta registrada. Se recomienda llamado de atención.';
+                    } else if (conteo === 2) {
+                        porcentaje = 66;
+                        color = '#f97316'; // Naranja
+                        textoBarra = 'Riesgo Alto';
+                        textoMensaje = '2 Faltas. Próxima falta es causal de despido.';
+                    } else if (conteo >= 3) {
+                        porcentaje = 100;
+                        color = '#ef4444'; // Rojo Intenso
+                        textoBarra = 'CAUSA DE DESPIDO';
+                        textoMensaje = '⚠️ LÍMITE ALCANZADO: 3 o más faltas justifican despido procedente.';
+                    }
+
+                    // Actualizar DOM
+                    fill.style.width = porcentaje + '%';
+                    fill.style.background = color;
+                    fill.textContent = textoBarra;
+                    mensaje.textContent = textoMensaje;
+                    mensaje.style.color = color;
+                    counter.textContent = `${conteo} / 3`;
+                    
+                    // Efecto de parpadeo si es crítico
+                    if (conteo >= 3) {
+                        mensaje.style.fontWeight = 'bold';
+                        fill.style.animation = 'pulse 2s infinite';
+                    }
                 }
-            });
+            })
+            .catch(err => console.error("Error cargando riesgo:", err));
         }
+        
+        // Estilo de animación para riesgo crítico
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.7; }
+                100% { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(styleSheet);
         
         // Close modal when clicking outside
         window.onclick = function(event) {
