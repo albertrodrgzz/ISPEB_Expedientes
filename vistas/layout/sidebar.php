@@ -7,20 +7,15 @@
 require_once __DIR__ . '/../../config/icons.php';
 ?>
 
-<!-- CSS Fix para forzar texto blanco -->
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/sidebar-fix.css">
 
-<!-- Botón hamburguesa para móvil -->
 <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
     <?= Icon::get('menu') ?>
 </button>
 
-<!-- Overlay para cerrar sidebar en móvil -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<!-- Sidebar Principal -->
 <aside class="sidebar" id="sidebar">
-    <!-- ===== HEADER DEL SIDEBAR ===== -->
     <div class="sidebar-header">
         <div class="logo">
             <img src="<?= APP_URL ?>/publico/imagenes/logo-telematica-letras-blancas.png" 
@@ -30,7 +25,6 @@ require_once __DIR__ . '/../../config/icons.php';
         </div>
     </div>
     
-    <!-- ===== MENÚ DE NAVEGACIÓN ===== -->
     <nav class="sidebar-nav">
         <?php
         // Detectar página y directorio actual para marcar item activo
@@ -95,33 +89,6 @@ require_once __DIR__ . '/../../config/icons.php';
                         'url' => '/vistas/amonestaciones/index.php',
                         'icon' => 'alert-triangle',
                         'dir' => 'amonestaciones'
-                    ],
-                    [
-                        'label' => 'Remociones',
-                        'url' => '/vistas/remociones/index.php',
-                        'icon' => 'x-circle',
-                        'dir' => 'remociones'
-                    ],
-                    [
-                        'label' => 'Salidas',
-                        'icon' => 'log-out',
-                        'submenu' => [
-                            [
-                                'label' => 'Despidos',
-                                'url' => '/vistas/despidos/index.php',
-                                'dir' => 'despidos'
-                            ],
-                            [
-                                'label' => 'Renuncias',
-                                'url' => '/vistas/renuncias/index.php',
-                                'dir' => 'renuncias'
-                            ],
-                            [
-                                'label' => 'Renuncias Aprobadas',
-                                'url' => '/vistas/renuncias_aprobadas/index.php',
-                                'dir' => 'renuncias_aprobadas'
-                            ]
-                        ]
                     ]
                 ]
             ],
@@ -175,7 +142,6 @@ require_once __DIR__ . '/../../config/icons.php';
                 ?>
                     
                     <?php if (isset($item['submenu'])): ?>
-                        <!-- ITEM CON SUBMENÚ -->
                         <div class="nav-item-accordion">
                             <a href="javascript:void(0)" class="nav-item" onclick="toggleSubmenu(this)">
                                 <span class="nav-icon">
@@ -200,7 +166,6 @@ require_once __DIR__ . '/../../config/icons.php';
                             </div>
                         </div>
                     <?php else: ?>
-                        <!-- ITEM NORMAL -->
                         <?php $isActive = isset($item['dir']) && $current_dir == $item['dir']; ?>
                         <a href="<?= APP_URL . $item['url'] ?>" 
                            class="nav-item <?= $isActive ? 'active' : '' ?>">
@@ -217,7 +182,6 @@ require_once __DIR__ . '/../../config/icons.php';
     </nav>
 </aside>
 
-<!-- JavaScript: Funcionalidad del Sidebar -->
 <script>
 /**
  * Toggle submenu (acordeón)

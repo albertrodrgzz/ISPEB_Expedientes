@@ -122,9 +122,11 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
                         <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">DEPARTAMENTO</label>
                         <select id="filtroDepartamento" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
                             <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dep): ?>
-                                <option value="<?= $dep['nombre'] ?>" <?= $filtros['departamento_id'] == $dep['id'] ? 'selected' : '' ?>>
-                                    <?= $dep['nombre'] ?>
+                            <?php foreach ($departamentos as $dep):
+                                $depVal = strtolower($dep['nombre']);
+                            ?>
+                                <option value="<?= htmlspecialchars($depVal) ?>" <?= $filtros['departamento_id'] == $dep['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($dep['nombre']) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -134,9 +136,11 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
                         <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">CARGO</label>
                         <select id="filtroCargo" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
                             <option value="">Todos</option>
-                            <?php foreach ($cargos as $cargo): ?>
-                                <option value="<?= $cargo['nombre_cargo'] ?>" <?= $filtros['cargo_id'] == $cargo['id'] ? 'selected' : '' ?>>
-                                    <?= $cargo['nombre_cargo'] ?>
+                            <?php foreach ($cargos as $cargo):
+                                $cargoVal = strtolower($cargo['nombre_cargo']);
+                            ?>
+                                <option value="<?= htmlspecialchars($cargoVal) ?>" <?= $filtros['cargo_id'] == $cargo['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cargo['nombre_cargo']) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -260,6 +264,10 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
                         </tbody>
                     </table>
                 </div>
+                <!-- Contador de resultados -->
+                <div style="padding: 12px 16px; border-top: 1px solid var(--color-border-light); font-size: 13px; color: var(--color-text-light);">
+                    Mostrando <strong id="contadorVisible">0</strong> de <strong id="contadorTotal">0</strong> funcionarios
+                </div>
             </div>
         </div>
     </div>
@@ -269,6 +277,10 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
         console.log('Inicializando filtros en tiempo real...');
         
         // Verificar si la librería cargó
+        const totalRows = document.querySelectorAll('#tablaFuncionarios tbody tr').length;
+        document.getElementById('contadorTotal').textContent = totalRows;
+        document.getElementById('contadorVisible').textContent = totalRows;
+
         if (typeof initTableFilters === 'function') {
             const filters = initTableFilters({
                 tableId: 'tablaFuncionarios',
@@ -277,25 +289,20 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
                     { id: 'filtroDepartamento', dataAttribute: 'departamento' },
                     { id: 'filtroCargo', dataAttribute: 'cargo' },
                     { id: 'filtroEstado', dataAttribute: 'estado' }
-                ]
+                ],
+                onFilter: function(visible, total) {
+                    document.getElementById('contadorVisible').textContent = visible;
+                    document.getElementById('contadorTotal').textContent = total;
+                }
             });
-            
+
             // Botón limpiar
             document.getElementById('btnLimpiar').addEventListener('click', function() {
                 if (filters && typeof filters.clearFilters === 'function') {
                     filters.clearFilters();
-                } else {
-                    // Fallback manual
-                    document.getElementById('buscarFuncionario').value = '';
-                    document.getElementById('filtroDepartamento').value = '';
-                    document.getElementById('filtroCargo').value = '';
-                    document.getElementById('filtroEstado').value = '';
-                    // Disparar evento para actualizar
-                    const event = new Event('input');
-                    document.getElementById('buscarFuncionario').dispatchEvent(event);
                 }
             });
-            
+
         } else {
             console.error('La función initTableFilters no está definida. Verifique filtros-tiempo-real.js');
         }

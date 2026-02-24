@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/username_generator.php';
 require_once __DIR__ . '/Usuario.php';
 
 class Funcionario {
@@ -49,25 +50,21 @@ class Funcionario {
         
         $params = [];
         
-        // Filtro por departamento
         if (!empty($filtros['departamento_id'])) {
             $sql .= " AND f.departamento_id = ?";
             $params[] = $filtros['departamento_id'];
         }
         
-        // Filtro por cargo
         if (!empty($filtros['cargo_id'])) {
             $sql .= " AND f.cargo_id = ?";
             $params[] = $filtros['cargo_id'];
         }
         
-        // Filtro por estado
         if (!empty($filtros['estado'])) {
             $sql .= " AND f.estado = ?";
             $params[] = $filtros['estado'];
         }
         
-        // Búsqueda por texto
         if (!empty($filtros['buscar'])) {
             $sql .= " AND (f.nombres LIKE ? OR f.apellidos LIKE ? OR f.cedula LIKE ?)";
             $buscar = '%' . $filtros['buscar'] . '%';
@@ -112,6 +109,68 @@ class Funcionario {
         $stmt->execute([$cedula]);
         return $stmt->fetch();
     }
+
+    /**
+     * Verificar duplicados de campos únicos (cédula, teléfono, email)
+     *
+     * @param array  $datos      Arreglo con keys: cedula, telefono, email
+     * @param int|null $excluir_id  ID del funcionario a excluir (para edición)
+     * @return array  Arreglo de errores. Vacío si no hay conflictos.
+     */
+    public function verificarDuplicados(array $datos, $excluir_id = null): array {
+        $errores = [];
+
+        // — Cédula —
+        $sql = "SELECT id, nombres, apellidos FROM funcionarios WHERE cedula = ?";
+        $params = [$datos['cedula']];
+        if ($excluir_id) {
+            $sql .= " AND id != ?";
+            $params[] = $excluir_id;
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $fila = $stmt->fetch();
+        if ($fila) {
+            $nombre = htmlspecialchars($fila['nombres'] . ' ' . $fila['apellidos']);
+            $errores['cedula'] = "La cédula ya pertenece al funcionario: <strong>$nombre</strong>.";
+        }
+
+        // — Teléfono (solo si se proporcionó) —
+        if (!empty($datos['telefono'])) {
+            $sql = "SELECT id, nombres, apellidos FROM funcionarios WHERE telefono = ? AND telefono != ''";
+            $params = [$datos['telefono']];
+            if ($excluir_id) {
+                $sql .= " AND id != ?";
+                $params[] = $excluir_id;
+            }
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            $fila = $stmt->fetch();
+            if ($fila) {
+                $nombre = htmlspecialchars($fila['nombres'] . ' ' . $fila['apellidos']);
+                $errores['telefono'] = "El teléfono ya está registrado para: <strong>$nombre</strong>.";
+            }
+        }
+
+        // — Email (solo si se proporcionó) —
+        if (!empty($datos['email'])) {
+            $sql = "SELECT id, nombres, apellidos FROM funcionarios WHERE email = ? AND email != ''";
+            $params = [$datos['email']];
+            if ($excluir_id) {
+                $sql .= " AND id != ?";
+                $params[] = $excluir_id;
+            }
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            $fila = $stmt->fetch();
+            if ($fila) {
+                $nombre = htmlspecialchars($fila['nombres'] . ' ' . $fila['apellidos']);
+                $errores['email'] = "El correo electrónico ya está registrado para: <strong>$nombre</strong>.";
+            }
+        }
+
+        return $errores;
+    }
     
     /**
      * Crear nuevo funcionario
@@ -130,9 +189,9 @@ class Funcionario {
             $datos['apellidos'],
             $datos['fecha_nacimiento'] ?? null,
             $datos['genero'] ?? null,
-            $datos['telefono'] ?? null,
-            $datos['email'] ?? null,
-            $datos['direccion'] ?? null,
+            $datos['telefono'] ?: null,
+            $datos['email'] ?: null,
+            $datos['direccion'] ?: null,
             $datos['cargo_id'],
             $datos['departamento_id'],
             $datos['fecha_ingreso'],
@@ -142,10 +201,8 @@ class Funcionario {
         
         if ($resultado) {
             $funcionario_id = $this->db->lastInsertId();
-            
-            // Crear usuario pendiente automáticamente
-            $this->crearUsuarioPendiente($funcionario_id, $datos['cedula'], $datos['email']);
-            
+            // Crear usuario pendiente usando nombre + apellido (no cédula)
+            $this->crearUsuarioPendiente($funcionario_id, $datos['nombres'], $datos['apellidos'], $datos['email'] ?? null);
             return $funcionario_id;
         }
         
@@ -154,11 +211,11 @@ class Funcionario {
     
     /**
      * Crear usuario pendiente para el funcionario
+     * Username: 1ra letra del nombre + apellido (ej: mperez). Si existe, 2 letras, etc.
      */
-    private function crearUsuarioPendiente($funcionario_id, $cedula, $email = null) {
+    private function crearUsuarioPendiente($funcionario_id, $nombres, $apellidos, $email = null) {
         try {
-            // Generar username desde la cédula (ej: V-12345678 -> v12345678)
-            $username = strtolower(str_replace(['-', ' '], '', $cedula));
+            $username = generarUsernameUnico($this->db, $nombres, $apellidos);
             
             $modeloUsuario = new Usuario();
             $usuario_id = $modeloUsuario->crearPendiente($funcionario_id, $username, $email);
@@ -201,9 +258,9 @@ class Funcionario {
             $datos['apellidos'],
             $datos['fecha_nacimiento'] ?? null,
             $datos['genero'] ?? null,
-            $datos['telefono'] ?? null,
-            $datos['email'] ?? null,
-            $datos['direccion'] ?? null,
+            $datos['telefono'] ?: null,
+            $datos['email'] ?: null,
+            $datos['direccion'] ?: null,
             $datos['cargo_id'],
             $datos['departamento_id'],
             $datos['fecha_ingreso'],
@@ -215,14 +272,9 @@ class Funcionario {
     
     /**
      * Reactivar funcionario inactivo (reingreso)
-     * Permite reincorporar a un funcionario que fue dado de baja
-     * @param int $id ID del funcionario a reactivar
-     * @param array $datosNuevos Nuevos datos de cargo, departamento, fecha_ingreso
-     * @return bool
      */
     public function reactivarFuncionario($id, $datosNuevos) {
         try {
-            // Actualizar datos del funcionario
             $stmt = $this->db->prepare("
                 UPDATE funcionarios SET
                     cargo_id = ?,
@@ -239,17 +291,14 @@ class Funcionario {
                 $datosNuevos['cargo_id'],
                 $datosNuevos['departamento_id'],
                 $datosNuevos['fecha_ingreso'],
-                $datosNuevos['telefono'] ?? null,
-                $datosNuevos['email'] ?? null,
-                $datosNuevos['direccion'] ?? null,
+                $datosNuevos['telefono'] ?: null,
+                $datosNuevos['email'] ?: null,
+                $datosNuevos['direccion'] ?: null,
                 $id
             ]);
             
             if ($resultado) {
-                // Registrar evento de reingreso en historial_administrativo
                 $this->registrarReingreso($id, $datosNuevos);
-                
-                // Reactivar usuario si existe
                 $this->reactivarUsuario($id);
             }
             
@@ -262,8 +311,6 @@ class Funcionario {
     
     /**
      * Registrar evento de reingreso en historial administrativo
-     * @param int $funcionario_id ID del funcionario
-     * @param array $datos Datos del reingreso
      */
     private function registrarReingreso($funcionario_id, $datos) {
         try {
@@ -274,10 +321,10 @@ class Funcionario {
             ");
             
             $detalles = json_encode([
-                'tipo' => 'REINGRESO',
-                'cargo_id' => $datos['cargo_id'],
+                'tipo'            => 'REINGRESO',
+                'cargo_id'        => $datos['cargo_id'],
                 'departamento_id' => $datos['departamento_id'],
-                'observaciones' => 'Reingreso automático al sistema'
+                'observaciones'   => 'Reingreso automático al sistema'
             ]);
             
             $stmt->execute([
@@ -293,7 +340,6 @@ class Funcionario {
     
     /**
      * Reactivar usuario asociado al funcionario
-     * @param int $funcionario_id ID del funcionario
      */
     private function reactivarUsuario($funcionario_id) {
         try {
@@ -332,19 +378,15 @@ class Funcionario {
     public function obtenerEstadisticas() {
         $stats = [];
         
-        // Total
         $stmt = $this->db->query("SELECT COUNT(*) as total FROM funcionarios WHERE estado != 'inactivo'");
         $stats['total'] = $stmt->fetch()['total'];
         
-        // Activos
         $stmt = $this->db->query("SELECT COUNT(*) as total FROM funcionarios WHERE estado = 'activo'");
         $stats['activos'] = $stmt->fetch()['total'];
         
-        // De vacaciones
         $stmt = $this->db->query("SELECT COUNT(*) as total FROM funcionarios WHERE estado = 'vacaciones'");
         $stats['vacaciones'] = $stmt->fetch()['total'];
         
-        // Por departamento
         $stmt = $this->db->query("
             SELECT d.nombre, COUNT(f.id) as total
             FROM departamentos d

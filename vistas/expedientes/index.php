@@ -40,15 +40,27 @@ $sql = "
         ha.funcionario_id,
         ha.tipo_evento as tipo_documento,
         CASE 
-            WHEN ha.tipo_evento = 'NOMBRAMIENTO' THEN CONCAT('Nombramiento - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.categoria')))
-            WHEN ha.tipo_evento = 'VACACION' THEN CONCAT('Vacaciones - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.periodo')))
-            WHEN ha.tipo_evento = 'AMONESTACION' THEN CONCAT('Amonestación - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.tipo_falta')))
+            WHEN ha.tipo_evento = 'NOMBRAMIENTO' THEN COALESCE(
+                NULLIF(CONCAT('Nombramiento - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.categoria'))), 'Nombramiento - null'),
+                'Nombramiento')
+            WHEN ha.tipo_evento = 'VACACION' THEN COALESCE(
+                NULLIF(CONCAT('Vacaciones - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.periodo'))), 'Vacaciones - null'),
+                'Vacación')
+            WHEN ha.tipo_evento = 'AMONESTACION' THEN COALESCE(
+                NULLIF(CONCAT('Amonestación - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.tipo_falta'))), 'Amonestación - null'),
+                'Amonestación')
+            WHEN ha.tipo_evento = 'REMOCION' THEN 'Remoción'
+            WHEN ha.tipo_evento = 'TRASLADO' THEN 'Traslado'
             ELSE ha.tipo_evento
         END as titulo,
         CASE 
-            WHEN ha.tipo_evento = 'NOMBRAMIENTO' THEN JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.descripcion'))
-            WHEN ha.tipo_evento = 'VACACION' THEN CONCAT(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.dias_totales')), ' días')
-            WHEN ha.tipo_evento = 'AMONESTACION' THEN JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.sancion_aplicada'))
+            WHEN ha.tipo_evento = 'NOMBRAMIENTO' THEN NULLIF(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.descripcion')), 'null')
+            WHEN ha.tipo_evento = 'VACACION' THEN NULLIF(CONCAT(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.dias_totales')), ' días'), 'null días')
+            WHEN ha.tipo_evento = 'AMONESTACION' THEN NULLIF(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.sancion_aplicada')), 'null')
+            WHEN ha.tipo_evento = 'REMOCION' THEN NULLIF(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.motivo')), 'null')
+            WHEN ha.tipo_evento = 'TRASLADO' THEN NULLIF(
+                CONCAT(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.departamento_origen')), ''), ' → ', COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.departamento_destino')), '')),
+                ' → ')
             ELSE NULL
         END as descripcion,
         ha.fecha_evento as fecha_inicio,
@@ -343,10 +355,13 @@ $funcionarios = $db->query("SELECT id, CONCAT(nombres, ' ', apellidos) AS nombre
                                         </td>
                                         <td>
                                             <div style="max-width: 300px;">
-                                                <div style="font-weight: 500;"><?php echo htmlspecialchars($doc['titulo']); ?></div>
-                                                <?php if ($doc['descripcion']): ?>
+                                                <div style="font-weight: 500;"><?php echo htmlspecialchars($doc['titulo'] ?? $doc['tipo_documento']); ?></div>
+                                                <?php
+                                                $desc = $doc['descripcion'] ?? '';
+                                                if ($desc && $desc !== 'null'):
+                                                ?>
                                                     <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                                                        <?php echo htmlspecialchars(substr($doc['descripcion'], 0, 60)) . (strlen($doc['descripcion']) > 60 ? '...' : ''); ?>
+                                                        <?php echo htmlspecialchars(substr($desc, 0, 60)) . (strlen($desc) > 60 ? '...' : ''); ?>
                                                     </div>
                                                 <?php endif; ?>
                                             </div>

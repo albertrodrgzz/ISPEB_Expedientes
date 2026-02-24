@@ -1,26 +1,20 @@
 <?php
 /**
  * Controlador de Escritura - Historial Administrativo
- * * Gestiona las operaciones de creación de registros de historial CON COHERENCIA DE NEGOCIO:
- * - Traslados → Actualiza departamento_id del funcionario
- * - Nombramientos → Actualiza cargo_id del funcionario
- * - Vacaciones → Actualiza estado a 'vacaciones'
- * - Retorno de Vacaciones (REINCORPORACION) → Actualiza estado a 'activo'
- * - Amonestaciones → Marca flag si es "muy_grave"
- * - Despidos/Renuncias → Actualiza estado a 'inactivo'
- * * @author Sistema ISPEB v3.3 - Corrección Fatal Error Auditoría
- * @date 2026-02-11
+ * * Gestiona las operaciones de creación de registros de historial CON COHERENCIA DE NEGOCIO.
+ * * Módulos Activos: Traslados, Nombramientos, Vacaciones, Amonestaciones.
+ * * Módulos Eliminados: Remociones, Salidas (Despidos/Renuncias).
  */
 
 // IMPORTANTE: Iniciar output buffering ANTES de cualquier otra cosa
 ob_start();
 
-// Suprimir display de errores para AJAX (los errores se logean en archivo)
+// Suprimir display de errores para AJAX
 ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
-// Configuración de respuesta JSON (debe estar antes de cualquier output)
+// Configuración de respuesta JSON
 header('Content-Type: application/json; charset=utf-8');
 
 // Seguridad y configuración
@@ -73,10 +67,6 @@ try {
             $resultado = registrarTraslado($pdo);
             break;
         
-        case 'registrar_despido':
-            $resultado = registrarDespido($pdo);
-            break;
-        
         case 'registrar_vacacion':
             $resultado = registrarVacacion($pdo);
             break;
@@ -93,9 +83,7 @@ try {
             $resultado = registrarNombramiento($pdo);
             break;
         
-        case 'registrar_remocion':
-            $resultado = registrarRemocion($pdo);
-            break;
+        // ELIMINADOS: registrar_remocion, registrar_despido
         
         default:
             throw new Exception('Acción no válida: ' . $accion, 400);
@@ -208,7 +196,7 @@ function registrarTraslado($pdo) {
         ");
         $stmt->execute([$departamento_destino_id, $funcionario_id]);
 
-        // Registrar en auditoría (CORREGIDO: Sin $pdo)
+        // Registrar en auditoría
         registrarAuditoria('REGISTRAR_TRASLADO', 'historial_administrativo', $historial_id, null, [
             'funcionario_id' => $funcionario_id,
             'departamento_origen' => $funcionario['departamento_actual'],
@@ -444,7 +432,7 @@ function registrarVacacion($pdo) {
         $stmt = $pdo->prepare("UPDATE funcionarios SET estado = 'vacaciones', updated_at = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$funcionario_id]);
 
-        // Auditoría (CORREGIDO: Sin $pdo)
+        // Auditoría
         registrarAuditoria('REGISTRAR_VACACION', 'historial_administrativo', $historial_id, null, [
             'funcionario_id' => $funcionario_id,
             'dias_habiles' => $dias_habiles,
@@ -515,7 +503,7 @@ function registrarRetornoVacacion($pdo) {
         $stmt = $pdo->prepare("UPDATE funcionarios SET estado = 'activo', updated_at = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$funcionario_id]);
 
-        // Auditoría (CORREGIDO: Sin $pdo)
+        // Auditoría
         registrarAuditoria('REGISTRAR_RETORNO_VACACION', 'historial_administrativo', $historial_id, ['estado' => 'vacaciones'], ['estado' => 'activo']);
 
         $pdo->commit();
@@ -576,120 +564,13 @@ function registrarAmonestacion($pdo) {
             $stmt->execute([$funcionario_id]);
         }
 
-        // Auditoría (CORREGIDO: Sin $pdo)
+        // Auditoría
         registrarAuditoria('REGISTRAR_AMONESTACION', 'historial_administrativo', $historial_id, null, ['tipo_falta' => $tipo_falta]);
 
         $pdo->commit();
 
         return ['success' => true, 'message' => 'Amonestación registrada.'];
 
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        throw $e;
-    }
-}
-
-/**
- * Registra un despido o renuncia
- */
-function registrarDespido($pdo) {
-    $funcionario_id = filter_var($_POST['funcionario_id'] ?? 0, FILTER_VALIDATE_INT);
-    $tipo_evento = $_POST['tipo_evento'] ?? 'DESPIDO';
-    $fecha_evento = $_POST['fecha_evento'] ?? date('Y-m-d');
-    $motivo = trim($_POST['motivo'] ?? '');
-
-    if (!$funcionario_id) throw new Exception('Datos incompletos', 400);
-
-    $pdo->beginTransaction();
-
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM funcionarios WHERE id = ?");
-        $stmt->execute([$funcionario_id]);
-        $funcionario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$funcionario || $funcionario['estado'] === 'inactivo') throw new Exception('Funcionario no válido', 400);
-
-        $detalles = json_encode(['motivo' => htmlspecialchars($motivo, ENT_QUOTES, 'UTF-8')], JSON_UNESCAPED_UNICODE);
-
-        $ruta_archivo = null;
-        $nombre_original = null;
-        if (isset($_FILES['archivo_pdf']) && $_FILES['archivo_pdf']['error'] === UPLOAD_ERR_OK) {
-            $resultado_archivo = guardarArchivoHistorial($funcionario_id, 'despidos', $_FILES['archivo_pdf']);
-            $ruta_archivo = $resultado_archivo['ruta'];
-            $nombre_original = $resultado_archivo['nombre_original'];
-        }
-
-        $stmt = $pdo->prepare("
-            INSERT INTO historial_administrativo (
-                funcionario_id, tipo_evento, fecha_evento,
-                detalles, ruta_archivo_pdf, nombre_archivo_original,
-                registrado_por
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([$funcionario_id, $tipo_evento, $fecha_evento, $detalles, $ruta_archivo, $nombre_original, $_SESSION['usuario_id']]);
-
-        $historial_id = $pdo->lastInsertId();
-
-        $stmt = $pdo->prepare("UPDATE funcionarios SET estado = 'inactivo', updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-        $stmt->execute([$funcionario_id]);
-
-        $stmt = $pdo->prepare("UPDATE usuarios SET estado = 'inactivo', updated_at = CURRENT_TIMESTAMP WHERE funcionario_id = ?");
-        $stmt->execute([$funcionario_id]);
-
-        // Auditoría (CORREGIDO: Sin $pdo)
-        registrarAuditoria('REGISTRAR_' . $tipo_evento, 'funcionarios', $funcionario_id, ['estado' => 'activo'], ['estado' => 'inactivo']);
-
-        $pdo->commit();
-
-        return ['success' => true, 'message' => 'Baja registrada exitosamente.'];
-
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        throw $e;
-    }
-}
-
-/**
- * Registra una remoción de cargo
- */
-function registrarRemocion($pdo) {
-    $funcionario_id = filter_var($_POST['funcionario_id'] ?? 0, FILTER_VALIDATE_INT);
-    $motivo = trim($_POST['motivo'] ?? '');
-    $fecha_evento = $_POST['fecha_evento'] ?? date('Y-m-d');
-    
-    if (!$funcionario_id) throw new Exception('Datos incompletos', 400);
-    
-    $pdo->beginTransaction();
-    
-    try {
-        $detalles = json_encode(['motivo' => htmlspecialchars($motivo, ENT_QUOTES, 'UTF-8')], JSON_UNESCAPED_UNICODE);
-        
-        $ruta_archivo = null;
-        $nombre_original = null;
-        if (isset($_FILES['archivo_pdf']) && $_FILES['archivo_pdf']['error'] === UPLOAD_ERR_OK) {
-            $resultado_archivo = guardarArchivoHistorial($funcionario_id, 'remociones', $_FILES['archivo_pdf']);
-            $ruta_archivo = $resultado_archivo['ruta'];
-            $nombre_original = $resultado_archivo['nombre_original'];
-        }
-        
-        $stmt = $pdo->prepare("
-            INSERT INTO historial_administrativo (
-                funcionario_id, tipo_evento, fecha_evento,
-                detalles, ruta_archivo_pdf, nombre_archivo_original,
-                registrado_por
-            ) VALUES (?, 'REMOCION', ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([$funcionario_id, $fecha_evento, $detalles, $ruta_archivo, $nombre_original, $_SESSION['usuario_id']]);
-        
-        $historial_id = $pdo->lastInsertId();
-        
-        // Auditoría (CORREGIDO: Sin $pdo)
-        registrarAuditoria('REGISTRAR_REMOCION', 'historial_administrativo', $historial_id, null, ['motivo' => $motivo]);
-        
-        $pdo->commit();
-        
-        return ['success' => true, 'message' => 'Remoción registrada exitosamente.'];
-        
     } catch (Exception $e) {
         $pdo->rollBack();
         throw $e;

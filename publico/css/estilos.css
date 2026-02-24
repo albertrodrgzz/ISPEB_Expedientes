@@ -55,9 +55,13 @@
     --gradient-success: linear-gradient(135deg, #10B981, #059669);
     --gradient-warning: linear-gradient(135deg, #F59E0B, #D97706);
     --gradient-danger: linear-gradient(135deg, #EF4444, #DC2626);
+    --gradient-blue: linear-gradient(135deg, #0F4C81, #00A8E8);
     --gradient-purple: linear-gradient(135deg, #8B5CF6, #7C3AED);
     --gradient-cyan: linear-gradient(135deg, #06B6D4, #0891B2);
     --gradient-teal: linear-gradient(135deg, #14B8A6, #0D9488);
+    --gradient-orange: linear-gradient(135deg, #F59E0B, #FBBF24);
+    --gradient-green: linear-gradient(135deg, #10B981, #34D399);
+    --gradient-red: linear-gradient(135deg, #EF4444, #DC2626);
 
     /* ===== SOMBRAS ===== */
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -1078,6 +1082,105 @@ body {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
 }
 
+/* ===== KPI CARD: Variantes de color por clase directa ===== */
+/* Usar .kpi-card.color-blue, .kpi-card.color-green, etc. en lugar de nth-child */
+.kpi-card.color-blue {
+    background: var(--gradient-blue) !important;
+    color: white !important;
+}
+
+.kpi-card.color-green {
+    background: var(--gradient-green) !important;
+    color: white !important;
+}
+
+.kpi-card.color-orange {
+    background: var(--gradient-orange) !important;
+    color: white !important;
+}
+
+.kpi-card.color-purple {
+    background: var(--gradient-purple) !important;
+    color: white !important;
+}
+
+.kpi-card.color-cyan {
+    background: var(--gradient-cyan) !important;
+    color: white !important;
+}
+
+.kpi-card.color-teal {
+    background: var(--gradient-teal) !important;
+    color: white !important;
+}
+
+.kpi-card.color-red {
+    background: var(--gradient-red) !important;
+    color: white !important;
+}
+
+/* En cards de color: texto y valor siempre blancos */
+.kpi-card[class*="color-"] .kpi-label,
+.kpi-card[class*="color-"] .kpi-value,
+.kpi-card.kpi-primary .kpi-label,
+.kpi-card.kpi-primary .kpi-value,
+.kpi-card.kpi-success .kpi-label,
+.kpi-card.kpi-success .kpi-value,
+.kpi-card.kpi-warning .kpi-label,
+.kpi-card.kpi-warning .kpi-value,
+.kpi-card.kpi-info .kpi-label,
+.kpi-card.kpi-info .kpi-value {
+    color: #FFFFFF !important;
+}
+
+/* En cards de color: icono con fondo semitransparente */
+.kpi-card[class*="color-"] .kpi-icon {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(8px);
+}
+
+/* Clase .gradient-* para el icono (compatible con vacaciones, nombramientos, etc.) */
+.kpi-icon.gradient-blue {
+    background: linear-gradient(135deg, #0F4C81, #00A8E8);
+    box-shadow: 0 4px 12px rgba(15, 76, 129, 0.35);
+}
+
+.kpi-icon.gradient-green {
+    background: linear-gradient(135deg, #10B981, #34D399);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.kpi-icon.gradient-orange {
+    background: linear-gradient(135deg, #F59E0B, #FBBF24);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.kpi-icon.gradient-purple {
+    background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+}
+
+.kpi-icon.gradient-cyan {
+    background: linear-gradient(135deg, #06B6D4, #0891B2);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+}
+
+.kpi-icon.gradient-teal {
+    background: linear-gradient(135deg, #14B8A6, #0D9488);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
+}
+
+.kpi-icon.gradient-red {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.kpi-icon svg {
+    color: white;
+    stroke: white;
+}
+
+
 .kpi-icon svg {
     width: 32px;
     height: 32px;
@@ -1177,6 +1280,43 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+}
+
+/* ===== FILTER TOOLBAR ===== */
+.filter-toolbar {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-item {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748B;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+@media (max-width: 768px) {
+    .filter-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-item {
+        min-width: 100%;
+    }
 }
 
 /* ===== TABLES ===== */
@@ -2437,6 +2577,7 @@ body {
         padding: var(--spacing-md);
     }
 }
+
 /* ===== SISTEMA RESPONSIVE UNIVERSAL ===== */
 
 
@@ -2451,7 +2592,7 @@ body {
 
     }
 
-    
+
 
     .main-content {
 
@@ -2461,7 +2602,7 @@ body {
 
     }
 
-    
+
 
     .page-header {
 
@@ -2473,7 +2614,7 @@ body {
 
     }
 
-    
+
 
     .page-header h1 {
 
@@ -2481,7 +2622,7 @@ body {
 
     }
 
-    
+
 
     .page-header .btn-primary {
 
@@ -2491,7 +2632,7 @@ body {
 
     }
 
-    
+
 
     .kpi-grid {
 
@@ -2499,7 +2640,7 @@ body {
 
     }
 
-    
+
 
     .kpi-value {
 
@@ -2507,7 +2648,7 @@ body {
 
     }
 
-    
+
 
     .card-body {
 
@@ -2515,7 +2656,7 @@ body {
 
     }
 
-    
+
 
     .table-wrapper {
 
@@ -2525,7 +2666,7 @@ body {
 
     }
 
-    
+
 
     .table-modern {
 
@@ -2533,7 +2674,7 @@ body {
 
     }
 
-    
+
 
     .table-modern th,
 
@@ -2557,7 +2698,7 @@ body {
 
     }
 
-    
+
 
     .main-content {
 
@@ -2567,7 +2708,7 @@ body {
 
     }
 
-    
+
 
     .page-header h1 {
 
@@ -2575,7 +2716,7 @@ body {
 
     }
 
-    
+
 
     .kpi-grid {
 
@@ -2583,7 +2724,7 @@ body {
 
     }
 
-    
+
 
     .card-body {
 
@@ -2607,7 +2748,7 @@ body {
 
     }
 
-    
+
 
     .kpi-grid {
 
@@ -2657,7 +2798,7 @@ body {
 
     }
 
-    
+
 
     .table-modern thead th:first-child,
 
@@ -2671,7 +2812,7 @@ body {
 
         z-index: 10;
 
-        box-shadow: 2px 0 4px rgba(0,0,0,0.05);
+        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
 
     }
 
@@ -2699,7 +2840,7 @@ body {
 
     }
 
-    
+
 
     .sidebar.active {
 
@@ -2707,7 +2848,7 @@ body {
 
     }
 
-    
+
 
     .menu-toggle {
 
@@ -2727,7 +2868,7 @@ body {
 
     }
 
-    
+
 
     .sidebar-overlay {
 

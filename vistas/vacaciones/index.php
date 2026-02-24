@@ -76,58 +76,7 @@ $vacaciones = $stmt->fetchAll();
     <link rel="stylesheet" href="../../publico/css/modern-components.css">
     <link rel="stylesheet" href="../../publico/css/swal-modern.css">
     
-    <style>
-        /* Estilos KPI Estandarizados (Estilo Nombramientos) */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            margin-bottom: 30px;
-        }
-        
-        .kpi-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border: 1px solid #E2E8F0;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: transform 0.2s ease;
-        }
-        
-        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        
-        .kpi-icon {
-            width: 56px; height: 56px;
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 24px; flex-shrink: 0;
-        }
-        
-        /* Gradientes Estándar */
-        .gradient-blue { background: linear-gradient(135deg, #0F4C81, #00A8E8); }
-        .gradient-green { background: linear-gradient(135deg, #10B981, #34D399); }
-        .gradient-orange { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
-        .gradient-purple { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
-        
-        .kpi-content { display: flex; flex-direction: column; }
-        .kpi-value { font-size: 28px; font-weight: 700; color: #1E293B; line-height: 1.2; }
-        .kpi-label { font-size: 13px; color: #64748B; font-weight: 600; text-transform: uppercase; margin-top: 4px; }
 
-        /* Filtros dentro de la Card */
-        .filter-toolbar {
-            display: flex;
-            gap: 15px;
-            padding: 20px;
-            background: #F8FAFC;
-            border-bottom: 1px solid #E2E8F0;
-            flex-wrap: wrap;
-        }
-        .filter-item { flex: 1; min-width: 200px; }
-        .filter-label { display: block; font-size: 12px; font-weight: 600; color: #64748B; margin-bottom: 5px; }
-    </style>
 </head>
 <body>
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
@@ -147,17 +96,17 @@ $vacaciones = $stmt->fetchAll();
             </div>
 
             <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-icon gradient-blue">
+                <div class="kpi-card color-blue">
+                    <div class="kpi-icon">
                         <?= Icon::get('users') ?>
                     </div>
                     <div class="kpi-content">
                         <span class="kpi-value"><?= $total_empleados_con_vacaciones ?></span>
-                        <span class="kpi-label">Empleados Histórico</span>
+                        <span class="kpi-label">Empleados Hist&oacute;rico</span>
                     </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon gradient-green">
+                <div class="kpi-card color-green">
+                    <div class="kpi-icon">
                         <?= Icon::get('sun') ?>
                     </div>
                     <div class="kpi-content">
@@ -165,17 +114,17 @@ $vacaciones = $stmt->fetchAll();
                         <span class="kpi-label">De Vacaciones Hoy</span>
                     </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon gradient-orange">
+                <div class="kpi-card color-orange">
+                    <div class="kpi-icon">
                         <?= Icon::get('clock') ?>
                     </div>
                     <div class="kpi-content">
                         <span class="kpi-value"><?= $dias_usados_anio ?></span>
-                        <span class="kpi-label">Días Usados (<?= date('Y') ?>)</span>
+                        <span class="kpi-label">D&iacute;as Usados (<?= date('Y') ?>)</span>
                     </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon gradient-purple">
+                <div class="kpi-card color-purple">
+                    <div class="kpi-icon">
                         <?= Icon::get('calendar') ?>
                     </div>
                     <div class="kpi-content">
