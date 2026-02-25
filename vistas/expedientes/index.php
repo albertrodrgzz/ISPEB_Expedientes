@@ -1,382 +1,260 @@
 <?php
 /**
  * Vista: Expedientes Digitales
- * Listado centralizado de todos los documentos del sistema
+ * Diseño idéntico al módulo de Funcionarios
  */
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/seguridad.php';
+require_once __DIR__ . '/../../config/icons.php';
 
-// Verificar sesión
 verificarSesion();
 
-// Obtener filtros
-$filtros = [
-    'buscar' => $_GET['buscar'] ?? '',
-    'tipo_documento' => $_GET['tipo_documento'] ?? '',
-    'funcionario_id' => $_GET['funcionario_id'] ?? ''
-];
-
-// Obtener documentos combinados de las tablas existentes
 $db = getDB();
 
-// Obtener estadísticas
-$stats_nombramientos = $db->query("SELECT COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'NOMBRAMIENTO'")->fetchColumn();
-$stats_vacaciones = $db->query("SELECT COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'VACACION'")->fetchColumn();
-$stats_amonestaciones = $db->query("SELECT COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'AMONESTACION'")->fetchColumn();
+// Estadísticas
+$stats_nombramientos  = (int)$db->query("SELECT COUNT(*) FROM historial_administrativo WHERE tipo_evento = 'NOMBRAMIENTO'")->fetchColumn();
+$stats_vacaciones     = (int)$db->query("SELECT COUNT(*) FROM historial_administrativo WHERE tipo_evento = 'VACACION'")->fetchColumn();
+$stats_amonestaciones = (int)$db->query("SELECT COUNT(*) FROM historial_administrativo WHERE tipo_evento = 'AMONESTACION'")->fetchColumn();
+$stats_traslados      = (int)$db->query("SELECT COUNT(*) FROM historial_administrativo WHERE tipo_evento = 'TRASLADO'")->fetchColumn();
+$stats_total          = $stats_nombramientos + $stats_vacaciones + $stats_amonestaciones + $stats_traslados;
 
-$stats = [
-    'total' => $stats_nombramientos + $stats_vacaciones + $stats_amonestaciones,
-    'nombramientos' => $stats_nombramientos,
-    'vacaciones' => $stats_vacaciones,
-    'amonestaciones' => $stats_amonestaciones,
-    'reposos' => 0
-];
+// Lista de funcionarios para filtro
+$funcionarios_lista = $db->query("SELECT id, CONCAT(nombres, ' ', apellidos) AS nombre_completo FROM funcionarios ORDER BY nombres, apellidos")->fetchAll();
 
-// Construir consulta desde historial_administrativo
-$sql = "
-    SELECT 
+// Consulta de documentos
+$stmt = $db->query("
+    SELECT
         ha.id,
         ha.funcionario_id,
-        ha.tipo_evento as tipo_documento,
-        CASE 
-            WHEN ha.tipo_evento = 'NOMBRAMIENTO' THEN COALESCE(
-                NULLIF(CONCAT('Nombramiento - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.categoria'))), 'Nombramiento - null'),
-                'Nombramiento')
-            WHEN ha.tipo_evento = 'VACACION' THEN COALESCE(
-                NULLIF(CONCAT('Vacaciones - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.periodo'))), 'Vacaciones - null'),
-                'Vacación')
-            WHEN ha.tipo_evento = 'AMONESTACION' THEN COALESCE(
-                NULLIF(CONCAT('Amonestación - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.tipo_falta'))), 'Amonestación - null'),
-                'Amonestación')
-            WHEN ha.tipo_evento = 'REMOCION' THEN 'Remoción'
-            WHEN ha.tipo_evento = 'TRASLADO' THEN 'Traslado'
+        ha.tipo_evento,
+        CASE
+            WHEN ha.tipo_evento = 'NOMBRAMIENTO'  THEN COALESCE(NULLIF(CONCAT('Nombramiento - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.categoria'))), 'Nombramiento - null'), 'Nombramiento')
+            WHEN ha.tipo_evento = 'VACACION'      THEN COALESCE(NULLIF(CONCAT('Vacaciones - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.periodo'))), 'Vacaciones - null'), 'Vacación')
+            WHEN ha.tipo_evento = 'AMONESTACION'  THEN COALESCE(NULLIF(CONCAT('Amonestación - ', JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.tipo_falta'))), 'Amonestación - null'), 'Amonestación')
+            WHEN ha.tipo_evento = 'TRASLADO'      THEN 'Traslado'
+            WHEN ha.tipo_evento = 'REMOCION'      THEN 'Remoción'
             ELSE ha.tipo_evento
-        END as titulo,
-        CASE 
-            WHEN ha.tipo_evento = 'NOMBRAMIENTO' THEN NULLIF(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.descripcion')), 'null')
-            WHEN ha.tipo_evento = 'VACACION' THEN NULLIF(CONCAT(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.dias_totales')), ' días'), 'null días')
-            WHEN ha.tipo_evento = 'AMONESTACION' THEN NULLIF(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.sancion_aplicada')), 'null')
-            WHEN ha.tipo_evento = 'REMOCION' THEN NULLIF(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.motivo')), 'null')
-            WHEN ha.tipo_evento = 'TRASLADO' THEN NULLIF(
-                CONCAT(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.departamento_origen')), ''), ' → ', COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles, '$.departamento_destino')), '')),
-                ' → ')
-            ELSE NULL
-        END as descripcion,
-        ha.fecha_evento as fecha_inicio,
+        END AS titulo,
+        ha.fecha_evento,
         ha.fecha_fin,
-        ha.ruta_archivo_pdf as ruta_archivo,
-        ha.nombre_archivo_original,
+        ha.ruta_archivo_pdf,
         ha.created_at,
         CONCAT(f.nombres, ' ', f.apellidos) AS nombre_funcionario,
         f.cedula,
-        f.foto AS foto,
         c.nombre_cargo,
         d.nombre AS departamento
     FROM historial_administrativo ha
     INNER JOIN funcionarios f ON ha.funcionario_id = f.id
     INNER JOIN cargos c ON f.cargo_id = c.id
     INNER JOIN departamentos d ON f.departamento_id = d.id
-    WHERE 1=1
-";
-
-$params = [];
-
-// Aplicar filtros
-if (!empty($filtros['buscar'])) {
-    $sql .= " AND (CONCAT(f.nombres, ' ', f.apellidos) LIKE ? OR f.cedula LIKE ?)";
-    $buscar = '%' . $filtros['buscar'] . '%';
-    $params[] = $buscar;
-    $params[] = $buscar;
-}
-
-if (!empty($filtros['funcionario_id'])) {
-    $sql .= " AND ha.funcionario_id = ?";
-    $params[] = $filtros['funcionario_id'];
-}
-
-if (!empty($filtros['tipo_documento'])) {
-    $tipo_map = [
-        'nombramiento' => 'NOMBRAMIENTO',
-        'vacaciones' => 'VACACION',
-        'amonestacion' => 'AMONESTACION'
-    ];
-    if (isset($tipo_map[$filtros['tipo_documento']])) {
-        $sql .= " AND ha.tipo_evento = ?";
-        $params[] = $tipo_map[$filtros['tipo_documento']];
-    }
-}
-
-$sql .= " ORDER BY ha.created_at DESC LIMIT 100";
-
-$stmt = $db->prepare($sql);
-$stmt->execute($params);
+    ORDER BY ha.created_at DESC
+    LIMIT 500
+");
 $documentos = $stmt->fetchAll();
-
-// Obtener lista de funcionarios para filtro
-$funcionarios = $db->query("SELECT id, CONCAT(nombres, ' ', apellidos) AS nombre_completo FROM funcionarios ORDER BY nombres, apellidos")->fetchAll();
 ?>
-<?php require_once __DIR__ . '/../../config/icons.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expedientes Digitales - <?php echo APP_NAME; ?></title>
-    <link rel="stylesheet" href="../../publico/css/estilos.css">
-    <link rel="stylesheet" href="../../publico/css/swal-modern.css">
-    <style>
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 20px;
-            color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-card:nth-child(2) {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        
-        .stat-card:nth-child(4) {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-        
-        .stat-card:nth-child(5) {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-        
-        .stat-number {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        .doc-type-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: capitalize;
-        }
-        
-        .doc-type-nombramiento {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .doc-type-vacaciones {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .doc-type-amonestacion {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .doc-type-reposo {
-            background: #e0e7ff;
-            color: #3730a3;
-        }
-        
-        .doc-type-despido {
-            background: #fecaca;
-            color: #7f1d1d;
-        }
-        
-        .doc-type-renuncia {
-            background: #fed7aa;
-            color: #7c2d12;
-        }
-        
-        .doc-type-otro {
-            background: #e5e7eb;
-            color: #374151;
-        }
-    </style>
+    <title>Expedientes Digitales - <?= APP_NAME ?></title>
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
+    <script src="<?= APP_URL ?>/publico/js/filtros-tiempo-real.js"></script>
 </head>
 <body>
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
-    
+
     <div class="main-content">
-        <header class="header">
-            <div class="header-left">
-                <h1 class="page-title">Expedientes Digitales</h1>
-            </div>
-        </header>
-        
-        <div class="content-wrapper">
-            <!-- Estadísticas -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number"><?php echo number_format($stats['total']); ?></div>
-                    <div class="stat-label">Total Documentos</div>
+        <?php include __DIR__ . '/../layout/header.php'; ?>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>
+                <?= Icon::get('file') ?>
+                Expedientes Digitales
+            </h1>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card kpi-primary">
+                <div class="kpi-icon">
+                    <?= Icon::get('file') ?>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number"><?php echo number_format($stats['nombramientos']); ?></div>
-                    <div class="stat-label">Nombramientos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number"><?php echo number_format($stats['vacaciones']); ?></div>
-                    <div class="stat-label">Vacaciones</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number"><?php echo number_format($stats['amonestaciones']); ?></div>
-                    <div class="stat-label">Amonestaciones</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number"><?php echo number_format($stats['reposos']); ?></div>
-                    <div class="stat-label">Reposos</div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Total Documentos</div>
+                    <div class="kpi-value"><?= $stats_total ?></div>
                 </div>
             </div>
-            
-            <!-- Filtros -->
-            <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header">
-                    <h2 class="card-title">Filtros de Búsqueda</h2>
+
+            <div class="kpi-card kpi-info">
+                <div class="kpi-icon">
+                    <?= Icon::get('clipboard') ?>
                 </div>
-                <div style="padding: 24px;">
-                    <form method="GET" action="" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
-                        <div class="form-group" style="margin: 0;">
-                            <label for="buscar" style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Buscar</label>
-                            <input 
-                                type="text" 
-                                id="buscar" 
-                                name="buscar" 
-                                class="search-input" 
-                                placeholder="Nombre, cédula, título..."
-                                value="<?php echo htmlspecialchars($filtros['buscar']); ?>"
-                                style="width: 100%;"
-                            >
-                        </div>
-                        
-                        <div class="form-group" style="margin: 0;">
-                            <label for="tipo_documento" style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Tipo de Documento</label>
-                            <select id="tipo_documento" name="tipo_documento" class="search-input" style="width: 100%;">
-                                <option value="">Todos</option>
-                                <option value="nombramiento" <?php echo $filtros['tipo_documento'] == 'nombramiento' ? 'selected' : ''; ?>>Nombramiento</option>
-                                <option value="vacaciones" <?php echo $filtros['tipo_documento'] == 'vacaciones' ? 'selected' : ''; ?>>Vacaciones</option>
-                                <option value="reposo" <?php echo $filtros['tipo_documento'] == 'reposo' ? 'selected' : ''; ?>>Reposo</option>
-                                <option value="amonestacion" <?php echo $filtros['tipo_documento'] == 'amonestacion' ? 'selected' : ''; ?>>Amonestación</option>
-                                <option value="despido" <?php echo $filtros['tipo_documento'] == 'despido' ? 'selected' : ''; ?>>Despido</option>
-                                <option value="renuncia" <?php echo $filtros['tipo_documento'] == 'renuncia' ? 'selected' : ''; ?>>Renuncia</option>
-                                <option value="otro" <?php echo $filtros['tipo_documento'] == 'otro' ? 'selected' : ''; ?>>Otro</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group" style="margin: 0;">
-                            <label for="funcionario_id" style="display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px;">Funcionario</label>
-                            <select id="funcionario_id" name="funcionario_id" class="search-input" style="width: 100%;">
-                                <option value="">Todos</option>
-                                <?php foreach ($funcionarios as $func): ?>
-                                    <option value="<?php echo $func['id']; ?>" <?php echo $filtros['funcionario_id'] == $func['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($func['nombre_completo']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div style="display: flex; align-items: flex-end; gap: 8px;">
-                            <button type="submit" class="btn btn-primary" style="flex: 1;">Filtrar</button>
-                            <a href="index.php" class="btn" style="background: #e2e8f0; color: #2d3748; text-decoration: none;">Limpiar</a>
-                        </div>
-                    </form>
+                <div class="kpi-content">
+                    <div class="kpi-label">Nombramientos</div>
+                    <div class="kpi-value"><?= $stats_nombramientos ?></div>
                 </div>
             </div>
-            
-            <!-- Tabla de Documentos -->
-            <div class="card">
-                <div class="card-header">
-                    <div>
-                        <h2 class="card-title">Listado de Documentos</h2>
-                        <p class="card-subtitle"><?php echo count($documentos); ?> documento(s) encontrado(s)</p>
+
+            <div class="kpi-card kpi-success">
+                <div class="kpi-icon">
+                    <?= Icon::get('sun') ?>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Vacaciones</div>
+                    <div class="kpi-value"><?= $stats_vacaciones ?></div>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-warning">
+                <div class="kpi-icon">
+                    <?= Icon::get('alert-triangle') ?>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Amonestaciones</div>
+                    <div class="kpi-value"><?= $stats_amonestaciones ?></div>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-danger">
+                <div class="kpi-icon">
+                    <?= Icon::get('arrow-right') ?>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Traslados</div>
+                    <div class="kpi-value"><?= $stats_traslados ?></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card-modern">
+            <div class="card-body" style="padding: 20px;">
+                <div class="filters-grid" style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 100px; gap: 16px; align-items: end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">BUSCAR</label>
+                        <input type="text" id="buscarExpediente" class="form-control" placeholder="Nombre, cédula, tipo..." style="padding: 8px 12px; height: 38px; font-size: 14px;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">TIPO DE DOCUMENTO</label>
+                        <select id="filtroTipo" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
+                            <option value="">Todos</option>
+                            <option value="nombramiento">Nombramiento</option>
+                            <option value="vacacion">Vacaciones</option>
+                            <option value="amonestacion">Amonestación</option>
+                            <option value="traslado">Traslado</option>
+                            <option value="remocion">Remoción</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">FUNCIONARIO</label>
+                        <select id="filtroFuncionario" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
+                            <option value="">Todos</option>
+                            <?php foreach ($funcionarios_lista as $func): ?>
+                                <option value="<?= $func['id'] ?>"><?= htmlspecialchars($func['nombre_completo']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <button id="btnLimpiar" class="btn-secondary" style="height: 38px; width: 100%; display: flex; align-items: center; justify-content: center; padding: 0;">
+                            <?= Icon::get('x', 'width: 16px; height: 16px; margin-right: 4px;') ?> Limpiar
+                        </button>
                     </div>
                 </div>
-                
-                <div class="table-container">
-                    <table class="table">
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card-modern">
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table id="tablaExpedientes" class="table-modern">
                         <thead>
                             <tr>
                                 <th>Funcionario</th>
                                 <th>Tipo</th>
                                 <th>Título</th>
-                                <th>Fecha Inicio</th>
+                                <th>Fecha</th>
                                 <th>Fecha Fin</th>
-                                <th>Creado Por</th>
-                                <th>Acciones</th>
+                                <th style="text-align:center;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($documentos)): ?>
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 40px; color: #a0aec0;">
-                                        No se encontraron documentos
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <div class="empty-state-icon">
+                                                <?= Icon::get('file', 'opacity: 0.3; width: 64px; height: 64px;') ?>
+                                            </div>
+                                            <div class="empty-state-title">No hay documentos registrados</div>
+                                            <p class="empty-state-description">Los documentos aparecerán aquí cuando se registren eventos administrativos.</p>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($documentos as $doc): ?>
-                                    <tr>
+                                    <?php
+                                    $tipo = strtolower($doc['tipo_evento']);
+                                    $tipoLabels = [
+                                        'nombramiento' => 'Nombramiento',
+                                        'vacacion'     => 'Vacaciones',
+                                        'amonestacion' => 'Amonestación',
+                                        'traslado'     => 'Traslado',
+                                        'remocion'     => 'Remoción',
+                                    ];
+                                    $badgeClases = [
+                                        'nombramiento' => 'badge-info',
+                                        'vacacion'     => 'badge-success',
+                                        'amonestacion' => 'badge-warning',
+                                        'traslado'     => 'badge-primary',
+                                        'remocion'     => 'badge-danger',
+                                    ];
+                                    $tipoLabel = $tipoLabels[$tipo] ?? ucfirst($tipo);
+                                    $badgeClass = $badgeClases[$tipo] ?? 'badge-info';
+                                    $iniciales = strtoupper(
+                                        substr($doc['nombre_funcionario'], 0, 1) .
+                                        (strpos($doc['nombre_funcionario'], ' ') !== false
+                                            ? substr(strstr($doc['nombre_funcionario'], ' '), 1, 1)
+                                            : '')
+                                    );
+                                    ?>
+                                    <tr data-tipo="<?= $tipo ?>" data-funcionario="<?= $doc['funcionario_id'] ?>">
                                         <td>
-                                            <div class="user-cell">
-                                                <div class="user-avatar">
-                                                    <?php 
-                                                    $nombres = explode(' ', $doc['nombre_funcionario']);
-                                                    echo strtoupper(substr($nombres[0], 0, 1) . (isset($nombres[1]) ? substr($nombres[1], 0, 1) : ''));
-                                                    ?>
+                                            <div style="display:flex;align-items:center;gap:12px;">
+                                                <div style="width:40px;height:40px;border-radius:50%;background:var(--color-primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
+                                                    <?= $iniciales ?>
                                                 </div>
                                                 <div>
-                                                    <div class="user-name"><?php echo htmlspecialchars($doc['nombre_funcionario']); ?></div>
-                                                    <div class="user-id"><?php echo htmlspecialchars($doc['cedula']); ?></div>
+                                                    <div style="font-weight:600;color:var(--color-text);"><?= htmlspecialchars($doc['nombre_funcionario']) ?></div>
+                                                    <div style="font-size:12px;color:var(--color-text-light);"><?= htmlspecialchars($doc['cedula']) ?> — <?= htmlspecialchars($doc['departamento']) ?></div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="doc-type-badge doc-type-<?php echo $doc['tipo_documento']; ?>">
-                                                <?php echo ucfirst($doc['tipo_documento']); ?>
-                                            </span>
+                                            <span class="badge <?= $badgeClass ?>"><?= $tipoLabel ?></span>
                                         </td>
                                         <td>
-                                            <div style="max-width: 300px;">
-                                                <div style="font-weight: 500;"><?php echo htmlspecialchars($doc['titulo'] ?? $doc['tipo_documento']); ?></div>
-                                                <?php
-                                                $desc = $doc['descripcion'] ?? '';
-                                                if ($desc && $desc !== 'null'):
-                                                ?>
-                                                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                                                        <?php echo htmlspecialchars(substr($desc, 0, 60)) . (strlen($desc) > 60 ? '...' : ''); ?>
-                                                    </div>
-                                                <?php endif; ?>
+                                            <div style="font-weight:500;color:var(--color-text);max-width:260px;">
+                                                <?= htmlspecialchars($doc['titulo']) ?>
                                             </div>
                                         </td>
-                                        <td><?php echo $doc['fecha_inicio'] ? date('d/m/Y', strtotime($doc['fecha_inicio'])) : '-'; ?></td>
-                                        <td><?php echo $doc['fecha_fin'] ? date('d/m/Y', strtotime($doc['fecha_fin'])) : '-'; ?></td>
-                                        <td><?php echo htmlspecialchars($doc['creado_por_nombre'] ?? 'Sistema'); ?></td>
-                                        <td>
-                                            <div style="display: flex; gap: 8px;">
-                                                <a href="../funcionarios/ver.php?id=<?php echo $doc['funcionario_id']; ?>" class="btn-icon" title="Ver expediente completo">
-                                                    <?php echo Icon::get('eye'); ?>
+                                        <td><?= $doc['fecha_evento'] ? date('d/m/Y', strtotime($doc['fecha_evento'])) : '—' ?></td>
+                                        <td><?= $doc['fecha_fin'] ? date('d/m/Y', strtotime($doc['fecha_fin'])) : '—' ?></td>
+                                        <td style="text-align:center;">
+                                            <div style="display:flex;justify-content:center;gap:8px;">
+                                                <a href="../funcionarios/ver.php?id=<?= $doc['funcionario_id'] ?>" class="btn-icon" title="Ver expediente">
+                                                    <?= Icon::get('eye') ?>
                                                 </a>
-                                                <?php if ($doc['ruta_archivo']): ?>
-                                                    <a href="../../<?php echo htmlspecialchars($doc['ruta_archivo']); ?>" class="btn-icon" title="Descargar documento" target="_blank">
-                                                        <?php echo Icon::get('download'); ?>
+                                                <?php if ($doc['ruta_archivo_pdf']): ?>
+                                                    <a href="<?= APP_URL ?>/<?= htmlspecialchars($doc['ruta_archivo_pdf']) ?>" class="btn-icon" title="Descargar PDF" target="_blank">
+                                                        <?= Icon::get('download') ?>
                                                     </a>
                                                 <?php endif; ?>
                                             </div>
@@ -387,10 +265,64 @@ $funcionarios = $db->query("SELECT id, CONCAT(nombres, ' ', apellidos) AS nombre
                         </tbody>
                     </table>
                 </div>
+                <!-- Contador -->
+                <div style="padding:12px 16px;border-top:1px solid var(--color-border-light);font-size:13px;color:var(--color-text-light);">
+                    Mostrando <strong id="contadorVisible">0</strong> de <strong id="contadorTotal">0</strong> documentos
+                </div>
             </div>
         </div>
-    </div>
-    
-    <script src="../../publico/js/app.js"></script>
+
+    </div><!-- /main-content -->
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const totalRows = document.querySelectorAll('#tablaExpedientes tbody tr[data-tipo]').length;
+        document.getElementById('contadorTotal').textContent = totalRows;
+        document.getElementById('contadorVisible').textContent = totalRows;
+
+        if (typeof initTableFilters === 'function') {
+            const filters = initTableFilters({
+                tableId: 'tablaExpedientes',
+                searchInputId: 'buscarExpediente',
+                selectFilters: [
+                    { id: 'filtroTipo',        dataAttribute: 'tipo' },
+                    { id: 'filtroFuncionario', dataAttribute: 'funcionario' }
+                ],
+                onFilter: function (visible, total) {
+                    document.getElementById('contadorVisible').textContent = visible;
+                    document.getElementById('contadorTotal').textContent = total;
+                }
+            });
+
+            document.getElementById('btnLimpiar').addEventListener('click', function () {
+                if (filters && typeof filters.clearFilters === 'function') {
+                    filters.clearFilters();
+                }
+            });
+        }
+    });
+
+    /* Responsive */
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .badge { display:inline-block; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+        .badge-info    { background:#dbeafe; color:#1e40af; }
+        .badge-success { background:#d1fae5; color:#065f46; }
+        .badge-warning { background:#fef3c7; color:#92400e; }
+        .badge-danger  { background:#fee2e2; color:#991b1b; }
+        .badge-primary { background:#ede9fe; color:#5b21b6; }
+
+        @media (max-width: 1024px) {
+            .filters-grid { grid-template-columns: 1fr 1fr !important; }
+            .filters-grid > div:last-child { grid-column: span 2; }
+        }
+        @media (max-width: 640px) {
+            .filters-grid { grid-template-columns: 1fr !important; }
+            .filters-grid > div:last-child { grid-column: span 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    </script>
+
 </body>
 </html>

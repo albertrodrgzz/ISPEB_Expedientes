@@ -110,7 +110,7 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
                     <input type="text" 
                            id="buscarNombramiento" 
                            class="search-input" 
-                           placeholder="🔍 Buscar por cédula, nombre, cargo...">
+                           placeholder="Buscar por c&eacute;dula, nombre, cargo...">
                 </div>
 
                 <div class="table-wrapper">
@@ -173,8 +173,8 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
     <script>
     // CSRF Token - Debug
     const CSRF_TOKEN = '<?= $_SESSION["csrf_token"] ?? "TOKEN_VACIO" ?>';
-    console.log('🔐 CSRF Token:', CSRF_TOKEN);
-    console.log('🔐 Longitud:', CSRF_TOKEN.length);
+    console.log('[DEBUG] CSRF Token:', CSRF_TOKEN);
+    console.log('[DEBUG] Longitud:', CSRF_TOKEN.length);
     
     let funcionariosData = [];
     let cargosData = [];
@@ -228,7 +228,8 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
                             <option value="">Seleccione un cargo</option>
                         </select>
                         <div id="cargo-hint" class="swal-hint">
-                            ℹ️ Cargo actual seleccionado por defecto
+                        <svg width="13" height="13" fill="none" stroke="#64748b" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Cargo actual seleccionado por defecto
                         </div>
                     </div>
 
@@ -405,9 +406,9 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
             if (funcionario.cargo_id) {
                 cargoSelect.value = funcionario.cargo_id;
                 const cargoNombre = cargosData.find(c => c.id == funcionario.cargo_id)?.nombre_cargo || 'N/A';
-                cargoHint.innerHTML = `ℹ️ Cargo actual: <strong>${cargoNombre}</strong>`;
+                cargoHint.innerHTML = `<svg width="13" height="13" fill="none" stroke="#64748b" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Cargo actual: <strong>${cargoNombre}</strong>`;
             } else {
-                cargoHint.innerHTML = 'ℹ️ Seleccione el nuevo cargo';
+                cargoHint.innerHTML = '<svg width="13" height="13" fill="none" stroke="#64748b" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Seleccione el nuevo cargo';
             }
             
             // Preseleccionar departamento actual
@@ -430,7 +431,7 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
         const formData = new FormData();
         formData.append('accion', 'registrar_nombramiento');
         formData.append('csrf_token', CSRF_TOKEN);
-        console.log('📤 Enviando CSRF:', CSRF_TOKEN);
+        console.log('[DEBUG] Enviando CSRF:', CSRF_TOKEN);
         formData.append('funcionario_id', data.funcionario_id);
         formData.append('cargo_id', data.cargo_id);
         formData.append('departamento', data.departamento);

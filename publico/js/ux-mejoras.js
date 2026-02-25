@@ -6,53 +6,53 @@
  * @version 3.0
  */
 
-(function() {
+(function () {
     'use strict';
-    
+
     /**
      * Inicializar mejoras de UX cuando el DOM esté listo
      */
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         inicializarFormularios();
-        console.log('✅ UX Mejoras: Sistema de feedback de formularios activado');
+        console.log('[UX] Sistema de feedback de formularios activado');
     });
-    
+
     /**
      * Detectar y mejorar todos los formularios del sistema
      */
     function inicializarFormularios() {
         const formularios = document.querySelectorAll('form');
         let formulariosInicializados = 0;
-        
+
         formularios.forEach(form => {
             // Ignorar formularios de búsqueda, filtros o marcados explícitamente
-            if (form.classList.contains('no-loading') || 
+            if (form.classList.contains('no-loading') ||
                 form.method.toLowerCase() === 'get' ||
                 form.hasAttribute('data-no-loading')) {
                 return;
             }
-            
-            form.addEventListener('submit', function(e) {
+
+            form.addEventListener('submit', function (e) {
                 const submitButton = encontrarBotonSubmit(form);
-                
+
                 if (submitButton) {
                     // Prevenir doble envío
                     if (submitButton.disabled) {
                         e.preventDefault();
                         return false;
                     }
-                    
+
                     // Aplicar estado de carga
                     aplicarEstadoCarga(submitButton);
                 }
             });
-            
+
             formulariosInicializados++;
         });
-        
-        console.log(`📋 ${formulariosInicializados} formularios con feedback automático`);
+
+        console.log('[UX] ' + formulariosInicializados + ' formularios con feedback automatico');
     }
-    
+
     /**
      * Encontrar el botón de submit en un formulario
      * @param {HTMLFormElement} form - Formulario
@@ -61,7 +61,7 @@
     function encontrarBotonSubmit(form) {
         // Buscar botón type="submit"
         let submitButton = form.querySelector('button[type="submit"]');
-        
+
         // Si no hay, buscar cualquier botón sin type (por defecto es submit)
         if (!submitButton) {
             const botones = form.querySelectorAll('button:not([type="button"]):not([type="reset"])');
@@ -69,15 +69,15 @@
                 submitButton = botones[botones.length - 1]; // Último botón
             }
         }
-        
+
         // Si aún no hay, buscar input type="submit"
         if (!submitButton) {
             submitButton = form.querySelector('input[type="submit"]');
         }
-        
+
         return submitButton;
     }
-    
+
     /**
      * Aplicar estado de carga al botón
      * @param {HTMLElement} button - Botón a modificar
@@ -86,14 +86,14 @@
         // Guardar texto original y ancho
         button.dataset.originalText = button.innerHTML;
         button.dataset.originalWidth = button.offsetWidth + 'px';
-        
+
         // Deshabilitar botón
         button.disabled = true;
         button.style.minWidth = button.dataset.originalWidth;
         button.style.cursor = 'not-allowed';
         button.style.opacity = '0.7';
         button.style.pointerEvents = 'none';
-        
+
         // Cambiar contenido con spinner
         button.innerHTML = `
             <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;">
@@ -102,7 +102,7 @@
             </svg>
             <span>Procesando...</span>
         `;
-        
+
         // Agregar animación de spinner si no existe
         if (!document.getElementById('spinner-keyframes')) {
             const style = document.createElement('style');
@@ -116,12 +116,12 @@
             document.head.appendChild(style);
         }
     }
-    
+
     /**
      * Restaurar estado original del botón (útil para validaciones AJAX)
      * @param {HTMLElement} button - Botón a restaurar
      */
-    window.restaurarBoton = function(button) {
+    window.restaurarBoton = function (button) {
         if (button && button.dataset.originalText) {
             button.disabled = false;
             button.style.cursor = '';
@@ -132,13 +132,13 @@
             delete button.dataset.originalWidth;
         }
     };
-    
+
     /**
      * Mostrar mensaje de éxito temporal (toast)
      * @param {string} mensaje - Mensaje a mostrar
      * @param {number} duracion - Duración en ms (default: 3000)
      */
-    window.mostrarMensajeExito = function(mensaje, duracion = 3000) {
+    window.mostrarMensajeExito = function (mensaje, duracion = 3000) {
         const toast = document.createElement('div');
         toast.className = 'toast toast-success';
         toast.innerHTML = `
@@ -147,27 +147,27 @@
             </svg>
             <span>${mensaje}</span>
         `;
-        
+
         // Agregar estilos si no existen
         if (!document.getElementById('toast-styles')) {
             agregarEstilosToast();
         }
-        
+
         document.body.appendChild(toast);
-        
+
         // Remover después de la duración
         setTimeout(() => {
             toast.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => toast.remove(), 300);
         }, duracion);
     };
-    
+
     /**
      * Mostrar mensaje de error temporal (toast)
      * @param {string} mensaje - Mensaje a mostrar
      * @param {number} duracion - Duración en ms (default: 4000)
      */
-    window.mostrarMensajeError = function(mensaje, duracion = 4000) {
+    window.mostrarMensajeError = function (mensaje, duracion = 4000) {
         const toast = document.createElement('div');
         toast.className = 'toast toast-error';
         toast.innerHTML = `
@@ -178,21 +178,21 @@
             </svg>
             <span>${mensaje}</span>
         `;
-        
+
         // Agregar estilos si no existen
         if (!document.getElementById('toast-styles')) {
             agregarEstilosToast();
         }
-        
+
         document.body.appendChild(toast);
-        
+
         // Remover después de la duración
         setTimeout(() => {
             toast.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => toast.remove(), 300);
         }, duracion);
     };
-    
+
     /**
      * Agregar estilos para los toasts
      */
@@ -246,7 +246,7 @@
         `;
         document.head.appendChild(style);
     }
-    
+
     /**
      * Validar formulario con feedback visual
      * Útil para validaciones personalizadas antes del envío
@@ -255,9 +255,9 @@
      * @param {Function} validacionCallback - Función que retorna true si es válido
      * @returns {boolean}
      */
-    window.validarFormularioConFeedback = function(form, validacionCallback) {
+    window.validarFormularioConFeedback = function (form, validacionCallback) {
         const submitButton = encontrarBotonSubmit(form);
-        
+
         if (!validacionCallback()) {
             // Si la validación falla, restaurar el botón
             if (submitButton) {
@@ -265,8 +265,8 @@
             }
             return false;
         }
-        
+
         return true;
     };
-    
+
 })();

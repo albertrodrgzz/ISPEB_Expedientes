@@ -219,7 +219,7 @@ $vacaciones = $stmt->fetchAll();
                                         <td>
                                             <div style="font-size: 13px;">
                                                 <?php echo date('d/m/Y', strtotime($vac['fecha_inicio'])); ?> 
-                                                <span style="color: #94A3B8;">➜</span> 
+                                                <span style="color: #94A3B8;">&rarr;</span> 
                                                 <?php echo date('d/m/Y', strtotime($vac['fecha_fin'])); ?>
                                             </div>
                                         </td>
@@ -423,7 +423,7 @@ $vacaciones = $stmt->fetchAll();
                             <div id="error-message" class="error-message"></div>
 
                             <div id="lottt-card" class="lottt-card">
-                                <div class="lottt-title">📋 Derecho a Vacaciones (LOTTT)</div>
+                                <div class="lottt-title"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Derecho a Vacaciones (LOTTT)</div>
                                 <div class="lottt-stats">
                                     <div class="lottt-stat">
                                         <div class="lottt-stat-label">Años Servicio</div>

@@ -72,7 +72,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
     <style>
         /* Flecha de cambio de departamento */
         .dept-change { display: flex; align-items: center; gap: 8px; font-size: 13px; flex-wrap: wrap; }
-        .dept-arrow { color: #94A3B8; font-size: 16px; }
+        .dept-arrow { color: #94A3B8; font-size: 14px; font-weight: 700; }
         .dept-old { color: #64748B; text-decoration: line-through; opacity: 0.75; font-size: 12px; }
         .dept-new { color: #0F4C81; font-weight: 600; }
         /* File input modal */
@@ -209,7 +209,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                                         <td>
                                             <div class="dept-change">
                                                 <span class="dept-old"><?= htmlspecialchars($dep_origen) ?></span>
-                                                <span class="dept-arrow">➜</span>
+                                                <span class="dept-arrow">&rarr;</span>
                                                 <span class="dept-new"><?= htmlspecialchars($dep_destino) ?></span>
                                             </div>
                                         </td>

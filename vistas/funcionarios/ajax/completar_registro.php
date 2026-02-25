@@ -15,7 +15,10 @@ try {
         throw new Exception('Método no permitido');
     }
     
-    $cedula = trim($_POST['cedula'] ?? '');
+    // Normalizar cédula: quitar prefijo V/E/J y guiones
+    $cedula_raw = trim($_POST['cedula'] ?? '');
+    $cedula = preg_replace('/^[VvEeJj]-?/', '', $cedula_raw);
+    $cedula = preg_replace('/[^0-9]/', '', $cedula);
     $password = $_POST['password'] ?? '';
     $password_confirm = $_POST['password_confirm'] ?? '';
     $pregunta_1 = trim($_POST['pregunta_1'] ?? '');

@@ -36,6 +36,17 @@ try {
         exit;
     }
 
+    // Normalizar cédula: quitar prefijo V/E/J y guiones, dejar solo dígitos
+    if ($campo === 'cedula') {
+        $valor = preg_replace('/^[VvEeJj]-?/', '', $valor);
+        $valor = preg_replace('/[^0-9]/', '', $valor);
+    }
+
+    // Normalizar teléfono: solo dígitos
+    if ($campo === 'telefono') {
+        $valor = preg_replace('/[^0-9]/', '', $valor);
+    }
+
     $db = getDB();
 
     $sql    = "SELECT id, nombres, apellidos FROM funcionarios WHERE {$campo} = ?";

@@ -10,25 +10,44 @@ require_once __DIR__ . '/../../modelos/Funcionario.php';
 
 verificarSesion();
 
-$id = $_GET['id'] ?? 0;
-if (!$id) { header('Location: index.php'); exit; }
+$nivel_acceso = $_SESSION['nivel_acceso'] ?? 3;
+$funcionario_id_sesion = $_SESSION['funcionario_id'] ?? 0;
+
+// Nivel 3: siempre ver su propio expediente (ignorar ?id ajeno)
+if ($nivel_acceso >= 3) {
+    if ($funcionario_id_sesion <= 0) {
+        // Sin funcionario_id en sesión → logout forzado
+        session_destroy();
+        header('Location: ' . APP_URL . '/index.php?error=sesion_invalida');
+        exit;
+    }
+    $id = $funcionario_id_sesion;
+} else {
+    $id = (int)($_GET['id'] ?? 0);
+    if (!$id) {
+        header('Location: index.php');
+        exit;
+    }
+}
 
 $modeloFuncionario = new Funcionario();
 $funcionario = $modeloFuncionario->obtenerPorId($id);
 
 if (!$funcionario) {
     $_SESSION['error'] = 'Funcionario no encontrado';
-    header('Location: index.php');
+    $redirect = ($nivel_acceso >= 3) ? APP_URL . '/vistas/dashboard/index.php' : 'index.php';
+    header('Location: ' . $redirect);
     exit;
 }
 
-// Permisos
-if (!verificarDepartamento($id) && $_SESSION['nivel_acceso'] > 2) {
+// Permisos: Nivel 3 solo puede ver su propio expediente (ya forzado arriba)
+// Nivel 1 y 2 usan verificarDepartamento
+if ($nivel_acceso < 3 && !verificarDepartamento($id)) {
     $_SESSION['error'] = 'Acceso denegado';
     header('Location: index.php');
     exit;
 }
-$puede_editar = verificarDepartamento($id);
+$puede_editar = ($nivel_acceso < 3) && verificarDepartamento($id);
 
 // Datos adicionales (Usuario, Edad)
 $db = getDB();
@@ -96,10 +115,16 @@ if ($funcionario['fecha_ingreso']) {
         
         <div class="page-header">
             <div style="display: flex; align-items: center; gap: 16px;">
+                <?php if ($nivel_acceso < 3): ?>
                 <a href="index.php" class="btn-secondary">
                     <?= Icon::get('arrow-left') ?> Volver
                 </a>
-                <h1>Expediente Digital</h1>
+                <?php else: ?>
+                <a href="<?= APP_URL ?>/vistas/dashboard/index.php" class="btn-secondary">
+                    <?= Icon::get('arrow-left') ?> Inicio
+                </a>
+                <?php endif; ?>
+                <h1><?= $nivel_acceso >= 3 ? 'Mi Expediente' : 'Expediente Digital' ?></h1>
             </div>
             <div style="display: flex; gap: 10px;">
                 <a href="../reportes/constancia_trabajo.php?id=<?= $id ?>" target="_blank" class="btn-primary" style="background: #10b981; border:none;">

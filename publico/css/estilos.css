@@ -11,13 +11,13 @@
     /* ===== COLORES PRIMARIOS ===== */
     --color-primary: #0F4C81;
     /* Azul Institucional */
-    --color-secondary: #00A8E8;
-    /* Cian Digital */
-    --color-accent: #00A8E8;
-    /* Acento/Acción */
+    --color-secondary: #0288D1;
+    /* Azul Digital (coincide con sidebar) */
+    --color-accent: #0288D1;
+    /* Acento/Accion */
 
-    /* Gradiente Marca */
-    --gradient-brand: linear-gradient(135deg, #0F4C81 0%, #00A8E8 100%);
+    /* Gradiente Marca - IDENTICO al sidebar */
+    --gradient-brand: linear-gradient(160deg, #0F4C81 0%, #1565A0 50%, #0288D1 100%);
 
     /* ===== BACKGROUNDS ===== */
     --color-bg: #F1F5F9;
@@ -2860,6 +2860,7 @@ body {
 
 
 
+
 @media (min-width: 1025px) {
 
     .menu-toggle {
@@ -2876,4 +2877,252 @@ body {
 
     }
 
+}
+
+/* =====================================================================
+   RESPONSIVE GLOBAL MEJORADO
+   ===================================================================== */
+
+/* ── Contenido principal ─────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    body {
+        padding: 0 !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        border-radius: 0 !important;
+        min-height: 100vh !important;
+    }
+
+    .content-wrapper {
+        padding: 16px !important;
+    }
+
+    /* Header compacto */
+    .header {
+        padding: 14px 16px !important;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .header-search {
+        width: 100% !important;
+        order: 3;
+    }
+
+    .page-title {
+        font-size: 22px !important;
+    }
+
+    /* KPI grid: 2 columnas en tablet */
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .kpi-card {
+        padding: 16px !important;
+    }
+
+    .kpi-value {
+        font-size: 26px !important;
+    }
+
+    /* Cards stack */
+    .card {
+        margin-bottom: 16px !important;
+    }
+
+    .card-header {
+        padding: 14px 16px !important;
+    }
+
+    .card-body {
+        padding: 14px 16px !important;
+    }
+
+    /* Tables scroll */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+    }
+
+    .table-modern {
+        min-width: 640px !important;
+    }
+
+    /* Page header stack */
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+    .page-header .btn,
+    .page-header .btn-primary {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Filter toolbar */
+    .filter-toolbar {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .filter-toolbar input,
+    .filter-toolbar select {
+        width: 100% !important;
+    }
+
+    /* Swal modals */
+    .swal2-popup {
+        width: 96vw !important;
+        max-width: 96vw !important;
+        padding: 18px !important;
+    }
+
+    /* Profile grid */
+    .profile-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ── Móvil pequeño ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .content-wrapper {
+        padding: 12px !important;
+    }
+
+    .header {
+        padding: 12px !important;
+    }
+
+    /* Header search collapsa */
+    .header-search {
+        display: none !important;
+    }
+
+    /* KPI 1 columna */
+    .kpi-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .kpi-card {
+        padding: 14px !important;
+    }
+
+    /* Título */
+    .page-title {
+        font-size: 18px !important;
+    }
+
+    .page-header h1 {
+        font-size: 18px !important;
+    }
+
+    /* Tabla más compacta */
+    .table-modern th,
+    .table-modern td {
+        padding: 8px 6px !important;
+        font-size: 12px !important;
+    }
+
+    /* Botones de accion en tabla: solo icono */
+    .btn-action span {
+        display: none;
+    }
+
+    .btn-action {
+        padding: 6px 8px !important;
+    }
+
+    /* Cards header */
+    .glass-card-header {
+        padding: 14px 16px 12px !important;
+    }
+
+    .glass-card-body {
+        padding: 14px 16px !important;
+    }
+
+    /* Quick grid 1 col */
+    .quick-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Hero responsive */
+    .profile-hero {
+        padding: 20px 16px !important;
+    }
+
+    .hero-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .hero-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* Swal más estrecho */
+    .swal2-popup {
+        padding: 14px !important;
+    }
+
+    /* Stats KPI row to col */
+    .stats-row {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    /* Modals full width */
+    .modal-box {
+        width: 98vw !important;
+        padding: 20px !important;
+        border-radius: 16px !important;
+    }
+
+    /* Tabs wrap */
+    .tabs {
+        flex-wrap: wrap !important;
+    }
+
+    .tab-btn {
+        flex: 1;
+        text-align: center;
+        min-width: 0;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+    }
+}
+
+/* ── Pantallas muy pequeñas ──────────────────────────────────────── */
+@media (max-width: 380px) {
+    .content-wrapper {
+        padding: 8px !important;
+    }
+
+    .page-title {
+        font-size: 16px !important;
+    }
+
+    .hero-stat {
+        padding: 8px 10px !important;
+        min-width: 60px;
+    }
+
+    .hero-stat-num {
+        font-size: 20px !important;
+    }
+
+    .profile-avatar {
+        width: 64px !important;
+        height: 64px !important;
+        font-size: 24px !important;
+    }
 }

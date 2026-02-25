@@ -15,10 +15,17 @@ try {
         throw new Exception('Método no permitido');
     }
     
-    $cedula = trim($_POST['cedula'] ?? '');
+    // Normalizar cédula: quitar prefijo V/E/J/v/e/j y guiones
+    $cedula_raw = trim($_POST['cedula'] ?? '');
+    $cedula = preg_replace('/^[VvEeJj]-?/', '', $cedula_raw);
+    $cedula = preg_replace('/[^0-9]/', '', $cedula); // solo dígitos
     
     if (empty($cedula)) {
         throw new Exception('La cédula es requerida');
+    }
+    
+    if (!ctype_digit($cedula) || strlen($cedula) < 6 || strlen($cedula) > 9) {
+        throw new Exception('Ingrese una cédula válida (solo números, sin prefijo V-)');
     }
     
     $db = getDB();

@@ -34,93 +34,155 @@ require_once __DIR__ . '/../../config/icons.php';
         /**
          * Configuración del menú por secciones
          */
-        $menuConfig = [
-            // ===== SECCIÓN: PRINCIPAL =====
-            [
-                'section' => 'PRINCIPAL',
-                'nivel_requerido' => 3,
-                'items' => [
-                    [
-                        'label' => 'Inicio',
-                        'url' => '/vistas/dashboard/index.php',
-                        'icon' => 'home',
-                        'dir' => 'dashboard'
-                    ],
-                    [
-                        'label' => 'Funcionarios',
-                        'url' => '/vistas/funcionarios/index.php',
-                        'icon' => 'users',
-                        'dir' => 'funcionarios'
-                    ],
-                    [
-                        'label' => 'Expedientes',
-                        'url' => '/vistas/expedientes/index.php',
-                        'icon' => 'folder',
-                        'dir' => 'expedientes'
+        /**
+         * Configuración de menú dinámica según nivel de acceso
+         * Nivel 3 (Empleado Base): Portal de Autogestión "MI ESPACIO"
+         * Nivel 1-2 (Admin/RRHH):  Menú de gestión global completo
+         */
+        $nivel_usuario = $_SESSION['nivel_acceso'] ?? 3;
+
+        if ($nivel_usuario == 3) {
+            // ===== MENÚ EXCLUSIVO NIVEL 3: MI ESPACIO =====
+            $funcionario_id_sesion = $_SESSION['funcionario_id'] ?? 0;
+            $menuConfig = [
+                [
+                    'section' => 'MI ESPACIO',
+                    'nivel_requerido' => 3,
+                    'items' => [
+                        [
+                            'label' => 'Inicio',
+                            'url'   => '/vistas/dashboard/index.php',
+                            'icon'  => 'home',
+                            'dir'   => 'dashboard'
+                        ],
+                        [
+                            'label' => 'Mi Expediente',
+                            'url'   => '/vistas/funcionarios/ver.php?id=' . $funcionario_id_sesion,
+                            'icon'  => 'user',
+                            'dir'   => 'funcionarios'
+                        ],
+                        [
+                            'label'   => 'Mis Documentos',
+                            'icon'    => 'folder',
+                            'dir'     => 'reportes',
+                            'submenu' => [
+                                [
+                                    'label' => 'Constancia de Trabajo',
+                                    'url'   => '/vistas/reportes/constancia_trabajo.php',
+                                    'dir'   => 'reportes'
+                                ],
+                                [
+                                    'label' => 'Recibos de Pago',
+                                    'url'   => '/vistas/reportes/index.php',
+                                    'dir'   => 'reportes'
+                                ]
+                            ]
+                        ],
+                        [
+                            'label' => 'Mis Solicitudes',
+                            'url'   => '/vistas/solicitudes/mis_solicitudes.php',
+                            'icon'  => 'send',
+                            'dir'   => 'solicitudes'
+                        ]
                     ]
                 ]
-            ],
-            
-            // ===== SECCIÓN: GESTIÓN RRHH =====
-            [
-                'section' => 'GESTIÓN RRHH',
-                'nivel_requerido' => 2,
-                'items' => [
-                    [
-                        'label' => 'Nombramientos',
-                        'url' => '/vistas/nombramientos/index.php',
-                        'icon' => 'file-text',
-                        'dir' => 'nombramientos'
-                    ],
-                    [
-                        'label' => 'Vacaciones',
-                        'url' => '/vistas/vacaciones/index.php',
-                        'icon' => 'sun',
-                        'dir' => 'vacaciones'
-                    ],
-                    [
-                        'label' => 'Traslados',
-                        'url' => '/vistas/traslados/index.php',
-                        'icon' => 'repeat',
-                        'dir' => 'traslados'
-                    ],
-                    [
-                        'label' => 'Amonestaciones',
-                        'url' => '/vistas/amonestaciones/index.php',
-                        'icon' => 'alert-triangle',
-                        'dir' => 'amonestaciones'
+            ];
+        } else {
+            // ===== MENÚ NIVEL 1 Y 2: GESTIÓN GLOBAL =====
+            $menuConfig = [
+                // ===== SECCIÓN: PRINCIPAL =====
+                [
+                    'section' => 'PRINCIPAL',
+                    'nivel_requerido' => 3,
+                    'items' => [
+                        [
+                            'label' => 'Inicio',
+                            'url'   => '/vistas/dashboard/index.php',
+                            'icon'  => 'home',
+                            'dir'   => 'dashboard'
+                        ],
+                        [
+                            'label' => 'Funcionarios',
+                            'url'   => '/vistas/funcionarios/index.php',
+                            'icon'  => 'users',
+                            'dir'   => 'funcionarios'
+                        ],
+                        [
+                            'label' => 'Expedientes',
+                            'url'   => '/vistas/expedientes/index.php',
+                            'icon'  => 'folder',
+                            'dir'   => 'expedientes'
+                        ]
+                    ]
+                ],
+
+                // ===== SECCIÓN: GESTIÓN RRHH =====
+                [
+                    'section' => 'GESTIÓN RRHH',
+                    'nivel_requerido' => 2,
+                    'items' => [
+                        [
+                            'label' => 'Nombramientos',
+                            'url'   => '/vistas/nombramientos/index.php',
+                            'icon'  => 'file-text',
+                            'dir'   => 'nombramientos'
+                        ],
+                        [
+                            'label' => 'Vacaciones',
+                            'url'   => '/vistas/vacaciones/index.php',
+                            'icon'  => 'sun',
+                            'dir'   => 'vacaciones'
+                        ],
+                        [
+                            'label' => 'Traslados',
+                            'url'   => '/vistas/traslados/index.php',
+                            'icon'  => 'repeat',
+                            'dir'   => 'traslados'
+                        ],
+                        [
+                            'label' => 'Amonestaciones',
+                            'url'   => '/vistas/amonestaciones/index.php',
+                            'icon'  => 'alert-triangle',
+                            'dir'   => 'amonestaciones'
+                        ],
+                        [
+                            'label' => 'Bandeja de Solicitudes',
+                            'url'   => '/vistas/solicitudes/gestionar_solicitudes.php',
+                            'icon'  => 'inbox',
+                            'dir'   => 'solicitudes'
+                        ]
+                    ]
+                ],
+
+                // ===== SECCIÓN: SISTEMA =====
+                [
+                    'section' => 'SISTEMA',
+                    'nivel_requerido' => 2,
+                    'items' => [
+                        [
+                            'label' => 'Reportes',
+                            'url'   => '/vistas/reportes/index.php',
+                            'icon'  => 'bar-chart',
+                            'dir'   => 'reportes'
+                        ],
+                        [
+                            'label'      => 'Administración',
+                            'url'        => '/vistas/admin/index.php',
+                            'icon'       => 'settings',
+                            'dir'        => 'admin',
+                            'nivel_item' => 1
+                        ],
+                        [
+                            'label'      => 'Respaldos',
+                            'url'        => '/vistas/respaldo/index.php',
+                            'icon'       => 'database',
+                            'dir'        => 'respaldo',
+                            'nivel_item' => 1
+                        ]
                     ]
                 ]
-            ],
-            
-            // ===== SECCIÓN: SISTEMA =====
-            [
-                'section' => 'SISTEMA',
-                'nivel_requerido' => 2,
-                'items' => [
-                    [
-                        'label' => 'Reportes',
-                        'url' => '/vistas/reportes/index.php',
-                        'icon' => 'bar-chart',
-                        'dir' => 'reportes'
-                    ],
-                    [
-                        'label' => 'Administración',
-                        'url' => '/vistas/admin/index.php',
-                        'icon' => 'settings',
-                        'dir' => 'admin',
-                        'nivel_item' => 1
-                    ],
-                    [
-                        'label' => 'Respaldos',
-                        'url' => '/vistas/respaldo/index.php',
-                        'icon' => 'database',
-                        'dir' => 'respaldo',
-                        'nivel_item' => 1
-                    ]
-                ]
-            ]
-        ];
+            ];
+        }
         
         /**
          * Renderizar menú dinámicamente
@@ -282,6 +344,6 @@ function toggleSubmenu(element) {
         }
     });
     
-    console.log('✅ Sidebar SIGED Enterprise inicializado');
+    console.log('[SIGED] Sidebar inicializado correctamente.');
 })();
 </script>

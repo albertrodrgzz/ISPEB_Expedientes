@@ -10,8 +10,8 @@
 function getBaseUrl() {
     const metaTag = document.querySelector('meta[name="app-url"]');
     if (!metaTag) {
-        console.error('❌ Meta tag app-url no encontrado en el HTML');
-        console.warn('💡 Asegúrate de agregar <meta name="app-url" content="<?= APP_URL ?>"> en el <head>');
+        console.error('[ERROR] Meta tag app-url no encontrado en el HTML');
+        console.warn('[WARN] Asegurate de agregar <meta name="app-url" content="<?= APP_URL ?>"> en el <head>');
         return '';
     }
 
@@ -84,7 +84,7 @@ async function fetchAPI(endpoint, options = {}) {
         const response = await fetch(url, finalOptions);
         return response;
     } catch (error) {
-        console.error(`❌ Error en fetchAPI (${url}):`, error);
+        console.error('[ERROR] fetchAPI:', url, error);
         throw error;
     }
 }
@@ -104,7 +104,7 @@ async function fetchAPI(endpoint, options = {}) {
 function buildUrl(path) {
     const baseUrl = getBaseUrl();
     if (!baseUrl) {
-        console.error('❌ No se pudo construir URL');
+        console.error('[ERROR] No se pudo construir URL');
         return path;
     }
     path = path.replace(/^\//, '');
@@ -115,10 +115,10 @@ function buildUrl(path) {
  * Helper para debugging - muestra la configuración actual
  */
 function debugAppConfig() {
-    console.group('🔧 SIGEX v3.5 - Configuración');
-    console.log('📍 Base URL:', getBaseUrl());
-    console.log('🌐 Location:', window.location.href);
-    console.log('📄 Document URL:', document.URL);
+    console.group('[SIGEX] Configuracion v3.5');
+    console.log('BaseURL:', getBaseUrl());
+    console.log('Location:', window.location.href);
+    console.log('Document:', document.URL);
     console.groupEnd();
 }
 
@@ -130,8 +130,8 @@ window.debugAppConfig = debugAppConfig;
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('✅ SIGEX v3.5 - Utilidades globales cargadas');
-    console.log('📍 Base URL:', getBaseUrl());
+    console.log('[SIGEX] Utilidades globales cargadas v3.5');
+    console.log('BaseURL:', getBaseUrl());
 
     // Búsqueda en tiempo real (mantener funcionalidad existente)
     const buscarInput = document.getElementById('buscar');

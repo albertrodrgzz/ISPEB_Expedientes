@@ -309,6 +309,7 @@
 .file-input-label.has-file svg {
     stroke: var(--color-success);
 }
+
 /* ===== BOTÓN VOLVER MODERNO ===== */
 .btn-secondary,
 a.btn-secondary {
@@ -360,7 +361,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .kpi-card {
 
@@ -368,7 +369,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .kpi-icon {
 
@@ -378,7 +379,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .kpi-icon svg {
 
@@ -388,7 +389,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .kpi-value {
 
@@ -396,7 +397,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .kpi-label {
 
@@ -448,7 +449,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .page-header h1 {
 
@@ -456,7 +457,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .page-header .btn-primary {
 
@@ -482,7 +483,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .card-body {
 
@@ -504,7 +505,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .table-modern thead th,
 
@@ -514,7 +515,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .table-modern thead th {
 
@@ -522,7 +523,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .user-avatar {
 
@@ -534,7 +535,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .user-name {
 
@@ -542,7 +543,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .user-id {
 
@@ -568,7 +569,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .btn-icon {
 
@@ -578,7 +579,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .btn-icon svg {
 
@@ -620,7 +621,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .empty-state-icon svg {
 
@@ -630,7 +631,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .empty-state-title {
 
@@ -638,7 +639,7 @@ a.btn-secondary svg {
 
     }
 
-    
+
 
     .empty-state-description {
 
@@ -704,17 +705,96 @@ a.btn-secondary svg {
 
 /* Ensure white text on gradients */
 
-.gradient-blue, .gradient-cyan, .gradient-green, .gradient-orange, .gradient-red {
+.gradient-blue,
+.gradient-cyan,
+.gradient-green,
+.gradient-orange,
+.gradient-red {
 
     color: white !important;
 
+}
+
+/* ===== TABLE CONTAINER - Scroll Horizontal en Móvil ===== */
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== FILTER TOOLBAR RESPONSIVE ===== */
+.filter-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+    align-items: flex-end;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+    flex: 1;
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+    .filter-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-item {
+        width: 100%;
+        min-width: unset;
+        flex: unset;
+    }
+}
+
+/* ===== PREVENT HORIZONTAL OVERFLOW ON MOBILE ===== */
+@media (max-width: 1024px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    .main-content {
+        overflow-x: hidden;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-wrapper {
+        padding: 12px;
+    }
+
+    .page-header {
+        margin-bottom: 16px;
+    }
+
+    .card-modern {
+        margin-bottom: 12px;
+    }
 }
 
 
 
 /* Fix for Icon colors inside gradients */
 
-.gradient-blue svg, .gradient-cyan svg, .gradient-green svg, .gradient-orange svg, .gradient-red svg {
+.gradient-blue svg,
+.gradient-cyan svg,
+.gradient-green svg,
+.gradient-orange svg,
+.gradient-red svg {
 
     stroke: white !important;
 

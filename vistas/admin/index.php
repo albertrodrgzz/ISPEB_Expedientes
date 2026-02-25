@@ -424,76 +424,72 @@ $usuarios = $stmt->fetchAll();
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <header class="header">
-            <div class="header-left">
-                <h1 class="page-title">Panel de Administración</h1>
-            </div>
-        </header>
+        <?php include __DIR__ . '/../layout/header.php'; ?>
         
         <div class="content-wrapper">
             <!-- Estadísticas Principales -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon">👥</div>
+                    <div class="stat-icon"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg></div>
                     <div class="stat-value"><?php echo $total_usuarios_activos; ?></div>
                     <div class="stat-label">Usuarios Activos</div>
                 </div>
                 <div class="stat-card secondary">
-                    <div class="stat-icon">👤</div>
+                    <div class="stat-icon"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
                     <div class="stat-value"><?php echo $total_funcionarios; ?></div>
                     <div class="stat-label">Funcionarios</div>
                 </div>
                 <div class="stat-card tertiary">
-                    <div class="stat-icon">📄</div>
+                    <div class="stat-icon"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
                     <div class="stat-value"><?php echo $total_documentos; ?></div>
                     <div class="stat-label">Documentos</div>
                 </div>
                 <div class="stat-card quaternary">
-                    <div class="stat-icon">💾</div>
+                    <div class="stat-icon"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></div>
                     <div class="stat-value"><?php echo $db_size; ?> MB</div>
-                    <div class="stat-label">Tamaño BD</div>
+                    <div class="stat-label">Tama&ntilde;o BD</div>
                 </div>
             </div>
             
             <!-- Tabs de Navegación -->
             <div class="admin-tabs">
-                <button class="admin-tab active" onclick="switchTab('overview')">📊 Resumen</button>
-                <button class="admin-tab" onclick="switchTab('users')">👥 Usuarios</button>
-                <button class="admin-tab" onclick="switchTab('tools')">🛠️ Herramientas</button>
-                <button class="admin-tab" onclick="switchTab('activity')">📋 Actividad</button>
+                <button class="admin-tab active" onclick="switchTab('overview')">Resumen</button>
+                <button class="admin-tab" onclick="switchTab('users')">Usuarios</button>
+                <button class="admin-tab" onclick="switchTab('tools')">Herramientas</button>
+                <button class="admin-tab" onclick="switchTab('activity')">Actividad</button>
             </div>
             
             <!-- Tab: Resumen -->
             <div id="tab-overview" class="tab-content active">
                 <div class="quick-actions">
                     <a href="#" onclick="switchTab('users'); return false;" class="quick-action-card">
-                        <div class="quick-action-icon">👥</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg></div>
                         <div class="quick-action-title">Gestionar Usuarios</div>
                         <div class="quick-action-desc">Crear y administrar cuentas</div>
                     </a>
                     <a href="organizacion.php" class="quick-action-card">
-                        <div class="quick-action-icon">🏢</div>
-                        <div class="quick-action-title">Organización</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
+                        <div class="quick-action-title">Organizaci&oacute;n</div>
                         <div class="quick-action-desc">Departamentos y cargos</div>
                     </a>
                     <a href="respaldo.php" class="quick-action-card">
-                        <div class="quick-action-icon">💾</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></div>
                         <div class="quick-action-title">Respaldo BD</div>
                         <div class="quick-action-desc">Generar copia de seguridad</div>
                     </a>
                     <a href="restaurar.php" class="quick-action-card">
-                        <div class="quick-action-icon">🔄</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>
                         <div class="quick-action-title">Restaurar BD</div>
                         <div class="quick-action-desc">Restaurar desde archivo</div>
                     </a>
                     <a href="auditoria.php" class="quick-action-card">
-                        <div class="quick-action-icon">📋</div>
-                        <div class="quick-action-title">Auditoría</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
+                        <div class="quick-action-title">Auditor&iacute;a</div>
                         <div class="quick-action-desc">Ver log de acciones</div>
                     </a>
-                    <a href="#" onclick="Swal.fire({icon: 'info', title: 'Próximamente', text: 'Configuración avanzada del sistema', confirmButtonColor: '#00a8cc'}); return false;" class="quick-action-card" style="opacity: 0.7;">
-                        <div class="quick-action-icon">⚙️</div>
-                        <div class="quick-action-title">Configuración</div>
+                    <a href="#" onclick="Swal.fire({icon: 'info', title: 'Pr&oacute;ximamente', text: 'Configuraci&oacute;n avanzada del sistema', confirmButtonColor: '#00a8cc'}); return false;" class="quick-action-card" style="opacity: 0.7;">
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>
+                        <div class="quick-action-title">Configuraci&oacute;n</div>
                         <div class="quick-action-desc">Ajustes del sistema</div>
                     </a>
                 </div>
@@ -544,10 +540,10 @@ $usuarios = $stmt->fetchAll();
                 <div class="users-table-container">
                     <div class="table-header">
                         <div class="search-box">
-                            <input type="text" id="searchUsers" class="search-input" placeholder="🔍 Buscar usuario...">
+                            <input type="text" id="searchUsers" class="search-input" placeholder="Buscar usuario...">
                         </div>
                         <button class="btn btn-primary" onclick="openCreateUserModal()">
-                            ➕ Crear Usuario
+                            Crear Usuario
                         </button>
                     </div>
                     
@@ -600,13 +596,13 @@ $usuarios = $stmt->fetchAll();
                                         <td>
                                             <div class="action-buttons">
                                                 <button class="btn-icon btn-edit" onclick="editUser(<?php echo $user['id']; ?>)" title="Editar">
-                                                    ✏️
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                 </button>
                                                 <button class="btn-icon btn-toggle" onclick="toggleUserStatus(<?php echo $user['id']; ?>, '<?php echo $user['estado']; ?>')" title="Cambiar estado">
-                                                    🔄
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                                 </button>
-                                                <button class="btn-icon btn-reset" onclick="resetPassword(<?php echo $user['id']; ?>)" title="Resetear contraseña">
-                                                    🔑
+                                                <button class="btn-icon btn-reset" onclick="resetPassword(<?php echo $user['id']; ?>)" title="Resetear contrase&ntilde;a">
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                                                 </button>
                                             </div>
                                         </td>
@@ -622,34 +618,34 @@ $usuarios = $stmt->fetchAll();
             <div id="tab-tools" class="tab-content">
                 <div class="quick-actions">
                     <a href="#" onclick="switchTab('users'); return false;" class="quick-action-card">
-                        <div class="quick-action-icon">👥</div>
-                        <div class="quick-action-title">Gestión de Usuarios</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg></div>
+                        <div class="quick-action-title">Gesti&oacute;n de Usuarios</div>
                         <div class="quick-action-desc">Crear y administrar cuentas de usuario</div>
                     </a>
                     <a href="organizacion.php" class="quick-action-card">
-                        <div class="quick-action-icon">🏢</div>
-                        <div class="quick-action-title">Gestión Organizacional</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
+                        <div class="quick-action-title">Gesti&oacute;n Organizacional</div>
                         <div class="quick-action-desc">Administrar departamentos y cargos</div>
                     </a>
                     <a href="respaldo.php" class="quick-action-card">
-                        <div class="quick-action-icon">💾</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></div>
                         <div class="quick-action-title">Respaldo de Base de Datos</div>
                         <div class="quick-action-desc">Generar copia de seguridad completa</div>
                     </a>
                     <a href="restaurar.php" class="quick-action-card">
-                        <div class="quick-action-icon">🔄</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>
                         <div class="quick-action-title">Restaurar Base de Datos</div>
                         <div class="quick-action-desc">Restaurar desde archivo SQL</div>
                     </a>
                     <a href="auditoria.php" class="quick-action-card">
-                        <div class="quick-action-icon">📋</div>
-                        <div class="quick-action-title">Log de Auditoría</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
+                        <div class="quick-action-title">Log de Auditor&iacute;a</div>
                         <div class="quick-action-desc">Consultar historial de acciones</div>
                     </a>
                     <div class="quick-action-card" style="opacity: 0.6; cursor: not-allowed;">
-                        <div class="quick-action-icon">⚙️</div>
-                        <div class="quick-action-title">Configuración Avanzada</div>
-                        <div class="quick-action-desc">Próximamente</div>
+                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>
+                        <div class="quick-action-title">Configuraci&oacute;n Avanzada</div>
+                        <div class="quick-action-desc">Pr&oacute;ximamente</div>
                     </div>
                 </div>
             </div>
@@ -683,12 +679,16 @@ $usuarios = $stmt->fetchAll();
                                 <div class="activity-item">
                                     <div class="activity-icon">
                                         <?php
-                                        $icono = '📝';
-                                        if (strpos($accion['accion'], 'LOGIN') !== false) $icono = '🔐';
-                                        elseif (strpos($accion['accion'], 'CREAR') !== false) $icono = '➕';
-                                        elseif (strpos($accion['accion'], 'ELIMINAR') !== false) $icono = '🗑️';
-                                        elseif (strpos($accion['accion'], 'ACTUALIZAR') !== false) $icono = '✏️';
-                                        echo $icono;
+                                        if (strpos($accion['accion'], 'LOGIN') !== false)
+                                            echo '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>';
+                                        elseif (strpos($accion['accion'], 'CREAR') !== false)
+                                            echo '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>';
+                                        elseif (strpos($accion['accion'], 'ELIMINAR') !== false)
+                                            echo '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+                                        elseif (strpos($accion['accion'], 'ACTUALIZAR') !== false)
+                                            echo '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>';
+                                        else
+                                            echo '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
                                         ?>
                                     </div>
                                     <div class="activity-content">
@@ -748,7 +748,8 @@ $usuarios = $stmt->fetchAll();
                 <div class="form-group">
                     <div style="background: #e6f7ff; border-left: 4px solid #00a8cc; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
                         <p style="margin: 0; color: #0066cc; font-size: 14px;">
-                            ℹ️ <strong>Usuario automático:</strong> El nombre de usuario se generará automáticamente como <code>[letra(s)_nombre][apellido]</code>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <strong>Usuario autom&aacute;tico:</strong> El nombre de usuario se generar&aacute; autom&aacute;ticamente como <code>[letra(s)_nombre][apellido]</code>
                         </p>
                     </div>
                 </div>
@@ -882,13 +883,14 @@ $usuarios = $stmt->fetchAll();
                                 html: `
                                     <p>El usuario ha sido creado exitosamente</p>
                                     <div style="background: #f0f9ff; border: 1px solid #00a8cc; border-radius: 8px; padding: 16px; margin-top: 16px;">
-                                        <p style="margin: 0 0 8px 0; color: #0066cc; font-weight: bold;">📝 Credenciales:</p>
+                                        <p style="margin: 0 0 8px 0; color: #0066cc; font-weight: bold;"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Credenciales:</p>
                                         <p style="margin: 4px 0; font-family: monospace; font-size: 16px;">
                                             <strong>Usuario:</strong> <span style="color: #00a8cc;">${data.username}</span>
                                         </p>
                                         <p style="margin: 8px 0 0 0; font-size: 12px; color: #666;">
-                                            ⚠️ Comunique estas credenciales al funcionario
-                                        </p>
+                                                    <svg width="12" height="12" fill="none" stroke="#f59e0b" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                    Comunique estas credenciales al funcionario
+                                                </p>
                                     </div>
                                 `,
                                 confirmButtonColor: '#10b981',

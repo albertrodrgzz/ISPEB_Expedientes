@@ -10,6 +10,10 @@ require_once __DIR__ . '/../../config/icons.php';
 
 verificarSesion();
 
+$nivel_acceso   = $_SESSION['nivel_acceso'] ?? 3;
+$funcionario_id = $_SESSION['funcionario_id'] ?? 0;
+$es_nivel3      = ($nivel_acceso >= 3);
+
 // Verificar permisos (nivel 1-3 puede ver reportes)
 if (!verificarNivel(3)) {
     $_SESSION['error'] = 'No tiene permisos para acceder a este módulo';
@@ -213,12 +217,23 @@ $tipos_eventos = $stmt->fetch()['total'];
                     <div class="report-info">
                         <?= Icon::get('info') ?> Documento que certifica la relación laboral, cargo y antigüedad del funcionario.
                     </div>
-                    <button class="report-button" onclick="abrirFormConstancia()">
-                        <?= Icon::get('file-text') ?>
-                        Generar Constancia
-                    </button>
+                    <?php if ($es_nivel3): ?>
+                        <!-- Nivel 3: genera directamente SU PROPIA constancia -->
+                        <a href="<?= APP_URL ?>/vistas/reportes/constancia_trabajo.php" target="_blank" class="report-button" style="text-decoration:none;">
+                            <?= Icon::get('file-text') ?>
+                            Generar Mi Constancia
+                        </a>
+                    <?php else: ?>
+                        <button class="report-button" onclick="abrirFormConstancia()">
+                            <?= Icon::get('file-text') ?>
+                            Generar Constancia
+                        </button>
+                    <?php endif; ?>
                 </div>
             </div>
+
+            <?php if (!$es_nivel3): ?>
+            <!-- Los siguientes reportes son solo para Nivel 1/2 Administrativo -->
 
             <!-- Listado de Personal -->
             <div class="report-card">
@@ -255,6 +270,8 @@ $tipos_eventos = $stmt->fetch()['total'];
                     </button>
                 </div>
             </div>
+            <?php endif; ?>
+
         </div>
     </div>
 

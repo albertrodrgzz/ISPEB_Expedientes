@@ -280,7 +280,7 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f7fa;
+            background: #1a2f48;
             min-height: 100vh;
             margin: 0;
             padding: 0;
@@ -300,7 +300,16 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            opacity: 0.08;
+            opacity: 0.35;
+            z-index: 0;
+        }
+        
+        /* Overlay azul institucional */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(160deg, rgba(15,76,129,0.72) 0%, rgba(2,136,209,0.50) 100%);
             z-index: 0;
         }
         
@@ -338,21 +347,22 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
             z-index: 1;
         }
         
-        /* Card horizontal minimalista */
+        /* Card horizontal */
         .login-container {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08),
-                        0 0 0 1px rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.55),
+                        0 0 0 1px rgba(255,255,255,0.12),
+                        inset 0 1px 0 rgba(255,255,255,0.6);
             overflow: hidden;
             max-width: 1000px;
             width: 100%;
             display: grid;
             grid-template-columns: 380px 1fr;
-            animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: fadeInScale 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+            border: 1px solid rgba(255,255,255,0.18);
         }
         
         @keyframes fadeInScale {
@@ -366,9 +376,9 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
             }
         }
         
-        /* Panel izquierdo - Branding con diseño creativo */
+        /* Panel izquierdo - Gradiente institucional */
         .login-header {
-            background: linear-gradient(135deg, #00a8cc 0%, #005f73 100%);
+            background: linear-gradient(160deg, #0F4C81 0%, #1565A0 50%, #0288D1 100%);
             color: white;
             padding: 50px 40px;
             display: flex;
@@ -389,9 +399,9 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
             right: 0;
             bottom: 0;
             background-image: 
-                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.05) 0%, transparent 40%);
+                radial-gradient(circle at 20% 30%, rgba(100,149,255,0.18) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(59,130,246,0.14) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(147,197,253,0.10) 0%, transparent 40%);
             z-index: 0;
         }
         
@@ -416,19 +426,18 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
         /* Partículas flotantes */
         .login-header .particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.6);
+            background: rgba(147,197,253,0.85);
             border-radius: 50%;
-            animation: float-particle 8s ease-in-out infinite;
+            animation: float-particle 7s ease-in-out infinite;
             z-index: 0;
+            box-shadow: 0 0 8px rgba(147,197,253,0.6);
         }
         
-        .login-header .particle:nth-child(1) { left: 20%; top: 20%; animation-delay: 0s; animation-duration: 7s; }
-        .login-header .particle:nth-child(2) { left: 60%; top: 30%; animation-delay: 1s; animation-duration: 9s; }
-        .login-header .particle:nth-child(3) { left: 80%; top: 60%; animation-delay: 2s; animation-duration: 6s; }
-        .login-header .particle:nth-child(4) { left: 30%; top: 70%; animation-delay: 1.5s; animation-duration: 8s; }
-        .login-header .particle:nth-child(5) { left: 70%; top: 40%; animation-delay: 0.5s; animation-duration: 7.5s; }
+        .login-header .particle:nth-child(1) { width:8px;height:8px; left: 18%; top: 22%; animation-delay: 0s; animation-duration: 6s; }
+        .login-header .particle:nth-child(2) { width:5px;height:5px; left: 62%; top: 28%; animation-delay: 0.8s; animation-duration: 8s; }
+        .login-header .particle:nth-child(3) { width:10px;height:10px; left: 78%; top: 58%; animation-delay: 1.6s; animation-duration: 5.5s; }
+        .login-header .particle:nth-child(4) { width:6px;height:6px; left: 28%; top: 72%; animation-delay: 2.4s; animation-duration: 7s; }
+        .login-header .particle:nth-child(5) { width:4px;height:4px; left: 68%; top: 42%; animation-delay: 1.2s; animation-duration: 6.5s; }
         
         @keyframes float-particle {
             0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0.6; }
@@ -798,7 +807,7 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
             <div class="login-body">
                 <?php if ($error): ?>
                     <div class="alert alert-error">
-                        <span>⚠️</span>
+                        <span><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span>
                         <span><?php echo htmlspecialchars($error); ?></span>
                     </div>
                 <?php endif; ?>
@@ -847,7 +856,7 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
                     
                     <?php if (isset($intentos_usuario) && $intentos_usuario > 0): ?>
                         <div class="alert alert-info">
-                            <span>ℹ️</span>
+                            <span><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
                             <span>Intentos fallidos: <?php echo $intentos_usuario; ?> de 3</span>
                         </div>
                     <?php endif; ?>
@@ -885,7 +894,7 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
                     <p class="subtitle">Paso 3 de 3: Establezca su nueva contraseña</p>
                     
                     <div class="alert alert-success">
-                        <span>✓</span>
+                        <span><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></span>
                         <span>Identidad verificada correctamente</span>
                     </div>
                     
@@ -928,7 +937,7 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
                     <p class="subtitle">Su contraseña ha sido actualizada exitosamente</p>
                     
                     <div class="alert alert-success">
-                        <span>✓</span>
+                        <span><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></span>
                         <span>Ahora puede iniciar sesión con su nueva contraseña</span>
                     </div>
                     

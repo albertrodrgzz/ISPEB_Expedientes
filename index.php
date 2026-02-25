@@ -167,25 +167,25 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         }
         
         :root {
-            --color-primary: #00a8cc;
-            --color-primary-dark: #0088aa;
-            --color-secondary: #005f73;
-            --color-success: #06d6a0;
-            --color-warning: #ffd166;
-            --color-danger: #ef476f;
-            --color-text: #2d3748;
-            --color-text-light: #718096;
-            --color-bg: #f7fafc;
+            --color-primary: #0F4C81;
+            --color-primary-dark: #0a3560;
+            --color-secondary: #0288D1;
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-text: #1e293b;
+            --color-text-light: #64748b;
+            --color-bg: #f1f5f9;
             --color-white: #ffffff;
             --color-border: #e2e8f0;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.14);
+            --shadow-lg: 0 10px 30px rgba(15,76,129,0.22);
         }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #f5f7fa;
+            background: #1a2f48;
             min-height: 100vh;
             margin: 0;
             padding: 0;
@@ -205,7 +205,16 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            opacity: 0.08;
+            opacity: 0.35;
+            z-index: 0;
+        }
+        
+        /* Overlay semitransparente - permite ver la imagen */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(160deg, rgba(15,76,129,0.72) 0%, rgba(2,136,209,0.50) 100%);
             z-index: 0;
         }
         
@@ -245,35 +254,38 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         
         /* Card horizontal minimalista */
         .login-container {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08),
-                        0 0 0 1px rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.55),
+                        0 0 0 1px rgba(255,255,255,0.12),
+                        inset 0 1px 0 rgba(255,255,255,0.6);
             overflow: hidden;
             max-width: 900px;
             width: 100%;
             display: grid;
             grid-template-columns: 380px 1fr;
-            animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: fadeInScale 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+            border: 1px solid rgba(255,255,255,0.18);
         }
         
         @keyframes fadeInScale {
             from {
                 opacity: 0;
-                transform: scale(0.95);
+                transform: scale(0.88) translateY(24px);
+                filter: blur(6px);
             }
             to {
                 opacity: 1;
-                transform: scale(1);
+                transform: scale(1) translateY(0);
+                filter: blur(0);
             }
         }
         
-        /* Panel izquierdo - Branding con diseño creativo */
+        /* Panel izquierdo - usa el gradiente identico al sidebar */
         .login-header {
-            background: linear-gradient(135deg, #00a8cc 0%, #005f73 100%);
+            background: linear-gradient(160deg, #0F4C81 0%, #1565A0 50%, #0288D1 100%);
             color: white;
             padding: 50px 40px;
             display: flex;
@@ -294,23 +306,25 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             right: 0;
             bottom: 0;
             background-image: 
-                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.05) 0%, transparent 40%);
+                radial-gradient(circle at 20% 30%, rgba(100,149,255,0.18) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(59,130,246,0.14) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(147,197,253,0.10) 0%, transparent 40%);
             z-index: 0;
         }
         
-        /* Formas geométricas decorativas */
+        /* Formas geométricas decorativas - doble anillo */
         .login-header::after {
             content: '';
             position: absolute;
-            width: 300px;
-            height: 300px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            width: 340px;
+            height: 340px;
+            border: 2.5px solid rgba(147,197,253,0.18);
             border-radius: 50%;
-            top: -100px;
-            right: -100px;
-            animation: rotate 20s linear infinite;
+            top: -120px;
+            right: -120px;
+            box-shadow: 0 0 0 60px rgba(147,197,253,0.06),
+                        0 0 0 120px rgba(59,130,246,0.04);
+            animation: rotate 18s linear infinite;
         }
         
         @keyframes rotate {
@@ -318,28 +332,27 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             to { transform: rotate(360deg); }
         }
         
-        /* Partículas flotantes */
+        /* Partículas flotantes - mas grandes y brillantes */
         .login-header .particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.6);
+            background: rgba(147,197,253,0.85);
             border-radius: 50%;
-            animation: float-particle 8s ease-in-out infinite;
+            animation: float-particle 7s ease-in-out infinite;
             z-index: 0;
+            box-shadow: 0 0 8px rgba(147,197,253,0.6);
         }
         
-        .login-header .particle:nth-child(1) { left: 20%; top: 20%; animation-delay: 0s; animation-duration: 7s; }
-        .login-header .particle:nth-child(2) { left: 60%; top: 30%; animation-delay: 1s; animation-duration: 9s; }
-        .login-header .particle:nth-child(3) { left: 80%; top: 60%; animation-delay: 2s; animation-duration: 6s; }
-        .login-header .particle:nth-child(4) { left: 30%; top: 70%; animation-delay: 1.5s; animation-duration: 8s; }
-        .login-header .particle:nth-child(5) { left: 70%; top: 40%; animation-delay: 0.5s; animation-duration: 7.5s; }
+        .login-header .particle:nth-child(1) { width:8px;height:8px; left: 18%; top: 22%; animation-delay: 0s; animation-duration: 6s; }
+        .login-header .particle:nth-child(2) { width:5px;height:5px; left: 62%; top: 28%; animation-delay: 0.8s; animation-duration: 8s; }
+        .login-header .particle:nth-child(3) { width:10px;height:10px; left: 78%; top: 58%; animation-delay: 1.6s; animation-duration: 5.5s; }
+        .login-header .particle:nth-child(4) { width:6px;height:6px; left: 28%; top: 72%; animation-delay: 2.4s; animation-duration: 7s; }
+        .login-header .particle:nth-child(5) { width:4px;height:4px; left: 68%; top: 42%; animation-delay: 1.2s; animation-duration: 6.5s; }
         
         @keyframes float-particle {
-            0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0.6; }
-            25% { transform: translateY(-20px) translateX(10px); opacity: 1; }
-            50% { transform: translateY(-40px) translateX(-10px); opacity: 0.8; }
-            75% { transform: translateY(-20px) translateX(5px); opacity: 1; }
+            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.7; }
+            25% { transform: translateY(-28px) translateX(14px) scale(1.3); opacity: 1; }
+            50% { transform: translateY(-52px) translateX(-14px) scale(0.9); opacity: 0.85; }
+            75% { transform: translateY(-28px) translateX(7px) scale(1.1); opacity: 1; }
         }
         
         /* Logo mejorado - Más grande y prominente */
@@ -384,8 +397,9 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         }
         
         @keyframes float-logo {
-            0%, 100% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-10px) scale(1.02); }
+            0%, 100% { transform: translateY(0px) scale(1) rotate(0deg); }
+            33% { transform: translateY(-16px) scale(1.04) rotate(0.8deg); }
+            66% { transform: translateY(-8px) scale(1.02) rotate(-0.5deg); }
         }
         
         /* Ocultar textos del header */
@@ -477,8 +491,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             outline: none;
             border-color: var(--color-primary);
             background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(0, 168, 204, 0.1);
-            transform: translateY(-1px);
+            box-shadow: 0 0 0 4px rgba(15,76,129,0.12);
+            transform: translateY(-2px);
         }
         
         .form-group input::placeholder {
@@ -500,11 +514,17 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            background: linear-gradient(160deg, #0F4C81 0%, #1565A0 50%, #0288D1 100%);
             color: white;
-            box-shadow: 0 4px 14px rgba(0, 168, 204, 0.3);
+            box-shadow: 0 6px 20px rgba(15,76,129,0.4);
             position: relative;
             overflow: hidden;
+            animation: pulseShadow 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulseShadow {
+            0%, 100% { box-shadow: 0 6px 20px rgba(15,76,129,0.35); }
+            50% { box-shadow: 0 8px 28px rgba(2,136,209,0.55); }
         }
         
         .btn-primary::before {
@@ -514,8 +534,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            transition: left 0.4s;
         }
         
         .btn-primary:hover::before {
@@ -523,8 +543,9 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 168, 204, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(13,46,127,0.55);
+            animation: none;
         }
         
         .btn-primary:active {
@@ -637,14 +658,14 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             
             <?php if ($error): ?>
                 <div class="alert alert-error">
-                    <span>⚠️</span>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                     <span><?php echo htmlspecialchars($error); ?></span>
                 </div>
             <?php endif; ?>
             
             <?php if ($mensaje): ?>
                 <div class="alert alert-info">
-                    <span>ℹ️</span>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span><?php echo htmlspecialchars($mensaje); ?></span>
                 </div>
             <?php endif; ?>
@@ -740,7 +761,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
                         </div>
                     `,
                     confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#00a8cc',
+                    confirmButtonColor: '#0F4C81',
                     buttonsStyling: true,
                     allowOutsideClick: true,
                     allowEscapeKey: true

@@ -21,14 +21,14 @@ $success   = '';
 
 // ─── Helpers de validación ───────────────────────────────────────────────────
 function validarCedulaVenezolana(string $cedula): bool {
-    // Acepta: V-1234567, E-12345678, V1234567, sin prefijo numérico puro
-    return (bool) preg_match('/^[VEve]-?\d{6,8}$/', trim($cedula));
+    // Acepta: solo dígitos, 6-9 números (sin prefijo V/E)
+    return (bool) preg_match('/^\d{6,9}$/', trim($cedula));
 }
 
 function validarTelefonoVenezolano(string $tel): bool {
-    // Acepta: 0412-1234567, 04121234567, +584121234567
-    $tel = preg_replace('/[\s\-()]/', '', $tel);
-    return (bool) preg_match('/^(\+58|0058|0)?4(1[246]|2[246])\d{7}$/', $tel);
+    // Acepta: solo dígitos 10-11 números (04121234567)
+    $tel = preg_replace('/[^0-9]/', '', $tel);
+    return (bool) preg_match('/^(\+58|0058)?4(1[246]|2[246])\d{7}$/', $tel);
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -39,12 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $datos = [
-        'cedula'           => strtoupper(trim(limpiar($_POST['cedula']))),
+        'cedula'           => preg_replace('/[^0-9]/', '', strtoupper(trim(limpiar($_POST['cedula'])))),
         'nombres'          => trim(limpiar($_POST['nombres'])),
         'apellidos'        => trim(limpiar($_POST['apellidos'])),
         'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?? null,
         'genero'           => $_POST['genero'] ?? null,
-        'telefono'         => trim(limpiar($_POST['telefono'] ?? '')),
+        'telefono'         => preg_replace('/[^0-9]/', '', trim(limpiar($_POST['telefono'] ?? ''))),
         'email'            => strtolower(trim(limpiar($_POST['email'] ?? ''))),
         'direccion'        => trim(limpiar($_POST['direccion'] ?? '')),
         'cargo_id'         => $_POST['cargo_id']         ?? '',
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($datos['cedula'])) {
         $errores['cedula'] = 'La cédula es obligatoria.';
     } elseif (!validarCedulaVenezolana($datos['cedula'])) {
-        $errores['cedula'] = 'Formato inválido. Ejemplo válido: V-12345678 o E-1234567.';
+        $errores['cedula'] = 'Ingrese solo los números de la cédula, sin prefijo V ni guiones (ej: 12345678).';
     }
 
     if (empty($datos['nombres'])) {
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!empty($datos['telefono']) && !validarTelefonoVenezolano($datos['telefono'])) {
-        $errores['telefono'] = 'Formato de teléfono inválido. Ejemplo: 0412-1234567.';
+        $errores['telefono'] = 'Ingrese el teléfono sin guiones ni letras (ej: 04121234567).';
     }
 
     if (!empty($datos['email']) && !filter_var($datos['email'], FILTER_VALIDATE_EMAIL)) {
@@ -261,9 +261,12 @@ function fieldClass(string $campo, array $errores): string {
                                 <label for="cedula">Cédula <span class="required">*</span></label>
                                 <input type="text" id="cedula" name="cedula"
                                     class="<?php echo fieldClass('cedula',$errores); ?>"
-                                    placeholder="V-12345678"
+                                    placeholder="Ej: 12345678"
                                     value="<?php echo htmlspecialchars($_POST['cedula'] ?? ''); ?>"
-                                    autocomplete="off" required>
+                                    autocomplete="off"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    required>
                                 <div class="field-feedback <?php echo isset($errores['cedula']) ? 'error' : ''; ?>" id="fb-cedula">
                                     <?php if (isset($errores['cedula'])) echo '❌ ' . $errores['cedula']; ?>
                                 </div>
@@ -324,7 +327,9 @@ function fieldClass(string $campo, array $errores): string {
                                 <label for="telefono">Teléfono</label>
                                 <input type="tel" id="telefono" name="telefono"
                                     class="<?php echo fieldClass('telefono',$errores); ?>"
-                                    placeholder="0412-1234567"
+                                    placeholder="04121234567"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
                                     value="<?php echo htmlspecialchars($_POST['telefono'] ?? ''); ?>">
                                 <div class="field-feedback <?php echo isset($errores['telefono']) ? 'error' : ''; ?>" id="fb-telefono">
                                     <?php if (isset($errores['telefono'])) echo '❌ ' . $errores['telefono']; ?>
@@ -467,18 +472,26 @@ function fieldClass(string $campo, array $errores): string {
 
         // ── Validación de formato de cédula (cliente) ─────────────────────────
         document.getElementById('cedula').addEventListener('blur', function () {
-            const val = this.value.trim().toUpperCase();
+            const raw = this.value.trim();
+            // Quitar prefijo V/E y guiones
+            const val = raw.replace(/^[VvEeJj]-?/, '').replace(/[^0-9]/g, '');
             this.value = val;
             if (!val) { clearFeedback('cedula'); estado['cedula'] = false; return; }
 
-            const ok = /^[VE]-?\d{6,8}$/.test(val);
+            const ok = /^\d{6,9}$/.test(val);
             if (!ok) {
-                setFeedback('cedula', 'error', '❌ Formato inválido. Ejemplo: V-12345678');
+                setFeedback('cedula', 'error', '❌ Ingrese solo los números (6-9 dígitos)');
                 estado['cedula'] = false;
                 return;
             }
             // Verificar duplicado en servidor
             verificarEnServidor('cedula', val);
+        });
+
+        // ── Input en tiempo real: solo dígitos para cédula ───────────────────
+        document.getElementById('cedula').addEventListener('input', function () {
+            // Quitar prefijo V/E y guiones si el usuario los escribe
+            this.value = this.value.replace(/^[VvEeJj]-?/, '').replace(/[^0-9]/g, '');
         });
 
         // ── Validación de teléfono (cliente + servidor) ───────────────────────
@@ -548,11 +561,22 @@ function fieldClass(string $campo, array $errores): string {
             this.value = v;
         });
 
-        // ── Formateo automático de teléfono ──────────────────────────────────
+        // ── Teléfono: solo dígitos ──────────────────────────────────────────
         document.getElementById('telefono').addEventListener('input', function () {
-            let v = this.value.replace(/[^\d]/g, '');
-            if (v.length > 4) v = v.slice(0, 4) + '-' + v.slice(4, 11);
-            this.value = v;
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        document.getElementById('telefono').addEventListener('blur', function () {
+            const val = this.value.replace(/[^0-9]/g, '');
+            this.value = val;
+            if (!val) { clearFeedback('telefono'); estado['telefono'] = true; return; }
+            const ok = /^(0|0058|\+58)?4(1[246]|2[246])\d{7}$/.test(val) || val.length === 11;
+            if (!ok) {
+                setFeedback('telefono', 'error', '❌ Ej: 04121234567 (11 dígitos)');
+                estado['telefono'] = false;
+                return;
+            }
+            verificarEnServidor('telefono', val);
         });
 
         // ── Validación del nombre / apellido ──────────────────────────────────
@@ -575,10 +599,9 @@ function fieldClass(string $campo, array $errores): string {
             camposDuplicados.forEach(c => {
                 if (estado[c] === false) hayError = true;
                 if (estado[c] === null) {
-                    // Campo no verificado: verificar formato mínimo
                     const val = document.getElementById(c)?.value.trim();
-                    if (c === 'cedula' && val && !/^[VE]-?\d{6,8}$/i.test(val)) {
-                        setFeedback(c, 'error', '❌ Formato de cédula inválido.');
+                    if (c === 'cedula' && val && !/^\d{6,9}$/.test(val)) {
+                        setFeedback(c, 'error', '❌ Ingrese solo los números de la cédula.');
                         hayError = true;
                     }
                 }

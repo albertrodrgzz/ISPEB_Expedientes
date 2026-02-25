@@ -14,10 +14,16 @@ require_once __DIR__ . '/../../config/seguridad.php';
 verificarSesion();
 
 // Obtener ID del funcionario
+$nivel_acceso = $_SESSION['nivel_acceso'] ?? 3;
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
+// Nivel 3: siempre usa su propio ID (seguridad + comodidad)
+if ($nivel_acceso >= 3) {
+    $id = (int)($_SESSION['funcionario_id'] ?? 0);
+}
+
 if ($id <= 0) {
-    die('ID de funcionario no válido');
+    die('ID de funcionario no válido. Por favor vuelve a iniciar sesión.');
 }
 
 $db = getDB();
