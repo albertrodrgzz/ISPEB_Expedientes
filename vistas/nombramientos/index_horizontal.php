@@ -378,8 +378,8 @@ icas -->
                             .file-input-button:hover { border-color: #0ea5e9; background: #f0f9ff; color: #0ea5e9; }
                             .file-input-button.has-file { background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); border-color: #06b6d4; color: #0e7490; }
                             .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
-                            .info-box { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-top: 12px; }
-                            .info-box-content { display: flex; align-items: start; gap: 10px; font-size: 12px; color: #92400e; line-height: 1.6; }
+                            .info-box { background: linear-gradient(135deg, #1e3a5f 0%, #1565a0 100%); border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-top: 12px; }
+                            .info-box-content { display: flex; align-items: start; gap: 10px; font-size: 12px; color: rgba(255,255,255,0.9); line-height: 1.6; }
                             .cargo-actual-box { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: none; }
                             .cargo-actual-content { display: flex; align-items: center; gap: 8px; color: #1e40af; font-size: 13px; font-weight: 500; }
                         </style>

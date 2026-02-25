@@ -18,8 +18,8 @@ require_once __DIR__ . '/../../config/icons.php';
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="logo">
-            <img src="<?= APP_URL ?>/publico/imagenes/logo-telematica-letras-blancas.png" 
-                 alt="<?= APP_NAME ?>" 
+            <img src="<?= APP_URL ?>/publico/imagenes/logotipo(B).png"
+                 alt="<?= APP_NAME ?>"
                  class="logo-image"
                  onerror="this.src='<?= APP_URL ?>/publico/imagenes/logo-telematica-letras-negras.png'">
         </div>

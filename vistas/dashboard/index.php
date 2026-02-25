@@ -371,11 +371,11 @@ if ($nivel_acceso >= 3) {
                 </div>
 
                 <?php if ($sol_pendientes > 0): ?>
-                <div class="kpi-card" style="border-left: 4px solid #f59e0b; background: #fffbeb;">
-                    <div class="kpi-icon" style="color:#f59e0b"><?php echo Icon::get('inbox'); ?></div>
+                <div class="kpi-card" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); border-left: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(217,119,6,0.35);">
+                    <div class="kpi-icon" style="color: rgba(255,255,255,0.9)"><?php echo Icon::get('inbox'); ?></div>
                     <div class="kpi-content">
-                        <div class="kpi-label">Solicitudes Pendientes</div>
-                        <div class="kpi-value" style="color:#b45309"><?php echo $sol_pendientes; ?></div>
+                        <div class="kpi-label" style="color: rgba(255,255,255,0.85)">Solicitudes Pendientes</div>
+                        <div class="kpi-value" style="color: #ffffff"><?php echo $sol_pendientes; ?></div>
                     </div>
                 </div>
                 <?php endif; ?>

@@ -392,8 +392,8 @@ $vacaciones = $stmt->fetchAll();
                             .file-input-button:hover { border-color: #06d6a0; background: #f0fdfa; color: #06d6a0; }
                             .file-input-button.has-file { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-color: #06d6a0; color: #059669; }
                             .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
-                            .info-box { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 3px solid #f59e0b; padding: 11px 14px; border-radius: 8px; margin-top: 10px; }
-                            .info-box-content { display: flex; align-items: start; gap: 9px; font-size: 11.5px; color: #92400e; line-height: 1.5; }
+                            .info-box { background: linear-gradient(135deg, #1e3a5f 0%, #1565a0 100%); border-left: 3px solid #f59e0b; padding: 11px 14px; border-radius: 8px; margin-top: 10px; }
+                            .info-box-content { display: flex; align-items: start; gap: 9px; font-size: 11.5px; color: rgba(255,255,255,0.88); line-height: 1.5; }
                             .lottt-card { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #06d6a0; border-radius: 12px; padding: 18px; margin-bottom: 18px; display: none; }
                             .lottt-title { font-size: 13px; color: #047857; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
                             .lottt-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }

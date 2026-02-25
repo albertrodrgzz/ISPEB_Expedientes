@@ -157,8 +157,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - <?php echo APP_NAME; ?></title>
-    
-    <!-- Google Fonts -->
+    <link rel="icon" type="image/png" href="publico/imagenes/isotipo.png">
+    <link rel="shortcut icon" href="publico/imagenes/isotipo.png">
     <style>
         * {
             margin: 0;
@@ -185,60 +185,62 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #1a2f48;
+            background: #1e3a52;
             min-height: 100vh;
             margin: 0;
             padding: 0;
             position: relative;
             overflow: hidden;
         }
-        
-        /* Imagen de fondo institucional */
+
+        /* Imagen de fondo - más visible */
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background-image: url('publico/imagenes/edificio-ispeb.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            opacity: 0.35;
+            opacity: 0.45;
             z-index: 0;
         }
-        
-        /* Overlay semitransparente - permite ver la imagen */
+
+        /* Overlay con degradado + patrón de puntos */
         body::after {
             content: '';
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(160deg, rgba(15,76,129,0.72) 0%, rgba(2,136,209,0.50) 100%);
+            inset: 0;
+            background:
+                linear-gradient(160deg, rgba(15,76,129,0.60) 0%, rgba(2,136,209,0.38) 100%),
+                radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: auto, 32px 32px;
             z-index: 0;
         }
         
-        /* Cintillo institucional */
+        /* Cintillo institucional — animación de entrada */
         .banner-container {
             width: 100%;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            height: 80px;
+            background: #ffffff;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.12);
             position: relative;
             z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            animation: bannerSlideDown 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
-        
+
+        @keyframes bannerSlideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
         .banner-container img {
+            width: 100%;
             height: 100%;
-            width: auto;
-            object-fit: contain;
-            padding: 10px 30px;
-            max-width: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
         }
         
         /* Wrapper horizontal */
@@ -252,42 +254,61 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             z-index: 1;
         }
         
-        /* Card horizontal minimalista */
+        /* Card del login */
         .login-container {
             background: rgba(255, 255, 255, 0.97);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border-radius: 24px;
-            box-shadow: 0 32px 80px rgba(0,0,0,0.55),
-                        0 0 0 1px rgba(255,255,255,0.12),
-                        inset 0 1px 0 rgba(255,255,255,0.6);
+            /* Sombra diseñada para fondo oscuro: glow + profundidad */
+            box-shadow:
+                0 0   0   1px rgba(255,255,255,0.15),
+                0 4px 12px rgba(0,0,0,0.4),
+                0 16px 40px rgba(0,0,0,0.5),
+                0 40px 80px rgba(0,0,0,0.55),
+                0 24px 80px rgba(2,136,209,0.35);
             overflow: hidden;
             max-width: 900px;
             width: 100%;
             display: grid;
             grid-template-columns: 380px 1fr;
-            animation: fadeInScale 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-            border: 1px solid rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.15);
+            /* Entrada suave desde abajo */
+            animation: loginCardIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+            /* Hover transition */
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                        box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
         }
-        
-        @keyframes fadeInScale {
-            from {
+
+        @keyframes loginCardIn {
+            0% {
                 opacity: 0;
-                transform: scale(0.88) translateY(24px);
+                transform: translateY(40px);
                 filter: blur(6px);
             }
-            to {
+            100% {
                 opacity: 1;
-                transform: scale(1) translateY(0);
+                transform: translateY(0);
                 filter: blur(0);
             }
         }
+
+        /* Hover: la card sube suavemente */
+        .login-container:hover {
+            transform: translateY(-10px);
+            box-shadow:
+                0 0   0   1px rgba(255,255,255,0.20),
+                0 8px 20px rgba(0,0,0,0.45),
+                0 24px 56px rgba(0,0,0,0.55),
+                0 56px 96px rgba(0,0,0,0.55),
+                0 32px 96px rgba(2,136,209,0.50);
+        }
         
-        /* Panel izquierdo - usa el gradiente identico al sidebar */
+        /* ===== PANEL IZQUIERDO - Premium Definitivo ===== */
         .login-header {
             background: linear-gradient(160deg, #0F4C81 0%, #1565A0 50%, #0288D1 100%);
             color: white;
-            padding: 50px 40px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -295,118 +316,171 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             text-align: center;
             position: relative;
             overflow: hidden;
+            padding: 44px 32px;
         }
-        
-        /* Patrón geométrico de fondo */
+
+        /* Cuadrícula de puntos finos */
         .login-header::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 30%, rgba(100,149,255,0.18) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(59,130,246,0.14) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(147,197,253,0.10) 0%, transparent 40%);
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px);
+            background-size: 24px 24px;
             z-index: 0;
         }
-        
-        /* Formas geométricas decorativas - doble anillo */
+
+        /* Orbe de brillo superior derecho - más prominente */
         .login-header::after {
             content: '';
             position: absolute;
-            width: 340px;
-            height: 340px;
-            border: 2.5px solid rgba(147,197,253,0.18);
-            border-radius: 50%;
-            top: -120px;
-            right: -120px;
-            box-shadow: 0 0 0 60px rgba(147,197,253,0.06),
-                        0 0 0 120px rgba(59,130,246,0.04);
-            animation: rotate 18s linear infinite;
-        }
-        
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Partículas flotantes - mas grandes y brillantes */
-        .login-header .particle {
-            position: absolute;
-            background: rgba(147,197,253,0.85);
-            border-radius: 50%;
-            animation: float-particle 7s ease-in-out infinite;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(14,123,196,0.10) 50%, transparent 70%);
+            top: -100px; right: -80px;
             z-index: 0;
-            box-shadow: 0 0 8px rgba(147,197,253,0.6);
+            animation: orb-pulse 7s ease-in-out infinite;
         }
-        
-        .login-header .particle:nth-child(1) { width:8px;height:8px; left: 18%; top: 22%; animation-delay: 0s; animation-duration: 6s; }
-        .login-header .particle:nth-child(2) { width:5px;height:5px; left: 62%; top: 28%; animation-delay: 0.8s; animation-duration: 8s; }
-        .login-header .particle:nth-child(3) { width:10px;height:10px; left: 78%; top: 58%; animation-delay: 1.6s; animation-duration: 5.5s; }
-        .login-header .particle:nth-child(4) { width:6px;height:6px; left: 28%; top: 72%; animation-delay: 2.4s; animation-duration: 7s; }
-        .login-header .particle:nth-child(5) { width:4px;height:4px; left: 68%; top: 42%; animation-delay: 1.2s; animation-duration: 6.5s; }
-        
-        @keyframes float-particle {
-            0%, 100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.7; }
-            25% { transform: translateY(-28px) translateX(14px) scale(1.3); opacity: 1; }
-            50% { transform: translateY(-52px) translateX(-14px) scale(0.9); opacity: 0.85; }
-            75% { transform: translateY(-28px) translateX(7px) scale(1.1); opacity: 1; }
+        @keyframes orb-pulse {
+            0%,100% { transform: scale(1) rotate(0deg);     opacity: 0.7; }
+            50%      { transform: scale(1.25) rotate(10deg); opacity: 1; }
         }
-        
-        /* Logo mejorado - Más grande y prominente */
-        .login-header .logo {
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 0;
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            position: relative;
-            z-index: 1;
-            animation: float-logo 3s ease-in-out infinite;
-            overflow: hidden;
+
+        /* Líneas diagonales decorativas */
+        .login-header .deco-lines {
+            position: absolute; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(45deg,  rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(-45deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
         }
-        
-        .login-header .logo img {
-            width: 85%;
-            height: 85%;
-            object-fit: contain;
+
+        /* Anillo grande pulsante centrado abajo */
+        .login-header .deco-ring {
+            position: absolute;
+            width: 360px; height: 360px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.08);
+            bottom: -180px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 0;
+            animation: ring-pulse 8s ease-in-out infinite;
         }
-        
-        /* Brillo sutil en el logo */
-        .login-header .logo::before {
+        .login-header .deco-ring::after {
             content: '';
             position: absolute;
-            top: 10%;
-            left: 10%;
-            right: 10%;
-            height: 30%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
-            border-radius: 12px;
-            z-index: -1;
+            inset: 28px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        
-        @keyframes float-logo {
-            0%, 100% { transform: translateY(0px) scale(1) rotate(0deg); }
-            33% { transform: translateY(-16px) scale(1.04) rotate(0.8deg); }
-            66% { transform: translateY(-8px) scale(1.02) rotate(-0.5deg); }
+        @keyframes ring-pulse {
+            0%,100% { transform: translateX(-50%) scale(1);    opacity:0.6; }
+            50%      { transform: translateX(-50%) scale(1.10); opacity:1; }
         }
-        
-        /* Ocultar textos del header */
+
+        /* Anillos decorativos - abajo izquierda */
+        .login-header .particle:nth-child(1) {
+            position: absolute;
+            width: 220px; height: 220px;
+            border: 1.5px solid rgba(100,180,255,0.12);
+            border-radius: 50%;
+            bottom: -80px; left: -80px;
+            animation: spin-slow 24s linear infinite;
+        }
+        .login-header .particle:nth-child(2) {
+            position: absolute;
+            width: 130px; height: 130px;
+            border: 1.5px solid rgba(100,180,255,0.08);
+            border-radius: 50%;
+            bottom: -30px; left: -30px;
+            animation: spin-slow 16s linear infinite reverse;
+        }
+        /* Puntos destellantes */
+        .login-header .particle:nth-child(3),
+        .login-header .particle:nth-child(4),
+        .login-header .particle:nth-child(5) {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(147,197,253,0.9);
+            box-shadow: 0 0 8px rgba(147,197,253,0.7);
+            animation: twinkle 5s ease-in-out infinite;
+        }
+        .login-header .particle:nth-child(3) { width:5px;height:5px; top:22%;left:18%; animation-delay:0s; }
+        .login-header .particle:nth-child(4) { width:4px;height:4px; top:62%;left:80%; animation-delay:1.8s; }
+        .login-header .particle:nth-child(5) { width:3px;height:3px; top:38%;left:72%; animation-delay:3.2s; }
+
+        @keyframes spin-slow  { to { transform: rotate(360deg); } }
+        @keyframes twinkle    { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.6)} }
+
+        /* Logo más grande con shimmer */
+        .login-header .logo {
+            position: relative; z-index: 2;
+            margin-bottom: 16px;
+            animation: breathe 5s ease-in-out infinite;
+            overflow: hidden;
+        }
+        .login-header .logo img {
+            width: 264px; height: auto;
+            object-fit: contain;
+            filter: brightness(0) invert(1) drop-shadow(0 4px 16px rgba(0,0,0,0.30));
+            display: block;
+        }
+        .login-header .logo::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+            animation: shimmer 5s ease-in-out infinite 2s;
+        }
+        @keyframes breathe {
+            0%,100% { transform: translateY(0)    scale(1); }
+            50%      { transform: translateY(-9px) scale(1.022); }
+        }
+        @keyframes shimmer {
+            0%   { transform: translateX(-150%); }
+            100% { transform: translateX(250%); }
+        }
+
+        /* Línea divisora con glow */
+        .logo-divider {
+            width: 56px; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent);
+            border-radius: 2px;
+            margin-bottom: 14px;
+            position: relative; z-index: 2;
+            animation: divider-glow 3.5s ease-in-out infinite;
+        }
+        @keyframes divider-glow {
+            0%,100% { width:40px; opacity:0.5; }
+            50%      { width:76px; opacity:1; }
+        }
+
+        /* Tagline más visible */
+        .panel-tagline {
+            position: relative; z-index: 2;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 2.2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.72);
+            line-height: 1.8;
+            max-width: 240px;
+        }
+
+        /* Versión al pie */
+        .panel-version {
+            position: absolute;
+            bottom: 16px; left: 0; right: 0;
+            text-align: center;
+            font-size: 10.5px;
+            color: rgba(255,255,255,0.28);
+            z-index: 2;
+            letter-spacing: 0.8px;
+        }
+
+        /* Ocultar todo lo que sobra */
         .login-header h1,
-        .login-header p {
-            display: none;
-        }
+        .login-header p:not(.panel-tagline),
+        .panel-features, .panel-subtitle,
+        .header-divider, .step-indicator { display: none !important; }
         
         /* Panel derecho - Formulario */
         .login-body {
@@ -633,23 +707,41 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
     </style>
 </head>
 <body>
-    <!-- Banner de ancho completo -->
     <div class="banner-container">
-        <img src="publico/imagenes/cintillo.png" alt="Gobierno Bolivariano - ISPEB - Dirección de Telemática">
+        <img src="publico/imagenes/cintillo.png" alt="ISPEB - Dirección de Telemática">
     </div>
     
     <!-- Contenedor centrado para el login -->
     <div class="login-wrapper">
         <div class="login-container">
         <div class="login-header">
+            <!-- Líneas diagonales decorativas -->
+            <div class="deco-lines"></div>
+            <!-- Anillo central pulsante -->
+            <div class="deco-ring"></div>
+            <!-- Partículas / Anillos giratorios -->
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <!-- Twinkle stars -->
             <div class="particle"></div>
             <div class="particle"></div>
             <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="logo"><img src="publico/imagenes/logo-telematica-letras-blancas.png" alt="ISPEB Telemática"></div>
-            <h1>ISPEB</h1>
-            <p>Dirección de Telemática</p>
+            <!-- Extra twinkle -->
+            <div class="particle-extra"></div>
+
+            <!-- Logo institucional -->
+            <div class="logo">
+                <img src="publico/imagenes/logotipo(B).png" alt="ISPEB Telemática">
+            </div>
+
+            <!-- Línea decorativa -->
+            <div class="logo-divider"></div>
+
+            <!-- Tagline definitivo -->
+            <p class="panel-tagline">Sistema de Gestión de<br>Expedientes Digitales</p>
+
+            <!-- Versión -->
+            <div class="panel-version">SIGED v3.1 &middot; ISPEB © 2026</div>
         </div>
         
         <div class="login-body">
