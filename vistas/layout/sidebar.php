@@ -7,7 +7,39 @@
 require_once __DIR__ . '/../../config/icons.php';
 ?>
 
-<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/sidebar-fix.css">
+<?php $css_v = filemtime(__DIR__ . '/../../publico/css/estilos.css'); ?>
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/sidebar-fix.css?v=<?= $css_v ?>">
+
+<style>
+/* ===== NAV BADGE — Solicitudes Pendientes ===== */
+.nav-badge {
+    display: none;                           /* oculto por defecto */
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+    margin-left: auto;
+    box-shadow: 0 2px 8px rgba(220,38,38,.45);
+    animation: badge-pulse 2s ease-in-out infinite;
+    letter-spacing: 0;
+}
+.nav-badge.visible {
+    display: inline-block;
+}
+@keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(220,38,38,.45); transform: scale(1); }
+    50%       { box-shadow: 0 2px 14px rgba(220,38,38,.75); transform: scale(1.12); }
+}
+/* Asegurar que el nav-item tenga flex para alinear el badge al final */
+.nav-item { display: flex; align-items: center; }
+</style>
+
 
 <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
     <?= Icon::get('menu') ?>
@@ -70,12 +102,8 @@ require_once __DIR__ . '/../../config/icons.php';
                                     'label' => 'Constancia de Trabajo',
                                     'url'   => '/vistas/reportes/constancia_trabajo.php',
                                     'dir'   => 'reportes'
-                                ],
-                                [
-                                    'label' => 'Recibos de Pago',
-                                    'url'   => '/vistas/reportes/index.php',
-                                    'dir'   => 'reportes'
                                 ]
+                                // 'Recibos de Pago' eliminado — no disponible para Nivel 3
                             ]
                         ],
                         [
@@ -149,7 +177,8 @@ require_once __DIR__ . '/../../config/icons.php';
                             'label' => 'Bandeja de Solicitudes',
                             'url'   => '/vistas/solicitudes/gestionar_solicitudes.php',
                             'icon'  => 'inbox',
-                            'dir'   => 'solicitudes'
+                            'dir'   => 'solicitudes',
+                            'badge' => 'solicitudes'   // <- activa el badge dinámico
                         ]
                     ]
                 ],
@@ -235,6 +264,9 @@ require_once __DIR__ . '/../../config/icons.php';
                                 <?= Icon::get($item['icon']) ?>
                             </span>
                             <span class="nav-text"><?= $item['label'] ?></span>
+                            <?php if (!empty($item['badge'])): ?>
+                                <span class="nav-badge" id="badge-<?= $item['badge'] ?>"></span>
+                            <?php endif; ?>
                         </a>
                     <?php endif; ?>
                     
@@ -346,4 +378,37 @@ function toggleSubmenu(element) {
     
     console.log('[SIGED] Sidebar inicializado correctamente.');
 })();
+
+/**
+ * ===== BADGE DINÁMICO: Solicitudes Pendientes =====
+ * Consulta la API cada 60 segundos y actualiza el badge de forma silenciosa.
+ */
+(function initBadgeSolicitudes() {
+    const badge = document.getElementById('badge-solicitudes');
+    if (!badge) return;   // no visible para nivel 3
+
+    const API_URL = (typeof APP_URL !== 'undefined' ? APP_URL : '') + '/api/contar_solicitudes.php';
+
+    function actualizarBadge() {
+        fetch(API_URL, { credentials: 'same-origin' })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data || typeof data.count === 'undefined') return;
+                const n = data.count;
+                if (n > 0) {
+                    badge.textContent = n > 99 ? '99+' : n;
+                    badge.classList.add('visible');
+                } else {
+                    badge.textContent = '';
+                    badge.classList.remove('visible');
+                }
+            })
+            .catch(() => {/* fallo silencioso, no romper la UI */});
+    }
+
+    // Ejecutar al cargar y luego cada 60 s
+    actualizarBadge();
+    setInterval(actualizarBadge, 60_000);
+})();
+
 </script>

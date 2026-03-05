@@ -89,6 +89,8 @@ $usuarios = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración - <?php echo APP_NAME; ?></title>
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="../../publico/css/responsive.css">
+
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js">
     <style>
@@ -459,44 +461,12 @@ $usuarios = $stmt->fetchAll();
                 <button class="admin-tab" onclick="switchTab('activity')">Actividad</button>
             </div>
             
-            <!-- Tab: Resumen -->
+            <!-- Tab: Resumen — solo muestra la actividad reciente (las tarjetas de acción están en Herramientas) -->
             <div id="tab-overview" class="tab-content active">
-                <div class="quick-actions">
-                    <a href="#" onclick="switchTab('users'); return false;" class="quick-action-card">
-                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg></div>
-                        <div class="quick-action-title">Gestionar Usuarios</div>
-                        <div class="quick-action-desc">Crear y administrar cuentas</div>
-                    </a>
-                    <a href="organizacion.php" class="quick-action-card">
-                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
-                        <div class="quick-action-title">Organizaci&oacute;n</div>
-                        <div class="quick-action-desc">Departamentos y cargos</div>
-                    </a>
-                    <a href="respaldo.php" class="quick-action-card">
-                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></div>
-                        <div class="quick-action-title">Respaldo BD</div>
-                        <div class="quick-action-desc">Generar copia de seguridad</div>
-                    </a>
-                    <a href="restaurar.php" class="quick-action-card">
-                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>
-                        <div class="quick-action-title">Restaurar BD</div>
-                        <div class="quick-action-desc">Restaurar desde archivo</div>
-                    </a>
-                    <a href="auditoria.php" class="quick-action-card">
-                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
-                        <div class="quick-action-title">Auditor&iacute;a</div>
-                        <div class="quick-action-desc">Ver log de acciones</div>
-                    </a>
-                    <a href="#" onclick="Swal.fire({icon: 'info', title: 'Pr&oacute;ximamente', text: 'Configuraci&oacute;n avanzada del sistema', confirmButtonColor: '#00a8cc'}); return false;" class="quick-action-card" style="opacity: 0.7;">
-                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>
-                        <div class="quick-action-title">Configuraci&oacute;n</div>
-                        <div class="quick-action-desc">Ajustes del sistema</div>
-                    </a>
-                </div>
-                
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">Actividad Reciente</h2>
+                        <a href="auditoria.php" class="btn btn-primary" style="font-size:13px;">Ver todo el log</a>
                     </div>
                     <div style="padding: 0;">
                         <?php if (count($ultimas_acciones) > 0): ?>
@@ -627,26 +597,17 @@ $usuarios = $stmt->fetchAll();
                         <div class="quick-action-title">Gesti&oacute;n Organizacional</div>
                         <div class="quick-action-desc">Administrar departamentos y cargos</div>
                     </a>
-                    <a href="respaldo.php" class="quick-action-card">
+                    <!-- UNA SOLA tarjeta de Respaldos — sin duplicados -->
+                    <a href="<?= APP_URL ?>/vistas/respaldo/index.php" class="quick-action-card">
                         <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></div>
-                        <div class="quick-action-title">Respaldo de Base de Datos</div>
-                        <div class="quick-action-desc">Generar copia de seguridad completa</div>
-                    </a>
-                    <a href="restaurar.php" class="quick-action-card">
-                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>
-                        <div class="quick-action-title">Restaurar Base de Datos</div>
-                        <div class="quick-action-desc">Restaurar desde archivo SQL</div>
+                        <div class="quick-action-title">Gesti&oacute;n de Respaldos</div>
+                        <div class="quick-action-desc">Exportar e importar base de datos</div>
                     </a>
                     <a href="auditoria.php" class="quick-action-card">
                         <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
                         <div class="quick-action-title">Log de Auditor&iacute;a</div>
                         <div class="quick-action-desc">Consultar historial de acciones</div>
                     </a>
-                    <div class="quick-action-card" style="opacity: 0.6; cursor: not-allowed;">
-                        <div class="quick-action-icon"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>
-                        <div class="quick-action-title">Configuraci&oacute;n Avanzada</div>
-                        <div class="quick-action-desc">Pr&oacute;ximamente</div>
-                    </div>
                 </div>
             </div>
             

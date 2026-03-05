@@ -34,7 +34,7 @@ if ($tipo === 'constancia') {
             c.nombre_cargo,
             d.nombre AS departamento
         FROM funcionarios f
-        INNER JOIN cargos c ON f.cargo_id = c.id
+        INNER JOIN cargos c        ON f.cargo_id        = c.id
         INNER JOIN departamentos d ON f.departamento_id = d.id
         WHERE f.id = ?
     ");
@@ -46,89 +46,107 @@ if ($tipo === 'constancia') {
         die('Funcionario no encontrado.');
     }
 
-    // Calcular antigüedad
-    $fecha_ingreso = new DateTime($f['fecha_ingreso']);
-    $diff = $fecha_ingreso->diff(new DateTime());
-    $antiguedad = $diff->y . ' año' . ($diff->y != 1 ? 's' : '');
-    if ($diff->m > 0) {
-        $antiguedad .= ' y ' . $diff->m . ' mes' . ($diff->m != 1 ? 'es' : '');
+    // ---- Helpers de encoding ----
+    $pdf_enc   = fn(string $s): string => mb_convert_encoding($s, 'ISO-8859-1', 'UTF-8');
+    $pdf_upper = fn(string $s): string => mb_convert_encoding(mb_strtoupper($s, 'UTF-8'), 'ISO-8859-1', 'UTF-8');
+
+    // ---- Antigüedad dinámica ----
+    $fechaIngreso = new DateTime($f['fecha_ingreso']);
+    $diff = $fechaIngreso->diff(new DateTime());
+    $anios_ant = $diff->y;  $meses_ant = $diff->m;  $dias_ant = $diff->d;
+
+    if ($anios_ant >= 1) {
+        $antiguedad = $anios_ant . ' año' . ($anios_ant != 1 ? 's' : '');
+        if ($meses_ant > 0) $antiguedad .= ' y ' . $meses_ant . ' mes' . ($meses_ant != 1 ? 'es' : '');
+    } elseif ($meses_ant >= 1) {
+        $antiguedad = $meses_ant . ' mes' . ($meses_ant != 1 ? 'es' : '');
+        if ($dias_ant > 0) $antiguedad .= ' y ' . $dias_ant . ' día' . ($dias_ant != 1 ? 's' : '');
+    } else {
+        $antiguedad = $dias_ant . ' día' . ($dias_ant != 1 ? 's' : '');
     }
 
-    // Fecha en español
-    $meses = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
-              7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
-    $fecha_emision   = date('d') . ' de ' . $meses[(int)date('m')] . ' de ' . date('Y');
-    $dia_ing = $fecha_ingreso->format('d');
-    $mes_ing = $meses[(int)$fecha_ingreso->format('m')];
-    $anio_ing = $fecha_ingreso->format('Y');
-    $fecha_ingreso_txt = "$dia_ing de $mes_ing de $anio_ing";
-    $genero_txt = ($f['genero'] == 'F') ? 'la ciudadana' : 'el ciudadano';
+    // ---- Fechas en español ----
+    $mesesES = [1=>'Enero',2=>'Febrero',3=>'Marzo',4=>'Abril',5=>'Mayo',6=>'Junio',
+                7=>'Julio',8=>'Agosto',9=>'Septiembre',10=>'Octubre',11=>'Noviembre',12=>'Diciembre'];
+    $fecha_emision     = date('d') . ' de ' . $mesesES[(int)date('m')] . ' de ' . date('Y');
+    $fecha_ingreso_txt = $fechaIngreso->format('d') . ' de ' . $mesesES[(int)$fechaIngreso->format('m')] . ' de ' . $fechaIngreso->format('Y');
+    $genero_txt        = ($f['genero'] === 'F') ? 'la ciudadana' : 'el ciudadano';
+    $nombre_completo   = mb_strtoupper($f['nombres'] . ' ' . $f['apellidos'], 'UTF-8');
 
     require_once __DIR__ . '/../../lib/fpdf/fpdf.php';
 
     class PDF_Constancia extends FPDF {
         function Header() {
+            // Cintillo a todo el ancho (190mm) — sin texto de membrete
             $logo = __DIR__ . '/../../publico/imagenes/cintillo.png';
-            if (file_exists($logo)) $this->Image($logo, 15, 10, 30);
-            $this->SetFont('Arial','B',10);
-            $this->SetXY(150, 10);
-            $this->MultiCell(50, 4, mb_convert_encoding("REPÚBLICA BOLIVARIANA\nDE VENEZUELA\nGOBERNACIÓN DEL\nESTADO BOLÍVAR",'ISO-8859-1','UTF-8'), 0, 'C');
-            $this->Ln(15);
+            if (file_exists($logo)) $this->Image($logo, 10, 10, 190);
+            $this->Ln(32); // espacio tras el cintillo
         }
         function Footer() {
-            $this->SetY(-15);
-            $this->SetFont('Arial','I',8);
-            $this->Cell(0,10, mb_convert_encoding('Página ','ISO-8859-1','UTF-8') . $this->PageNo(), 0, 0, 'C');
+            // Pie institucional al final real de la página
+            $this->SetY(-28);
+            $this->SetFont('Arial', 'I', 8);
+            $this->SetTextColor(120, 120, 120);
+            $this->MultiCell(0, 4,
+                mb_convert_encoding(
+                    "Instituto de Salud Pública del Estado Bolívar\n"
+                  . "Dirección de Telemática — Ciudad Bolívar, Estado Bolívar",
+                    'ISO-8859-1', 'UTF-8'),
+                0, 'C');
+            $this->SetTextColor(160, 160, 160);
+            $this->Cell(0, 4,
+                mb_convert_encoding('Página ', 'ISO-8859-1', 'UTF-8') . $this->PageNo(),
+                0, 0, 'C');
         }
     }
 
     $pdf = new PDF_Constancia();
     $pdf->AddPage();
-    $pdf->SetMargins(25,25,25);
+    $pdf->SetMargins(25, 15, 25);
+    $pdf->Ln(8);
+
+    // Título
+    $pdf->SetFont('Arial', 'B', 16);
+    $pdf->Cell(0, 10, $pdf_enc('CONSTANCIA DE TRABAJO'), 0, 1, 'C');
     $pdf->Ln(10);
 
-    $pdf->SetFont('Arial','B',16);
-    $pdf->Cell(0,10, mb_convert_encoding('CONSTANCIA DE TRABAJO','ISO-8859-1','UTF-8'), 0, 1, 'C');
-    $pdf->Ln(10);
-
-    $pdf->SetFont('Arial','',12);
-    $texto1 = "Quien suscribe, Director de la Dirección de Telemática del Instituto de Salud Pública del Estado Bolívar (ISPEB), por medio de la presente hace constar que $genero_txt:";
-    $pdf->MultiCell(0,6, mb_convert_encoding($texto1,'ISO-8859-1','UTF-8'), 0, 'J');
+    // Párrafo 1
+    $pdf->SetFont('Arial', '', 12);
+    $texto1 = "Quien suscribe, Director de la Dirección de Telemática del Instituto "
+            . "de Salud Pública del Estado Bolívar (ISPEB), por medio de la presente "
+            . "hace constar que $genero_txt:";
+    $pdf->MultiCell(0, 6, $pdf_enc($texto1), 0, 'J');
     $pdf->Ln(5);
 
-    $pdf->SetFont('Arial','B',12);
-    $nombre_completo = strtoupper($f['nombres'] . ' ' . $f['apellidos']);
-    $pdf->Cell(0,6, mb_convert_encoding($nombre_completo,'ISO-8859-1','UTF-8'), 0, 1, 'C');
-    $pdf->SetFont('Arial','',12);
-    $pdf->Cell(0,6, mb_convert_encoding('Titular de la Cédula de Identidad N° ' . $f['cedula'],'ISO-8859-1','UTF-8'), 0, 1, 'C');
+    // Datos centrados en negrita
+    $pdf->SetFont('Arial', 'B', 13);
+    $pdf->Cell(0, 7, $pdf_upper($nombre_completo), 0, 1, 'C');
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Cell(0, 6, $pdf_enc('Titular de la Cédula de Identidad N° ' . $f['cedula']), 0, 1, 'C');
     $pdf->Ln(5);
 
-    $texto2 = "Presta sus servicios en esta institución desde el $fecha_ingreso_txt, acumulando una antigüedad de $antiguedad, desempeñando actualmente el cargo de " . strtoupper($f['nombre_cargo']) . ", adscrito al departamento de " . strtoupper($f['departamento']) . ".";
-    $pdf->MultiCell(0,6, mb_convert_encoding($texto2,'ISO-8859-1','UTF-8'), 0, 'J');
+    // Párrafo 2
+    $cargo_up = mb_strtoupper($f['nombre_cargo'], 'UTF-8');
+    $depto_up = mb_strtoupper($f['departamento'],  'UTF-8');
+    $texto2 = "Presta sus servicios en esta institución desde el $fecha_ingreso_txt, "
+            . "acumulando una antigüedad de $antiguedad, desempeñando actualmente el cargo de "
+            . "$cargo_up, adscrito al departamento de $depto_up.";
+    $pdf->MultiCell(0, 6, $pdf_upper($texto2), 0, 'J');
     $pdf->Ln(5);
 
-    $texto3 = "Constancia que se expide a petición de la parte interesada en Ciudad Bolívar, a los $fecha_emision.";
-    $pdf->MultiCell(0,6, mb_convert_encoding($texto3,'ISO-8859-1','UTF-8'), 0, 'J');
-    $pdf->Ln(20);
+    // Párrafo 3
+    $texto3 = "Constancia que se expide a petición de la parte interesada "
+            . "en Ciudad Bolívar, a los $fecha_emision.";
+    $pdf->MultiCell(0, 6, $pdf_enc($texto3), 0, 'J');
 
-    $pdf->SetFont('Arial','',11);
-    $pdf->Ln(15);
-    $pdf->Cell(0,6,'_________________________________', 0, 1, 'C');
-    $pdf->SetFont('Arial','B',11);
-    $pdf->Cell(0,6, mb_convert_encoding('DIRECTOR DE TELEMÁTICA','ISO-8859-1','UTF-8'), 0, 1, 'C');
-    $pdf->SetFont('Arial','',10);
-    $pdf->Cell(0,6,'ISPEB', 0, 1, 'C');
-    $pdf->Ln(10);
-    $pdf->SetFont('Arial','I',8);
-    $pdf->SetTextColor(100,100,100);
-    $pdf->MultiCell(0,4, mb_convert_encoding("Instituto de Salud Pública del Estado Bolívar\nDirección de Telemática\nCiudad Bolívar - Estado Bolívar",'ISO-8859-1','UTF-8'), 0, 'C');
+    // Sin firma — eliminada por instrucción del usuario
 
-    registrarAuditoria('GENERAR_CONSTANCIA','funcionarios',$funcionario_id,null,[
-        'funcionario' => $nombre_completo,
+    registrarAuditoria('GENERAR_CONSTANCIA', 'funcionarios', $funcionario_id, null, [
+        'funcionario'  => $nombre_completo,
         'generado_por' => $_SESSION['nombre_completo'] ?? 'Usuario'
     ]);
 
-    $nombre_pdf = 'Constancia_' . str_replace(' ','_',$f['nombres']) . '_' . str_replace(' ','_',$f['apellidos']) . '.pdf';
+    $nombre_pdf = 'Constancia_' . str_replace(' ', '_', $f['nombres']) . '_' . str_replace(' ', '_', $f['apellidos']) . '.pdf';
     if (ob_get_length()) ob_end_clean();
     $pdf->Output('I', $nombre_pdf);
     exit;
@@ -183,24 +201,24 @@ if ($tipo === 'listado') {
     class PDF_Listado extends FPDF {
         public $titulo_reporte = '';
         function Header() {
+            // Cintillo a todo el ancho landscape: 277mm
             $logo = __DIR__ . '/../../publico/imagenes/cintillo.png';
-            if (file_exists($logo)) $this->Image($logo, 10, 10, 190);
+            if (file_exists($logo)) $this->Image($logo, 10, 10, 277);
             $this->Ln(30);
             $this->SetFont('Arial','B',14);
-            $this->Cell(0,10, mb_convert_encoding('LISTADO DE PERSONAL - ISPEB','ISO-8859-1','UTF-8'), 0, 1, 'C');
+            $this->Cell(0,10, mb_convert_encoding('REPORTE GENERAL DE FUNCIONARIOS - SIGED','ISO-8859-1','UTF-8'), 0, 1, 'C');
             $this->SetFont('Arial','',10);
             $this->Cell(0,5, mb_convert_encoding($this->titulo_reporte . ' | Fecha: ' . date('d/m/Y'),'ISO-8859-1','UTF-8'), 0, 1, 'C');
             $this->Ln(5);
-            // Cabecera de tabla
-            $this->SetFont('Arial','B',8);
+            // Cabeceras — anchos: 30+80+75+60+32 = 277mm
+            $this->SetFont('Arial','B',9);
             $this->SetFillColor(15, 76, 129);
             $this->SetTextColor(255);
-            $this->Cell(22,8, mb_convert_encoding('CÉDULA','ISO-8859-1','UTF-8'), 1, 0, 'C', true);
-            $this->Cell(55,8, mb_convert_encoding('NOMBRES Y APELLIDOS','ISO-8859-1','UTF-8'), 1, 0, 'C', true);
-            $this->Cell(45,8, 'CARGO', 1, 0, 'C', true);
-            $this->Cell(38,8, 'DEPARTAMENTO', 1, 0, 'C', true);
-            $this->Cell(18,8, mb_convert_encoding('ANT.','ISO-8859-1','UTF-8'), 1, 0, 'C', true);
-            $this->Cell(12,8, 'EST.', 1, 1, 'C', true);
+            $this->Cell(30, 8, mb_convert_encoding('CÉDULA','ISO-8859-1','UTF-8'),        1, 0, 'C', true);
+            $this->Cell(80, 8, mb_convert_encoding('NOMBRES Y APELLIDOS','ISO-8859-1','UTF-8'), 1, 0, 'C', true);
+            $this->Cell(75, 8, 'CARGO',           1, 0, 'C', true);
+            $this->Cell(60, 8, 'DEPARTAMENTO',    1, 0, 'C', true);
+            $this->Cell(32, 8, 'ESTADO',          1, 1, 'C', true);
         }
         function Footer() {
             $this->SetY(-15);
@@ -218,29 +236,28 @@ if ($tipo === 'listado') {
     $pdf->SetTextColor(0);
 
     if (empty($funcionarios)) {
-        $pdf->Cell(190,10, mb_convert_encoding('No se encontraron registros.','ISO-8859-1','UTF-8'), 1, 1, 'C');
+        $pdf->Cell(277, 10, mb_convert_encoding('No se encontraron registros.','ISO-8859-1','UTF-8'), 1, 1, 'C');
     } else {
         $fill = false;
         foreach ($funcionarios as $row) {
-            $pdf->SetFillColor($fill ? 240 : 255, $fill ? 240 : 255, $fill ? 240 : 255);
-            $nombre = mb_convert_encoding($row['nombres'] . ' ' . $row['apellidos'],'ISO-8859-1','UTF-8');
-            $cargo  = mb_convert_encoding($row['nombre_cargo'] ?? 'N/A','ISO-8859-1','UTF-8');
-            $depto  = mb_convert_encoding($row['departamento'] ?? 'N/A','ISO-8859-1','UTF-8');
-            $est    = mb_convert_encoding(ucfirst($row['estado']),'ISO-8859-1','UTF-8');
-            $ant    = $row['antiguedad'] . 'a';
+            $pdf->SetFillColor($fill ? 240 : 255, $fill ? 244 : 255, $fill ? 250 : 255);
+            $nombre = mb_convert_encoding($row['nombres'] . ' ' . $row['apellidos'], 'ISO-8859-1', 'UTF-8');
+            $cargo  = mb_convert_encoding($row['nombre_cargo'] ?? 'N/A', 'ISO-8859-1', 'UTF-8');
+            $depto  = mb_convert_encoding($row['departamento'] ?? 'N/A', 'ISO-8859-1', 'UTF-8');
+            $est    = mb_convert_encoding(ucfirst($row['estado']), 'ISO-8859-1', 'UTF-8');
 
-            $pdf->Cell(22,7,$row['cedula'], 1,0,'C',$fill);
-            $pdf->Cell(55,7,substr($nombre,0,38), 1,0,'L',$fill);
-            $pdf->Cell(45,7,substr($cargo,0,28), 1,0,'L',$fill);
-            $pdf->Cell(38,7,substr($depto,0,22), 1,0,'L',$fill);
-            $pdf->Cell(18,7,$ant, 1,0,'C',$fill);
-            $pdf->Cell(12,7,$est, 1,1,'C',$fill);
+            // Anchos: 30+80+75+60+32 = 277mm
+            $pdf->Cell(30, 7, $row['cedula'],             1, 0, 'C', $fill);
+            $pdf->Cell(80, 7, substr($nombre, 0, 52),     1, 0, 'L', $fill);
+            $pdf->Cell(75, 7, substr($cargo,  0, 45),     1, 0, 'L', $fill);
+            $pdf->Cell(60, 7, substr($depto,  0, 38),     1, 0, 'L', $fill);
+            $pdf->Cell(32, 7, $est,                       1, 1, 'C', $fill);
             $fill = !$fill;
         }
-        // Total
+        // Fila de total
         $pdf->SetFont('Arial','B',8);
-        $pdf->SetFillColor(220,230,245);
-        $pdf->Cell(190,7, mb_convert_encoding('TOTAL: ' . count($funcionarios) . ' funcionario(s)','ISO-8859-1','UTF-8'), 1, 1, 'R', true);
+        $pdf->SetFillColor(220, 230, 245);
+        $pdf->Cell(277, 7, mb_convert_encoding('TOTAL: ' . count($funcionarios) . ' funcionario(s)','ISO-8859-1','UTF-8'), 1, 1, 'R', true);
     }
 
     registrarAuditoria('GENERAR_REPORTE_PDF','funcionarios',null,null,[

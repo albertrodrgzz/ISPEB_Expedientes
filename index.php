@@ -159,6 +159,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
     <title>Login - <?php echo APP_NAME; ?></title>
     <link rel="icon" type="image/png" href="publico/imagenes/isotipo.png">
     <link rel="shortcut icon" href="publico/imagenes/isotipo.png">
+    <link rel="stylesheet" href="publico/css/responsive.css">
     <style>
         * {
             margin: 0;
@@ -190,7 +191,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             margin: 0;
             padding: 0;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* Imagen de fondo - más visible */
@@ -221,12 +223,12 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         /* Cintillo institucional — animación de entrada */
         .banner-container {
             width: 100%;
-            height: 80px;
+            height: auto;
             background: #ffffff;
             box-shadow: 0 2px 16px rgba(0,0,0,0.12);
             position: relative;
             z-index: 10;
-            overflow: hidden;
+            overflow: visible;
             animation: bannerSlideDown 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
@@ -237,8 +239,9 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
 
         .banner-container img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            max-height: none;
+            object-fit: contain;
             object-position: center;
             display: block;
         }
@@ -248,7 +251,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: calc(100vh - 70px);
+            min-height: calc(100vh - 80px);
+            height: auto;
             padding: 30px;
             position: relative;
             z-index: 1;
@@ -680,20 +684,50 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             }
             
             .login-wrapper {
-                height: calc(100vh - 60px);
-                padding: 20px;
+                height: auto;
+                min-height: calc(100dvh - 60px);
+                padding: 20px 16px;
+                align-items: flex-start;
+            }
+
+            /* Card: 1 columna en tablet */
+            .login-container {
+                grid-template-columns: 1fr !important;
+                max-width: 480px !important;
+            }
+
+            /* Panel izquierdo arriba, más compacto */
+            .login-header {
+                min-height: 200px !important;
+                padding: 30px 24px !important;
+            }
+
+            /* Ocultar decoraciones pesadas */
+            .deco-lines, .deco-ring, .particle, .particle-extra {
+                display: none !important;
             }
         }
         
         @media (max-width: 480px) {
             .login-body {
-                padding: 30px 25px;
+                padding: 24px 20px;
             }
             
             .login-footer {
-                padding: 20px 25px;
+                padding: 16px 20px;
+            }
+
+            /* Card ocupa todo el ancho */
+            .login-container {
+                max-width: 100% !important;
+                border-radius: 16px !important;
             }
             
+            .login-header {
+                min-height: 160px !important;
+                padding: 24px 20px !important;
+            }
+
             .login-header .logo {
                 width: 70px;
                 height: 70px;
@@ -701,7 +735,15 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
             }
             
             .login-header h1 {
-                font-size: 26px;
+                font-size: 22px;
+            }
+
+            .login-wrapper {
+                padding: 12px !important;
+            }
+
+            .banner-container {
+                height: 52px;
             }
         }
     </style>

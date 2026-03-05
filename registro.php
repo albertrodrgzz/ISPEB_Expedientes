@@ -36,6 +36,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
     <title>Completar Registro - Sistema de Expedientes ISPEB</title>
     <link rel="icon" type="image/png" href="publico/imagenes/isotipo.png">
     <link rel="shortcut icon" href="publico/imagenes/isotipo.png">
+    <link rel="stylesheet" href="publico/css/responsive.css">
     <style>
         :root {
             --color-primary: #00a8cc;
@@ -100,13 +101,13 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
         /* Cintillo institucional — animación de entrada */
         .banner-container {
             width: 100%;
-            height: 80px;
+            height: auto;
             background: #ffffff;
             box-shadow: 0 2px 16px rgba(0,0,0,0.12);
             position: sticky;
             top: 0;
             z-index: 10;
-            overflow: hidden;
+            overflow: visible;
             animation: bannerSlideDown 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         @keyframes bannerSlideDown {
@@ -115,8 +116,9 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
         }
         .banner-container img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            max-height: none;
+            object-fit: contain;
             object-position: center;
             display: block;
         }
@@ -126,7 +128,8 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 70px);
+            min-height: calc(100vh - 80px);
+            height: auto;
             padding: 30px 15px;
             position: relative;
             z-index: 1;
@@ -629,9 +632,10 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
             }
             
             .login-container {
-                max-width: 100%;
+                grid-template-columns: 1fr !important;
+                max-width: 480px;
                 border-radius: 16px;
-                margin: 10px;
+                margin: 0 auto;
             }
             
             .login-header {

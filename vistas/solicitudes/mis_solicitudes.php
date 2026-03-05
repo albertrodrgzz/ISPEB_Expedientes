@@ -1,7 +1,7 @@
-﻿<?php
+<?php
 /**
- * Vista: Mis Solicitudes (Portal del Empleado â€“ Nivel 3)
- * Sistema ISPEB - AutogestiÃ³n de Vacaciones y Permisos
+ * Vista: Mis Solicitudes (Portal del Empleado – Nivel 3)
+ * Sistema ISPEB - Autogestión de Vacaciones y Permisos
  */
 
 require_once __DIR__ . '/../../config/database.php';
@@ -20,7 +20,7 @@ $pdo              = getDB();
 $funcionario_id   = $_SESSION['funcionario_id'] ?? 0;
 $csrf_token       = generarTokenCSRF();
 
-// â”€â”€ EstadÃ­sticas rÃ¡pidas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Estadísticas rápidas ──────────────────────────────────────────────────────
 $stmt = $pdo->prepare("SELECT
     COUNT(*)                                               AS total,
     SUM(estado = 'pendiente')                              AS pendientes,
@@ -30,7 +30,7 @@ $stmt = $pdo->prepare("SELECT
 $stmt->execute([$funcionario_id]);
 $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// â”€â”€ Listado de solicitudes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Listado de solicitudes ────────────────────────────────────────────────────
 $stmt = $pdo->prepare("
     SELECT se.*,
            u.username AS revisado_por_nombre
@@ -49,10 +49,11 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Solicitudes - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
     <style>
-        /* â”€â”€ Solicitudes Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ── Solicitudes Grid ──────────────────────────────── */
         .solicitudes-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -190,7 +191,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex; align-items: center; justify-content: center;
             opacity: 0.5;
         }
-        /* â”€â”€ KPI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        /* ── KPI ──────────────────────────────────────────── */
         .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
         @media(max-width:768px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } .solicitudes-grid{ grid-template-columns:1fr; } }
     </style>
@@ -252,7 +253,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="empty-solicitudes-icon">
                             <?= Icon::get('send', 'width:36px;height:36px;') ?>
                         </div>
-                        <h3 style="font-size:18px;color:#1e293b;margin-bottom:8px;">Sin solicitudes aÃºn</h3>
+                        <h3 style="font-size:18px;color:#1e293b;margin-bottom:8px;">Sin solicitudes aún</h3>
                         <p style="font-size:14px;margin-bottom:20px;">Haz click en "Nueva Solicitud" para enviar tu primera solicitud al departamento de RRHH.</p>
                         <button class="btn-primary" onclick="abrirModalNuevaSolicitud()">
                             <?= Icon::get('plus') ?> Nueva Solicitud
@@ -292,7 +293,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="card-fechas">
                             <?= Icon::get('calendar', 'width:14px;height:14px;') ?>
                             <strong><?= date('d/m/Y', strtotime($sol['fecha_inicio'])) ?></strong>
-                            <span style="color:#94a3b8;">â†’</span>
+                            <span style="color:#94a3b8;">→</span>
                             <strong><?= date('d/m/Y', strtotime($sol['fecha_fin'])) ?></strong>
                         </div>
 
@@ -301,7 +302,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <?= htmlspecialchars($sol['motivo']) ?>
                         </div>
 
-                        <!-- ObservaciÃ³n del revisor -->
+                        <!-- Observación del revisor -->
                         <?php if ($sol['observaciones_respuesta'] && $estado !== 'pendiente'): ?>
                             <div class="card-observacion <?= $estado ?>">
                                 <strong style="display:block;margin-bottom:3px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">

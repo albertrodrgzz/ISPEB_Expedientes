@@ -43,6 +43,7 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Directorio de Funcionarios - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <script src="<?= APP_URL ?>/publico/js/filtros-tiempo-real.js"></script>
 </head>

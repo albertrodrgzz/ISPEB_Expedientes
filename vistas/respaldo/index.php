@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Vista: Respaldo de Base de Datos
  * Módulo principal con opciones de exportar e importar
@@ -523,297 +523,171 @@ $pageTitle = 'Respaldo de Base de Datos';
     </script>
 
     <style>
+    /* ===== Liquid Glass — Gestión de Respaldos ===== */
+    .page-header {
+        display: flex; align-items: flex-start; gap: 14px; margin-bottom: 8px;
+    }
+    .page-header h1 {
+        display: flex; align-items: center; gap: 12px;
+        font-size: 26px; font-weight: 700; color: var(--color-text, #1e293b); margin: 0;
+    }
+    .page-description { color: var(--color-text-light, #64748b); font-size: 14px; margin: 4px 0 0; }
+
+    /* === Grid principal === */
     .options-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 32px;
+        gap: 28px;
         margin-top: 32px;
     }
 
+    /* === Tarjetas Liquid Glass === */
     .option-card {
-        background: white;
-        border-radius: 16px;
-        padding: 32px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border: 2px solid #e2e8f0;
-        transition: all 0.3s ease;
+        background: rgba(255,255,255,0.88);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-radius: 20px;
+        padding: 36px 32px;
+        border: 1.5px solid rgba(255,255,255,0.65);
+        box-shadow: 0 8px 32px rgba(15,76,129,0.10), 0 1.5px 4px rgba(0,0,0,0.04);
+        transition: all 0.35s cubic-bezier(.4,0,.2,1);
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
+        position: relative;
+        overflow: hidden;
     }
-
+    .option-card::before {
+        content: ''; position: absolute; inset: 0; border-radius: 20px;
+        opacity: 0; transition: opacity 0.35s ease; pointer-events: none;
+    }
     .option-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        transform: translateY(-6px);
+        box-shadow: 0 20px 48px rgba(15,76,129,0.16), 0 4px 12px rgba(0,0,0,0.07);
+        border-color: rgba(15,76,129,0.2);
     }
+    .option-card:hover::before { opacity: 1; }
 
-    .export-card {
-        border-top: 4px solid #00a8cc;
-    }
+    .export-card { border-top: 4px solid #0F4C81; }
+    .export-card::before { background: linear-gradient(135deg,rgba(15,76,129,0.04),rgba(0,168,204,0.04)); }
+    .import-card { border-top: 4px solid #dc2626; }
+    .import-card::before { background: linear-gradient(135deg,rgba(220,38,38,0.04),rgba(239,68,68,0.03)); }
 
-    .import-card {
-        border-top: 4px solid #dc3545;
-    }
-
+    /* === Ícono circular === */
     .option-icon {
-        width: 96px;
-        height: 96px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 24px;
+        width: 96px; height: 96px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 24px; transition: transform 0.3s ease;
     }
-
+    .option-card:hover .option-icon { transform: scale(1.08) rotate(3deg); }
     .export-card .option-icon {
-        background: linear-gradient(135deg, #e7f5ff 0%, #d0ebff 100%);
-        color: #00a8cc;
+        background: linear-gradient(135deg,#dbeafe,#bfdbfe);
+        color: #0F4C81; box-shadow: 0 4px 16px rgba(15,76,129,0.15);
     }
-
     .import-card .option-icon {
-        background: linear-gradient(135deg, #ffe5e5 0%, #ffd0d0 100%);
-        color: #dc3545;
+        background: linear-gradient(135deg,#fee2e2,#fecaca);
+        color: #dc2626; box-shadow: 0 4px 16px rgba(220,38,38,0.15);
     }
 
-    .option-card h2 {
-        font-size: 24px;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 12px;
-    }
+    .option-card h2 { font-size: 22px; font-weight: 700; color: #1e293b; margin-bottom: 10px; }
+    .option-card p  { color: #64748b; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
 
-    .option-card p {
-        color: #718096;
-        margin-bottom: 24px;
-        line-height: 1.6;
-    }
-
-    .option-features {
-        width: 100%;
-        margin-bottom: 24px;
-    }
-
+    .option-features { width: 100%; margin-bottom: 24px; }
     .feature {
-        padding: 8px 0;
-        color: #4a5568;
-        font-size: 14px;
+        padding: 7px 12px; color: #475569; font-size: 14px;
+        display: flex; align-items: center; gap: 8px;
+        background: rgba(15,76,129,0.04); border-radius: 8px; margin-bottom: 6px;
     }
+    .import-card .feature { background: rgba(220,38,38,0.04); }
 
-    .option-card .btn {
-        width: 100%;
-        margin-top: auto;
+    .option-card .btn { width: 100%; margin-top: auto; font-size: 15px; font-weight: 600; }
+
+    /* btn-danger */
+    .btn-danger {
+        background: linear-gradient(135deg,#dc2626,#b91c1c) !important;
+        color: white !important; border: none !important;
+        padding: 14px 24px; border-radius: var(--radius-md, 10px);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        gap: 8px; transition: all 0.3s ease;
     }
+    .btn-danger:hover { box-shadow: 0 6px 20px rgba(220,38,38,0.35); transform: scale(1.02); }
 
+    /* === Secciones internas con Liquid Glass === */
     .backup-section {
-        margin-top: 32px;
+        margin-top: 28px;
         animation: fadeIn 0.3s ease;
+        background: rgba(255,255,255,0.88);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-radius: 20px;
+        border: 1.5px solid rgba(255,255,255,0.65);
+        box-shadow: 0 8px 32px rgba(15,76,129,0.08);
+        padding: 28px;
     }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
     .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
-        border-bottom: 2px solid #e2e8f0;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 24px; padding-bottom: 16px;
+        border-bottom: 2px solid rgba(15,76,129,0.1);
     }
-
-    .section-header h2 {
-        font-size: 24px;
-        font-weight: 700;
-        color: #2d3748;
-    }
-
+    .section-header h2 { font-size: 22px; font-weight: 700; color: #1e293b; }
     .btn-close {
-        background: #f1f5f9;
-        border: none;
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        color: #64748b;
+        background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s; color: #64748b;
     }
+    .btn-close:hover { background: #e2e8f0; color: #334155; }
 
-    .btn-close:hover {
-        background: #e2e8f0;
-        color: #334155;
-    }
-
-    .content-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-    }
-
-    .info-grid {
-        display: grid;
-        gap: 12px;
-    }
-
+    .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .info-grid { display: grid; gap: 10px; }
     .info-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 12px;
-        background: #f8f9fa;
-        border-radius: 8px;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 14px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;
     }
+    .info-label { font-weight: 600; color: #475569; }
+    .info-value { color: #0F4C81; font-weight: 600; }
 
-    .info-label {
-        font-weight: 600;
-        color: #495057;
-    }
-
-    .info-value {
-        color: #00a8cc;
-        font-weight: 500;
-    }
-
+    /* Upload */
     .upload-area {
-        border: 2px dashed #cbd5e1;
-        border-radius: 12px;
-        padding: 40px;
-        text-align: center;
-        background: #f8f9fa;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        border: 2px dashed #cbd5e1; border-radius: 14px;
+        padding: 40px; text-align: center; background: #f8fafc;
+        cursor: pointer; transition: all 0.3s ease;
     }
-
-    .upload-area:hover {
-        border-color: #00a8cc;
-        background: #e7f5ff;
-    }
-
-    .upload-area svg {
-        color: #00a8cc;
-        margin-bottom: 16px;
-    }
-
-    .upload-text {
-        font-size: 16px;
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 8px;
-    }
-
-    .upload-subtext {
-        font-size: 14px;
-        color: #718096;
-    }
+    .upload-area:hover { border-color: #0F4C81; background: #eff6ff; }
+    .upload-area svg  { color: #0F4C81; margin-bottom: 14px; }
+    .upload-text      { font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
+    .upload-subtext   { font-size: 13px; color: #64748b; }
 
     .file-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 16px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        display: flex; align-items: center; gap: 12px; padding: 14px;
+        background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;
     }
-
-    .file-info svg {
-        color: #00a8cc;
-        flex-shrink: 0;
-    }
-
-    .file-details {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .file-name {
-        font-weight: 600;
-        color: #2d3748;
-    }
-
-    .file-size {
-        font-size: 14px;
-        color: #718096;
-    }
-
+    .file-info svg   { color: #0F4C81; flex-shrink: 0; }
+    .file-details    { flex: 1; display: flex; flex-direction: column; }
+    .file-name       { font-weight: 600; color: #1e293b; }
+    .file-size       { font-size: 13px; color: #64748b; }
     .btn-remove {
-        background: none;
-        border: none;
-        color: #dc3545;
-        cursor: pointer;
-        padding: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px;
-        transition: background 0.2s;
+        background: none; border: none; color: #dc2626; cursor: pointer;
+        padding: 4px; display: flex; align-items: center; justify-content: center;
+        border-radius: 6px; transition: background 0.2s;
     }
+    .btn-remove:hover { background: #fee2e2; }
 
-    .btn-remove:hover {
-        background: #fee;
-    }
+    .form-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 0; }
+    .form-group input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #0F4C81; }
 
-    .form-group label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        padding: 8px 0;
-    }
+    .alert { display: flex; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid; }
+    .alert svg { flex-shrink: 0; margin-top: 2px; }
+    .alert-danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
 
-    .form-group input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-    }
+    .card h4  { font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 10px; }
+    .card ol, .card ul { padding-left: 18px; color: #475569; font-size: 14px; }
+    .card li  { padding: 4px 0; line-height: 1.5; }
 
-    .alert {
-        display: flex;
-        gap: 12px;
-        padding: 16px;
-        border-radius: 8px;
-        border: 1px solid;
-    }
-
-    .alert svg {
-        flex-shrink: 0;
-        margin-top: 2px;
-    }
-
-    .alert-danger {
-        background: #fee;
-        border-color: #fcc;
-        color: #dc3545;
-    }
-
-    .card h4 {
-        font-size: 16px;
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 12px;
-    }
-
-    .card ol,
-    .card ul {
-        margin-left: 20px;
-        color: #4a5568;
-        line-height: 1.8;
-    }
-
-    .card li {
-        margin-bottom: 8px;
-    }
-
-    @media (max-width: 1024px) {
-        .options-grid,
-        .content-grid {
-            grid-template-columns: 1fr;
-        }
+    @media (max-width: 768px) {
+        .options-grid, .content-grid { grid-template-columns: 1fr; }
     }
     </style>
 </body>

@@ -40,6 +40,7 @@ $tipos_eventos = $stmt->fetch()['total'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reportes - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
     <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
@@ -330,9 +331,10 @@ $tipos_eventos = $stmt->fetch()['total'];
     }
 
     /**
-     * Abre formulario para Listado de Personal
+     * Abre formulario para Listado de Personal — elige PDF o Excel
      */
     async function abrirFormListado() {
+        // Paso 1: recoger filtros
         const { value: formValues } = await Swal.fire({
             title: 'Listado de Personal',
             html: `
@@ -353,25 +355,52 @@ $tipos_eventos = $stmt->fetch()['total'];
                             <option value="cargo">Cargo</option>
                         </select>
                     </div>
+                    <div class="swal-field" style="grid-column: 1 / -1; margin-top: 8px;">
+                        <label class="swal-label" style="margin-bottom:8px;display:block;">Formato de exportación</label>
+                        <div style="display:flex;gap:12px;">
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #BFDBFE;border-radius:10px;cursor:pointer;background:#EFF6FF;">
+                                <input type="radio" name="formato" value="pdf" checked style="accent-color:#1D4ED8;">
+                                <span style="font-weight:600;color:#1D4ED8;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    PDF
+                                </span>
+                            </label>
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #A7F3D0;border-radius:10px;cursor:pointer;background:#ECFDF5;">
+                                <input type="radio" name="formato" value="excel" style="accent-color:#059669;">
+                                <span style="font-weight:600;color:#059669;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+                                    Excel (.xls)
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             `,
-            width: '500px',
+            width: '520px',
             showCancelButton: true,
-            confirmButtonText: 'Generar PDF',
+            confirmButtonText: 'Generar',
             cancelButtonText: 'Cancelar',
             preConfirm: () => {
-                return {
-                    estado: document.getElementById('swal-estado').value,
-                    orden: document.getElementById('swal-orden').value
-                };
+                const estado  = document.getElementById('swal-estado').value;
+                const orden   = document.getElementById('swal-orden').value;
+                const formato = document.querySelector('input[name="formato"]:checked')?.value ?? 'pdf';
+                return { estado, orden, formato };
             }
         });
 
         if (formValues) {
-            window.open(
-                `generar_pdf.php?tipo=listado&estado=${formValues.estado}&orden=${formValues.orden}`,
-                '_blank'
-            );
+            const { estado, orden, formato } = formValues;
+            if (formato === 'excel') {
+                window.open(
+                    `exportar_excel.php?tipo=general&estado=${estado}&orden=${orden}`,
+                    '_blank'
+                );
+            } else {
+                window.open(
+                    `generar_pdf.php?tipo=listado&estado=${estado}&orden=${orden}`,
+                    '_blank'
+                );
+            }
         }
     }
 

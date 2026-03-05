@@ -3,8 +3,8 @@
  * Sistema de Gestión de Expedientes Digitales
  */
 
-/* Importar tipografía Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Fuente Inter: cargada via header.php → publico/fonts/inter.css (100% offline) */
+/* NO usar @import de Google Fonts aquí — rompe el modo intranet sin internet */
 
 /* ===== VARIABLES CSS - PALETA CORPORATIVA SIGED ===== */
 :root {
@@ -94,6 +94,20 @@
     /* ===== TIPOGRAFÍA ===== */
     --font-primary: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+/* ── Tablet/Móvil: sidebar se convierte en overlay ──
+   Al poner --sidebar-width: 0px, el calc() de margin-left
+   en .main-content se resuelve a 0 automáticamente.        ── */
+@media (max-width: 1023px) {
+    :root {
+        --sidebar-width: 0px;
+    }
+
+    body {
+        padding: 0 !important;
+    }
+}
+
 
 /* Reset tipográfico */
 * {
@@ -3378,3 +3392,316 @@ textarea:focus {
         transition: none !important;
     }
 }
+
+/* ================================================================
+   RESPONSIVE CRÍTICO — Inline en estilos.css (failsafe doble)
+   Esto garantiza que funcione incluso sin responsive.css
+   ================================================================ */
+
+/* ── Tablet y menor (≤1023px) ─────────────────────────────────── */
+@media (max-width: 1023px) {
+
+    /* Body: sin padding para que main-content ocupe TODO */
+    html,
+    body {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Sidebar: fuera de pantalla como overlay */
+    .sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        transform: translateX(-110%) !important;
+        border-radius: 0 16px 16px 0 !important;
+        z-index: 1000 !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        width: 260px !important;
+    }
+
+    .sidebar.active {
+        transform: translateX(0) !important;
+    }
+
+    /* ❗ EL FIX PRINCIPAL: main-content ocupa 100% del ancho */
+    .main-content {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        border-radius: 0 !important;
+        min-height: 100vh !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Header con espacio para el toggle */
+    .header {
+        padding-left: 64px !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 50 !important;
+    }
+
+    /* Botón de menú visible en móvil */
+    .menu-toggle {
+        display: flex !important;
+        position: fixed !important;
+        left: 14px !important;
+        top: 14px !important;
+        z-index: 1001 !important;
+    }
+
+    /* KPI cards: 2 columnas en tablet, texto legible */
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    /* KPI texto más grande para tablet */
+    .kpi-value {
+        font-size: 28px !important;
+        font-weight: 700 !important;
+    }
+
+    .kpi-label {
+        font-size: 13px !important;
+    }
+
+    .kpi-card {
+        padding: 16px !important;
+        gap: 12px !important;
+    }
+
+    .kpi-icon {
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 22px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Content wrapper */
+    .content-wrapper {
+        padding: 16px !important;
+    }
+
+    /* Charts */
+    .charts-grid,
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Tablas con scroll horizontal */
+    .table-wrapper,
+    .table-container,
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        max-width: 100% !important;
+        display: block !important;
+    }
+
+    table,
+    .table-modern,
+    .table {
+        min-width: 560px !important;
+    }
+
+    /* Filter toolbar */
+    .filter-toolbar {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    /* Page header */
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+}
+
+/* ── Móvil grande (≤767px) ────────────────────────────────────── */
+@media (max-width: 767px) {
+
+    .kpi-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .kpi-value {
+        font-size: 30px !important;
+    }
+
+    .kpi-label {
+        font-size: 13px !important;
+    }
+
+    .kpi-card {
+        padding: 14px 16px !important;
+    }
+
+    .header {
+        padding: 12px 12px 12px 58px !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    .page-title {
+        font-size: 20px !important;
+    }
+
+    .content-wrapper {
+        padding: 12px !important;
+    }
+
+    /* Cards más compactas */
+    .card-header {
+        padding: 14px 16px !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    .card-body {
+        padding: 14px 16px !important;
+    }
+
+    /* Tabs con scroll */
+    .tabs-nav {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .tab-btn {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+    }
+
+    /* Ocultar search en header */
+    .header-search {
+        display: none !important;
+    }
+}
+
+/* ── Móvil pequeño (<480px) ───────────────────────────────────── */
+@media (max-width: 479px) {
+
+    .header {
+        padding: 10px 10px 10px 52px !important;
+    }
+
+    .kpi-value {
+        font-size: 26px !important;
+    }
+
+    .kpi-icon {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 18px !important;
+    }
+
+    .content-wrapper {
+        padding: 10px !important;
+    }
+
+    .page-title {
+        font-size: 17px !important;
+    }
+
+    .table-modern th,
+    .table-modern td,
+    .table th,
+    .table td {
+        padding: 8px 6px !important;
+        font-size: 12px !important;
+    }
+}
+
+
+/* ============================================================
+   RETROCOMPATIBILIDAD SEGURA — Solo prefijos vendor adicionales.
+   No sobreescribe valores existentes ni cambia layout/border-radius.
+   ============================================================ */
+
+/* ── -webkit-backdrop-filter para Safari 9-14 ─────────── */
+/* sidebar y header: backdropfilter declarado en sus reglas propias.
+   Esta regla solo garantiza la presencia del prefijo webkit. */
+.sidebar {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+.header {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+/* ── user-select: prefijos vendor ──────────────────────── */
+.avatar-inicial,
+.user-avatar,
+.nav-section-title,
+.kpi-value,
+.page-title {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* ── Transiciones con prefijos (botones, nav-items, cards) ── */
+.nav-item,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-logout,
+.kpi-card,
+.card-modern,
+.avatar-inicial,
+.solicitud-card,
+.quick-card {
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    -ms-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+/* ── Transformaciones con prefijos ─────────────────────── */
+.nav-item:hover,
+.btn:hover,
+.btn-primary:hover,
+.kpi-card:hover,
+.card-modern:hover,
+.quick-card:hover,
+.btn-logout:hover {
+    -webkit-transform: translateY(-2px);
+    -moz-transform: translateY(-2px);
+    -ms-transform: translateY(-2px);
+    transform: translateY(-2px);
+}
+
+/* ── Monitores cuadrados 4:3 (1024×768) ────────────────── */
+@media (max-width: 1024px) and (max-height: 768px) {
+    .portal-hero {
+        -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        padding: 20px;
+        gap: 14px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+/* FIN DE ARCHIVO — estilos.css */

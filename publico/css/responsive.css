@@ -1,0 +1,574 @@
+/**
+ * RESPONSIVE.CSS — SIGED Sistema Integral v2
+ * CARGADO: como <link> en cada PHP después de estilos.css
+ * Cubre: PC Gamer ≥1920, Desktop 1280-1919, Laptop 1024-1279,
+ *        Tablet 768-1023, Móvil 480-767, Móvil pequeño <480
+ */
+
+/* ================================================================
+   SCROLLBAR MODERNO — Aplicado globalmente
+   ================================================================ */
+:root {
+    --scrollbar-width: 6px;
+    --scrollbar-track: rgba(241, 245, 249, 0.8);
+    --scrollbar-thumb: rgba(15, 76, 129, 0.35);
+    --scrollbar-thumb-hover: rgba(15, 76, 129, 0.6);
+}
+
+/* Chrome/Edge/Safari */
+::-webkit-scrollbar {
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-width);
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Scrollbar en el main-content más pronunciado */
+.main-content::-webkit-scrollbar {
+    width: 5px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+    background: rgba(15, 76, 129, 0.25);
+    border-radius: 10px;
+}
+
+/* ================================================================
+   TABLAS — Scroll horizontal en TODOS los breakpoints
+   ================================================================ */
+.table-wrapper,
+.table-container,
+.table-responsive,
+div[class*="table"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: 100% !important;
+}
+
+table,
+.table-modern {
+    max-width: 100%;
+}
+
+/* ================================================================
+   PC GAMER / 4K — ≥1920px
+   ================================================================ */
+@media (min-width: 1920px) {
+    :root {
+        --sidebar-width: 280px;
+    }
+
+    .main-content {
+        margin-left: calc(var(--sidebar-width) + 32px) !important;
+        margin-right: 32px !important;
+        margin-top: 32px !important;
+        margin-bottom: 32px !important;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 28px !important;
+    }
+
+    .content-wrapper {
+        padding: 36px !important;
+    }
+
+    .page-title {
+        font-size: 34px !important;
+    }
+}
+
+/* ================================================================
+   DESKTOP — 1280px a 1919px (no especial, layout normal)
+   ================================================================ */
+@media (min-width: 1280px) and (max-width: 1919px) {
+    .kpi-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    }
+}
+
+/* ================================================================
+   LAPTOP — 1024px a 1279px
+   ================================================================ */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    :root {
+        --sidebar-width: 240px;
+    }
+
+    .main-content {
+        margin-left: calc(var(--sidebar-width) + 20px) !important;
+        margin-right: 16px !important;
+        margin-top: 16px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+    }
+
+    .content-wrapper {
+        padding: 20px !important;
+    }
+
+    .page-title {
+        font-size: 24px !important;
+    }
+}
+
+/* ================================================================
+   TABLET — 768px a 1023px
+   ================================================================ */
+@media (max-width: 1023px) {
+
+    /* ── BODY: sin padding para que el layout ocupe todo ── */
+    html,
+    body {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+        width: 100% !important;
+    }
+
+    /* ── SIDEBAR: fuera de la pantalla como overlay ── */
+    .sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        transform: translateX(-110%) !important;
+        border-radius: 0 16px 16px 0 !important;
+        z-index: 1000 !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
+        width: 260px !important;
+    }
+
+    .sidebar.active {
+        transform: translateX(0) !important;
+    }
+
+    /* ── MAIN CONTENT: ocupa TODO el ancho sin margen izquierdo ── */
+    .main-content {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding-left: 0 !important;
+        border-radius: 0 !important;
+        min-height: 100vh !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ── HEADER ── */
+    .header {
+        padding: 14px 16px 14px 68px !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 50 !important;
+    }
+
+    /* ── MENU TOGGLE ── */
+    .menu-toggle {
+        display: flex !important;
+        position: fixed !important;
+        left: 16px !important;
+        top: 14px !important;
+        z-index: 51 !important;
+    }
+
+    /* ── KPI GRID ── */
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    /* ── CONTENT WRAPPER ── */
+    .content-wrapper {
+        padding: 16px !important;
+    }
+
+    /* ── CHARTS ── */
+    .charts-grid,
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ── CARDS ── */
+    .card {
+        margin-bottom: 12px !important;
+    }
+
+    .card-header {
+        padding: 14px 16px !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+
+    .card-body {
+        padding: 14px 16px !important;
+    }
+
+    /* ── TABLES ── */
+    .table-wrapper,
+    .table-container,
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    table,
+    .table-modern {
+        min-width: 600px !important;
+    }
+
+    /* ── FILTER TOOLBAR ── */
+    .filter-toolbar {
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+
+    .filter-toolbar input,
+    .filter-toolbar select {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    /* ── HEADER SEARCH ── */
+    .header-search {
+        width: 100% !important;
+        max-width: none !important;
+        order: 3 !important;
+    }
+
+    /* ── TABS ── */
+    .tabs-nav {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+    }
+
+    .tab-btn {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* ================================================================
+   MÓVIL GRANDE — 480px a 767px
+   ================================================================ */
+@media (max-width: 767px) {
+    .kpi-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .kpi-card {
+        padding: 14px !important;
+    }
+
+    .kpi-value {
+        font-size: 26px !important;
+    }
+
+    .header {
+        padding: 12px 12px 12px 60px !important;
+    }
+
+    .page-title {
+        font-size: 20px !important;
+    }
+
+    .content-wrapper {
+        padding: 12px !important;
+    }
+
+    .tab-btn {
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+    }
+
+    .profile-grid,
+    .profile-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .swal2-popup {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        padding: 16px !important;
+    }
+
+    .header-search {
+        display: none !important;
+    }
+
+    .btn {
+        font-size: 13px !important;
+    }
+}
+
+/* ================================================================
+   MÓVIL PEQUEÑO — <480px
+   ================================================================ */
+@media (max-width: 479px) {
+    .content-wrapper {
+        padding: 10px !important;
+    }
+
+    .header {
+        padding: 10px 10px 10px 52px !important;
+    }
+
+    .page-title {
+        font-size: 17px !important;
+    }
+
+    .kpi-card {
+        padding: 12px !important;
+        gap: 10px !important;
+    }
+
+    .kpi-value {
+        font-size: 22px !important;
+    }
+
+    .kpi-label {
+        font-size: 11px !important;
+    }
+
+    .table-modern th,
+    .table-modern td {
+        padding: 7px 6px !important;
+        font-size: 12px !important;
+    }
+
+    .btn-action span {
+        display: none !important;
+    }
+
+    .btn-action {
+        padding: 5px 7px !important;
+    }
+
+    .card-header {
+        padding: 12px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .card-actions {
+        width: 100% !important;
+        flex-direction: column !important;
+    }
+
+    .card-actions .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .menu-toggle {
+        left: 10px !important;
+        top: 10px !important;
+    }
+}
+
+/* ================================================================
+   LOGIN VIEWS — Cintillo institucional RESPONSIVE
+   ================================================================ */
+
+/* Banner/cintillo: siempre ocupa todo el ancho */
+.banner-container {
+    width: 100% !important;
+    overflow: hidden !important;
+    position: relative !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
+}
+
+.banner-container img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center top !important;
+    display: block !important;
+    max-width: none !important;
+}
+
+@media (max-width: 1023px) {
+    .banner-container {
+        height: 64px !important;
+    }
+
+    .login-wrapper {
+        height: auto !important;
+        min-height: calc(100dvh - 64px) !important;
+        overflow-y: auto !important;
+        padding: 20px !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+    }
+
+    /* Login body ocupa toda la pantalla en tablet */
+    body.login-page {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .banner-container {
+        height: 56px !important;
+    }
+
+    .login-wrapper {
+        padding: 14px !important;
+        min-height: calc(100dvh - 56px) !important;
+    }
+
+    /* Card en columna única */
+    .login-container {
+        grid-template-columns: 1fr !important;
+        max-width: 440px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+    }
+
+    .login-header {
+        min-height: 180px !important;
+        padding: 28px 24px !important;
+        border-radius: 0 !important;
+    }
+
+    /* Ocultar decoraciones pesadas en móvil */
+    .deco-lines,
+    .deco-ring,
+    .particle,
+    .particle-extra {
+        display: none !important;
+    }
+
+    .login-body {
+        padding: 24px 20px !important;
+    }
+
+    .login-footer {
+        padding: 16px 20px !important;
+    }
+}
+
+@media (max-width: 479px) {
+    .banner-container {
+        height: 48px !important;
+    }
+
+    .login-wrapper {
+        padding: 10px !important;
+        min-height: calc(100dvh - 48px) !important;
+    }
+
+    .login-container {
+        max-width: 100% !important;
+        border-radius: 14px !important;
+    }
+
+    .login-header {
+        min-height: 150px !important;
+        padding: 20px 16px !important;
+    }
+
+    .login-header .logo img {
+        width: 180px !important;
+    }
+
+    .login-header h1 {
+        font-size: 20px !important;
+    }
+
+    .login-body {
+        padding: 20px 16px !important;
+    }
+
+    .login-footer {
+        padding: 12px 16px !important;
+        font-size: 12px !important;
+    }
+}
+
+/* ================================================================
+   UTILIDADES – hide/show por pantalla
+   ================================================================ */
+@media (max-width: 767px) {
+    .hide-mobile {
+        display: none !important;
+    }
+
+    .show-mobile {
+        display: block !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .show-mobile {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    .hide-tablet {
+        display: none !important;
+    }
+}
+
+/* ================================================================
+   ACCESSIBILITY: reduce motion
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}

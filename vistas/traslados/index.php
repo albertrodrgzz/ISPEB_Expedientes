@@ -64,6 +64,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
     <title>Traslados - <?= APP_NAME ?></title>
 
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
 

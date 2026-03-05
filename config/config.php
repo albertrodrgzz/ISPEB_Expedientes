@@ -58,7 +58,7 @@ if (!defined('APP_URL')) {
 
 // Nombre de la aplicación
 if (!defined('APP_NAME')) {
-    define('APP_NAME', 'SIGEX');
+    define('APP_NAME', 'SIGED');
 }
 
 // Versión de la aplicación

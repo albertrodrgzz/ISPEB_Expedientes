@@ -1,17 +1,25 @@
 /**
  * HEADER FIX - Diseño moderno para sidebar flotante
+ * El header flota encima del contenido con position:fixed
+ * Los índices !important garantizan que ningun otro CSS lo sobreescriba.
  */
 
 /* Header modernizado para sidebar flotante */
 .header {
-    position: fixed;
+    position: fixed !important;
     top: 16px !important;
-    /* Alineado con sidebar flotante */
     left: calc(var(--sidebar-width) + 8px) !important;
-    /* Espacio del sidebar + gap */
     right: 16px !important;
-    /* Margen derecho */
+    /* width:auto para que left+right controlen el tamaño */
+    width: auto !important;
     height: 68px !important;
+
+    /* Layout interno: título izquierda, avatar+logout derecha */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
 
     background: white !important;
     backdrop-filter: blur(10px);
@@ -25,12 +33,10 @@
         0 1px 3px rgba(0, 0, 0, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 
-    /* Borde no, solo sombra */
     border: none !important;
     border-bottom: none !important;
-
     padding: 0 28px !important;
-
+    z-index: 999 !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -50,10 +56,45 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
-/* User profile hover */
-.user-profile:hover {
-    background: rgba(15, 76, 129, 0.04) !important;
-    transform: translateY(-1px);
+/* User-profile en el topbar del header */
+.header .user-profile {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    text-decoration: none !important;
+    padding: 6px 12px !important;
+    border-radius: 12px !important;
+    transition: background 0.2s ease, transform 0.2s ease !important;
+    flex: 0 0 auto !important;
+    max-width: 220px !important;
+}
+
+.header .user-profile:hover {
+    background: rgba(15, 76, 129, 0.06) !important;
+    transform: translateY(-1px) !important;
+}
+
+.header .user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+}
+
+.header .user-name {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.header .user-role {
+    font-size: 11px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 /* Logout button mejorado */
@@ -80,4 +121,53 @@
     margin-left: calc(var(--sidebar-width) + 8px) !important;
     margin-right: 16px !important;
     padding: 24px !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE FIX — Tablet y Móvil (≤1023px)
+   Este bloque SOBREESCRIBE todo porque header-fix.css
+   se carga al final de la cascada via header.php
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+
+    /* Header: ocupa todo el ancho, pegado arriba */
+    .header {
+        position: sticky !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        z-index: 50 !important;
+        padding: 0 16px 0 64px !important;
+        box-sizing: border-box !important;
+        height: 60px !important;
+    }
+
+    /* Main content: SIN márgenes del sidebar — ocupa TODO el ancho */
+    .main-content {
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        border-radius: 0 !important;
+        box-sizing: border-box !important;
+    }
+}
+
+@media (max-width: 767px) {
+
+    .header {
+        height: 56px !important;
+        padding: 0 12px 0 56px !important;
+    }
+
+    .page-title {
+        font-size: 17px !important;
+    }
 }

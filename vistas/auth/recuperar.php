@@ -254,6 +254,7 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
     <title>Recuperar Contraseña - <?php echo APP_NAME; ?></title>
     <link rel="icon" type="image/png" href="../../publico/imagenes/isotipo.png">
     <link rel="shortcut icon" href="../../publico/imagenes/isotipo.png">
+    <link rel="stylesheet" href="../../publico/css/responsive.css">
     <style>
         * {
             margin: 0;
@@ -285,7 +286,8 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
             margin: 0;
             padding: 0;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
         
         /* Imagen de fondo institucional */
@@ -316,12 +318,12 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
         /* Cintillo institucional — animación de entrada */
         .banner-container {
             width: 100%;
-            height: 80px;
+            height: auto;
             background: #ffffff;
             box-shadow: 0 2px 16px rgba(0,0,0,0.12);
             position: relative;
             z-index: 10;
-            overflow: hidden;
+            overflow: visible;
             animation: bannerSlideDown 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
@@ -332,8 +334,9 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
 
         .banner-container img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            max-height: none;
+            object-fit: contain;
             object-position: center;
             display: block;
         }
@@ -343,7 +346,8 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 70px);
+            min-height: calc(100vh - 80px);
+            height: auto;
             padding: 30px;
             position: relative;
             z-index: 1;

@@ -5,16 +5,30 @@
  */
 
 require_once __DIR__ . '/../../config/icons.php';
+
+// Variables de sesión defensivas — nunca generan PHP notices
+$_hdr_nombre  = $_SESSION['nombres']       ?? ($_SESSION['nombre_completo'] ?? 'Usuario');
+$_hdr_cargo   = $_SESSION['cargo']         ?? ($_SESSION['departamento']    ?? 'Sistema');
+$_hdr_nivel   = (int)($_SESSION['nivel_acceso'] ?? 3);
+$_hdr_inicial = strtoupper(mb_substr(trim($_hdr_nombre), 0, 1, 'UTF-8') ?: 'U');
+$_hdr_av_clase = match($_hdr_nivel) {
+    1       => 'avatar-inicial--nivel-1',
+    2       => 'avatar-inicial--nivel-2',
+    default => 'avatar-inicial--nivel-3',
+};
 ?>
 
-<!-- Cargar fuente Inter -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Fuente Inter — LOCAL (100% offline, sin CDN) -->
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/fonts/inter.css">
 
-<!-- Favicon -->
-<link rel="icon" type="image/png" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
-<link rel="shortcut icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+<!-- Favicon — usa APP_URL absoluta para funcionar en cualquier nivel de ruta -->
+<link rel="icon"             type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+<link rel="icon"             type="image/png" sizes="16x16" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+<link rel="apple-touch-icon"                  sizes="180x180" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+<link rel="shortcut icon"    type="image/png"                href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+
+<!-- modern-components.css garantiza estilos de avatar en todas las vistas -->
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
 
 <!-- CSS Fix para header flotante moderno -->
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/header-fix.css">
@@ -25,33 +39,39 @@ require_once __DIR__ . '/../../config/icons.php';
 <!-- Header -->
 <header class="header">
     <div class="header-left">
-        <h1 class="page-title">Vista General</h1>
+        <h1 class="page-title"><?= htmlspecialchars($pageTitle ?? 'Vista General') ?></h1>
     </div>
-    
+
     <div class="header-right">
+        <?php if (!empty($headerAction)): ?>
+            <?= $headerAction ?>
+        <?php endif; ?>
+
         <!-- User Profile (Clickable) -->
         <a href="<?= APP_URL ?>/vistas/perfil/" class="user-profile" title="Mi perfil">
-            <div class="user-avatar">
-                <?= strtoupper(substr($_SESSION['nombres'], 0, 2)) ?>
+            <div class="user-avatar avatar-inicial <?= $_hdr_av_clase ?>">
+                <?= htmlspecialchars($_hdr_inicial) ?>
             </div>
             <div class="user-info">
-                <div class="user-name">
-                    <?= htmlspecialchars($_SESSION['nombres']) ?>
-                </div>
-                <div class="user-role">
-                    <?= htmlspecialchars($_SESSION['cargo']) ?>
-                </div>
+                <div class="user-name"><?= htmlspecialchars($_hdr_nombre) ?></div>
+                <div class="user-role"><?= htmlspecialchars($_hdr_cargo) ?></div>
             </div>
         </a>
-        
-        <!-- Logout Button -->
+
+        <!-- Logout Button — SIEMPRE visible -->
         <button onclick="confirmarCerrarSesion()" class="btn-logout" title="Cerrar sesión">
             <?= Icon::get('logout') ?>
         </button>
     </div>
 </header>
 
+
 <script>
+/* Variable global APP_URL para JS (badge, fetch, etc.) */
+if (typeof APP_URL === 'undefined') {
+    var APP_URL = '<?= addslashes(APP_URL) ?>';
+}
+
 /**
  * Confirmar cierre de sesión con SweetAlert2
  */
@@ -66,7 +86,6 @@ function confirmarCerrarSesion() {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            // Mostrar indicador de carga
             Swal.fire({
                 title: 'Cerrando sesión...',
                 allowOutsideClick: false,
@@ -75,8 +94,6 @@ function confirmarCerrarSesion() {
                     Swal.showLoading();
                 }
             });
-            
-            // Redirigir al logout
             window.location.href = '<?= APP_URL ?>/config/logout.php';
         }
     });

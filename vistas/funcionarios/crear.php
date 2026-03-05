@@ -26,9 +26,10 @@ function validarCedulaVenezolana(string $cedula): bool {
 }
 
 function validarTelefonoVenezolano(string $tel): bool {
-    // Acepta: solo dígitos 10-11 números (04121234567)
+    // Acepta: 0416..., 0412..., 0424..., etc. (10-11 dígitos con 0 inicial o sin prefijo)
     $tel = preg_replace('/[^0-9]/', '', $tel);
-    return (bool) preg_match('/^(\+58|0058)?4(1[246]|2[246])\d{7}$/', $tel);
+    // Acepta con prefijo 0, +58 o 0058, o directo. Operadoras: 412,414,416,424,426
+    return (bool) preg_match('/^(\+58|0058|0)?4(1[2-9]|2[24-6])\d{7}$/', $tel) || strlen($tel) === 11;
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -221,16 +222,11 @@ function fieldClass(string $campo, array $errores): string {
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
 
     <div class="main-content">
-        <header class="header">
-            <div class="header-left">
-                <h1 class="page-title">Nuevo Funcionario</h1>
-            </div>
-            <div class="header-right">
-                <a href="index.php" class="btn" style="background:#e2e8f0;color:#2d3748;text-decoration:none;">
-                    ← Volver al Listado
-                </a>
-            </div>
-        </header>
+        <?php
+            $pageTitle    = 'Nuevo Funcionario';
+            $headerAction = '<a href="index.php" class="btn" style="background:#e2e8f0;color:#2d3748;text-decoration:none;">← Volver al Listado</a>';
+            include __DIR__ . '/../layout/header.php';
+        ?>
 
         <div class="content-wrapper">
             <div class="card">
@@ -495,19 +491,7 @@ function fieldClass(string $campo, array $errores): string {
         });
 
         // ── Validación de teléfono (cliente + servidor) ───────────────────────
-        document.getElementById('telefono').addEventListener('blur', function () {
-            const val = this.value.trim();
-            if (!val) { clearFeedback('telefono'); estado['telefono'] = true; return; }
-
-            const limpio = val.replace(/[\s\-()]/g, '');
-            const ok = /^(\+58|0058|0)?4(1[246]|2[246])\d{7}$/.test(limpio);
-            if (!ok) {
-                setFeedback('telefono', 'error', '❌ Formato inválido. Ejemplo: 0412-1234567');
-                estado['telefono'] = false;
-                return;
-            }
-            verificarEnServidor('telefono', val);
-        });
+        // (manejado por el listener de abajo)
 
         // ── Validación de email (cliente + servidor) ──────────────────────────
         document.getElementById('email').addEventListener('blur', function () {

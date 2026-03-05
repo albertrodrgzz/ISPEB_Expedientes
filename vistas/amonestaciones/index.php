@@ -66,6 +66,7 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
     <title>Amonestaciones - <?= APP_NAME ?></title>
 
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
 

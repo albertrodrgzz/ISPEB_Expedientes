@@ -73,6 +73,8 @@ $vacaciones = $stmt->fetchAll();
     <title>Vacaciones - <?php echo APP_NAME; ?></title>
     
     <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="../../publico/css/responsive.css">
+
     <link rel="stylesheet" href="../../publico/css/modern-components.css">
     <link rel="stylesheet" href="../../publico/css/swal-modern.css">
     

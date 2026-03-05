@@ -90,7 +90,9 @@ if ($nivel_acceso >= 3) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Portal – <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/responsive.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
+
     <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <style>
         /* ── Portal Nivel 3 ── */
@@ -172,11 +174,22 @@ if ($nivel_acceso >= 3) {
 
             <!-- Hero card del empleado -->
             <div class="portal-hero">
+                <?php
+                $av_inicial_hero = strtoupper(mb_substr($mi_perfil['nombre_completo'], 0, 1, 'UTF-8') ?: 'U');
+                $foto_url = !empty($mi_perfil['foto'])
+                    ? APP_URL . '/subidas/fotos/' . htmlspecialchars($mi_perfil['foto'])
+                    : null;
+                ?>
                 <div class="portal-avatar">
-                    <?php if ($mi_perfil['foto']): ?>
-                        <img src="<?= APP_URL ?>/subidas/fotos/<?= htmlspecialchars($mi_perfil['foto']) ?>" alt="Foto">
+                    <?php if ($foto_url): ?>
+                        <img src="<?= $foto_url ?>"
+                             alt="<?= htmlspecialchars($av_inicial_hero) ?>"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span style="display:none; width:100%; height:100%; align-items:center; justify-content:center; font-size:34px; font-weight:800; color:white;">
+                            <?= htmlspecialchars($av_inicial_hero) ?>
+                        </span>
                     <?php else: ?>
-                        <?= strtoupper(substr($mi_perfil['nombre_completo'], 0, 1)) ?>
+                        <?= htmlspecialchars($av_inicial_hero) ?>
                     <?php endif; ?>
                 </div>
                 <div>

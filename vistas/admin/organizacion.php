@@ -49,9 +49,10 @@ $cargos = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión Organizacional - <?php echo APP_NAME; ?></title>
-    <link rel="stylesheet" href="../../publico/css/estilos.css">
+    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/responsive.css">
     <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js">
+    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <style>
         .org-tabs {
             display: flex;
@@ -272,18 +273,7 @@ $cargos = $stmt->fetchAll();
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <header class="header">
-            <div class="header-left">
-                <h1 class="page-title">Gestión Organizacional</h1>
-                <p style="color: var(--color-text-light); margin-top: 4px;">Administrar departamentos y cargos del sistema</p>
-            </div>
-            <div class="header-right">
-                <a href="index.php" class="btn" style="background: #e2e8f0; color: #2d3748; text-decoration: none;">
-                    ← Volver al Panel
-                </a>
-            </div>
-        </header>
-        
+        <?php include __DIR__ . '/../layout/header.php'; ?>
         <div class="content-wrapper">
             <!-- Tabs -->
             <div class="org-tabs">
