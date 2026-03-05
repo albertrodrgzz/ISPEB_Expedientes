@@ -42,6 +42,8 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Directorio de Funcionarios - <?= APP_NAME ?></title>
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+    <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">

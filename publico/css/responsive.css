@@ -74,9 +74,100 @@ table,
 }
 
 /* ================================================================
-   PC GAMER / 4K — ≥1920px
+   TOPBAR / HEADER — Reglas robustas para TODOS los breakpoints
+   Garantiza que avatar + logout sean siempre visibles
    ================================================================ */
-@media (min-width: 1920px) {
+
+/* El header siempre es flex row con space-between */
+.header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: auto !important;
+    /* left+right controlan el ancho cuando es fixed */
+    overflow: visible !important;
+    flex-wrap: nowrap !important;
+    min-height: 56px !important;
+    box-sizing: border-box !important;
+}
+
+.header-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.header-right {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-left: 16px !important;
+}
+
+/* Título nunca desborda */
+.page-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ================================================================
+   TV / 4K — ≥2560px
+   ================================================================ */
+@media (min-width: 2560px) {
+    :root {
+        --sidebar-width: 300px;
+    }
+
+    .header {
+        height: 80px !important;
+        padding: 0 40px !important;
+    }
+
+    .page-title {
+        font-size: 36px !important;
+    }
+
+    .user-avatar {
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 20px !important;
+    }
+
+    .user-name {
+        font-size: 16px !important;
+    }
+
+    .main-content {
+        margin-top: 120px !important;
+    }
+
+    .content-wrapper {
+        padding: 48px !important;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 32px !important;
+    }
+
+    .kpi-value {
+        font-size: 44px !important;
+    }
+
+    .nav-item {
+        font-size: 16px !important;
+        padding: 14px 18px !important;
+    }
+}
+
+/* ================================================================
+   WIDESCREEN / PC GAMER — 1920px a 2559px
+   ================================================================ */
+@media (min-width: 1920px) and (max-width: 2559px) {
     :root {
         --sidebar-width: 280px;
     }
@@ -85,7 +176,6 @@ table,
         margin-left: calc(var(--sidebar-width) + 32px) !important;
         margin-right: 32px !important;
         margin-top: 32px !important;
-        margin-bottom: 32px !important;
     }
 
     .kpi-grid {
@@ -103,9 +193,27 @@ table,
 }
 
 /* ================================================================
-   DESKTOP — 1280px a 1919px (no especial, layout normal)
+   MONITOR GRANDE — 1440px a 1919px
    ================================================================ */
-@media (min-width: 1280px) and (max-width: 1919px) {
+@media (min-width: 1440px) and (max-width: 1919px) {
+    :root {
+        --sidebar-width: 270px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 24px !important;
+    }
+
+    .content-wrapper {
+        padding: 30px !important;
+    }
+}
+
+/* ================================================================
+   DESKTOP — 1280px a 1439px
+   ================================================================ */
+@media (min-width: 1280px) and (max-width: 1439px) {
     .kpi-grid {
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
     }

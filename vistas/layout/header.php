@@ -21,11 +21,11 @@ $_hdr_av_clase = match($_hdr_nivel) {
 <!-- Fuente Inter — LOCAL (100% offline, sin CDN) -->
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/fonts/inter.css">
 
-<!-- Favicon — usa APP_URL absoluta para funcionar en cualquier nivel de ruta -->
+<!-- Favicon absoluto — funciona en CUALQUIER ruta de la app -->
 <link rel="icon"             type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 <link rel="icon"             type="image/png" sizes="16x16" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 <link rel="apple-touch-icon"                  sizes="180x180" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
-<link rel="shortcut icon"    type="image/png"                href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+<link rel="shortcut icon"    type="image/x-icon"              href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 
 <!-- modern-components.css garantiza estilos de avatar en todas las vistas -->
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
