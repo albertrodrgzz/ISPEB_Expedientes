@@ -1,14 +1,81 @@
-# Prevenir ejecución de PHP en carpeta de subidas
-<FilesMatch "\.php$">
-    Order Allow,Deny
-    Deny from all
+# ╔═══════════════════════════════════════════════════════════════════╗
+# ║  /subidas/.htaccess — CUARENTENA ANTI-RCE                         ║
+# ║  Este directorio almacena archivos subidos por usuarios.           ║
+# ║  OBJETIVO: que NINGÚN archivo ejecute código PHP/CGI,             ║
+# ║  sin importar su extensión.                                        ║
+# ║  OWASP: A08 Software and Data Integrity Failures                  ║
+# ╚═══════════════════════════════════════════════════════════════════╝
+
+# ── 1. DESACTIVAR EL MOTOR PHP EN TODO EL DIRECTORIO ────────────────────────
+# Incluso si alguien sube un .php que evadió la validación, Apache
+# lo servirá como texto plano, nunca lo ejecutará.
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php5.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# ── 2. FORZAR TIPO MIME → TEXT/PLAIN PARA EXTENSIONES PELIGROSAS ────────────
+# Si el motor PHP fuera ignorado, esta regla hace que el archivo
+# se descargue/muestre como texto, nunca se interprete.
+<FilesMatch "\.(php[0-9]?|phtml|phar|php\.|cgi|pl|py|asp|aspx|sh|exe|bat|cmd|msi|vbs|js|jar)$">
+    # Apache 2.4+
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    # Apache 2.2
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
 </FilesMatch>
 
-# Permitir solo descarga de archivos específicos
-<FilesMatch "\.(jpg|jpeg|png|gif|pdf|doc|docx)$">
-    Order Allow,Deny
-    Allow from all
+# Alternativa con ForceType (segunda capa)
+<FilesMatch "\.(php[0-9]?|phtml|phar)$">
+    ForceType text/plain
 </FilesMatch>
 
-# Prevenir listado de directorios
-Options -Indexes
+# ── 3. DESHABILITAR CGI Y SSI ────────────────────────────────────────────────
+Options -ExecCGI -Indexes -Includes
+RemoveHandler .php .php5 .php7 .php8 .phtml .phar .cgi .pl .py
+RemoveType    .php .php5 .php7 .php8 .phtml .phar
+
+# ── 4. BLOQUEAR ACCESO DIRECTO A .HTACCESS ──────────────────────────────────
+<Files ".htaccess">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</Files>
+
+# ── 5. SOLO PERMITIR TIPOS MIME SEGUROS ─────────────────────────────────────
+# Lista blanca: únicamente imágenes y PDF son válidos para subidas.
+# Si en el futuro agregas .docx, añádelo aquí también.
+<FilesMatch "(?i)\.(jpg|jpeg|png|gif|webp|pdf|doc|docx)$">
+    # Estos archivos SÍ se sirven normalmente.
+    # No hay directiva extra: la exclusión de PHP ya los protege.
+</FilesMatch>
+
+# ── 6. CABECERA DE DESCARGA PARA PDFs (evitar ejecución en browser) ──────────
+<FilesMatch "(?i)\.pdf$">
+    <IfModule mod_headers.c>
+        Header set Content-Disposition "attachment"
+        Header set X-Content-Type-Options "nosniff"
+    </IfModule>
+</FilesMatch>
+
+# ── 7. CABECERAS DE SEGURIDAD GENERALES ─────────────────────────────────────
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header unset X-Powered-By
+</IfModule>

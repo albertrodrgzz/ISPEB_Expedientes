@@ -1,20 +1,89 @@
-# Protección de archivos
+# ╔═══════════════════════════════════════════════════════════════════╗
+# ║  .HTACCESS MAESTRO — SIGED v3.5                                    ║
+# ║  Hardening estructural para entorno de producción                  ║
+# ║  OWASP: A05 Security Misconfiguration                              ║
+# ╚═══════════════════════════════════════════════════════════════════╝
+
+# ── 1. DESHABILITAR LISTADO DE DIRECTORIOS ───────────────────────────────────
+# Si falta un index.php, Apache NO muestra el árbol de archivos.
+Options -Indexes -MultiViews
+
+# ── 2. PROTEGER ESTE MISMO ARCHIVO ──────────────────────────────────────────
 <Files ".htaccess">
     Order Allow,Deny
     Deny from all
 </Files>
 
-# Prevenir listado de directorios
-Options -Indexes
-
-# Proteger archivos sensibles
-<FilesMatch "\.(sql|log|md|json|lock)$">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
-
-# Habilitar rewrite (para futuras rutas limpias)
+# ── 3. BLOQUEAR ACCESO A DIRECTORIOS SENSIBLES ──────────────────────────────
+# config/ → contiene credenciales de BD, claves, constantes de la app.
+# database/ → scripts SQL con estructura de tablas y datos de ejemplo.
+# modelos/ → lógica de negocio interna, no debe ser visible.
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /APP3/
+
+    # Bloquear acceso directo a directorios sensibles (403 Forbidden)
+    RewriteRule ^(config|database|modelos|lib)(/|$) - [F,L]
 </IfModule>
+
+# Alternativa sin mod_rewrite (doble capa de protección):
+<IfModule mod_authz_core.c>
+    # Apache 2.4+
+    <DirectoryMatch "^.*(config|database|modelos|lib).*$">
+        Require all denied
+    </DirectoryMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    # Apache 2.2
+    <DirectoryMatch "^.*(config|database|modelos|lib).*$">
+        Order Allow,Deny
+        Deny from all
+    </DirectoryMatch>
+</IfModule>
+
+# ── 4. BLOQUEAR ARCHIVOS OCULTOS Y SENSIBLES ────────────────────────────────
+# Git, dotfiles, logs, SQL dumps, archivos de entorno, llaves privadas.
+<FilesMatch "(^\.|\.git|\.env|\.sql|\.log|\.md|\.json|\.lock|\.pem|\.key|\.bak|\.swp|~$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ── 5. CABECERAS DE SEGURIDAD HTTP ──────────────────────────────────────────
+<IfModule mod_headers.c>
+    # Evitar que el navegador ejecute el tipo MIME incorrecto
+    Header set X-Content-Type-Options "nosniff"
+
+    # Bloquear iframes de sitios externos (clickjacking)
+    Header set X-Frame-Options "SAMEORIGIN"
+
+    # Forzar XSS protection en navegadores antiguos
+    Header set X-XSS-Protection "1; mode=block"
+
+    # Eliminar la firma del servidor (seguridad por oscuridad)
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
+
+# ── 6. FORZAR UTF-8 EN TODAS LAS RESPUESTAS ─────────────────────────────────
+AddDefaultCharset UTF-8
+
+# ── 7. DENEGAR ACCESO A SCRIPTS PHP EN CARPETAS PROTEGIDAS ──────────────────
+# Segunda capa: aunque llegue un .php a config/ no se ejecuta.
+<FilesMatch "^(config|database|modelos).*\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ── 8. LIMITAR TAMAÑO DE PETICIÓN (Anti-DoS básico) ─────────────────────────
+# 10 MB máximo para evitar uploads abusivos (refuerza config PHP).
+LimitRequestBody 10485760

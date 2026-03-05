@@ -149,3 +149,69 @@ if (!defined('SESSION_NAME')) {
 if (!defined('SESSION_LIFETIME')) {
     define('SESSION_LIFETIME', 1800);
 }
+
+// ===================================================
+// HELPERS DE SEGURIDAD — Anti-XSS
+// ===================================================
+
+/**
+ * e() — Escape seguro para HTML (OWASP XSS Prevention Rule #1)
+ *
+ * Úsalo en TODAS las vistas al hacer echo de datos de BD o usuarios:
+ *   <?= e($variable) ?>
+ *   <?php echo e($nombre) ?>
+ *
+ * Protege contra: <script>, onclick=, javascript:, y cualquier
+ * etiqueta/atributo HTML inyectado por el usuario.
+ *
+ * @param  mixed  $value  Valor a escapar (string, int, null)
+ * @return string         Valor seguro para insertar en HTML
+ */
+if (!function_exists('e')) {
+    function e($value): string {
+        return htmlspecialchars((string)($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+}
+
+/**
+ * eAttr() — Escape para atributos HTML (value=, placeholder=, title=, etc.)
+ * Uso: <input value="<?= eAttr($variable) ?>">
+ */
+if (!function_exists('eAttr')) {
+    function eAttr($value): string {
+        return htmlspecialchars((string)($value ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+}
+
+/**
+ * eJs() — Escape seguro para contexto JavaScript inline
+ * Uso: var nombre = "<?= eJs($variable) ?>";
+ * NUNCA uses e() dentro de <script>, usa eJs() en su lugar.
+ */
+if (!function_exists('eJs')) {
+    function eJs($value): string {
+        return addslashes(strip_tags((string)($value ?? '')));
+    }
+}
+
+/**
+ * sanitizeInt() — Forzar entero válido (evita inyección tipo "1 OR 1=1")
+ * Uso en IDs GET/POST: $id = sanitizeInt($_GET['id'] ?? 0);
+ */
+if (!function_exists('sanitizeInt')) {
+    function sanitizeInt($value, int $default = 0): int {
+        $filtered = filter_var($value, FILTER_VALIDATE_INT);
+        return $filtered !== false ? (int)$filtered : $default;
+    }
+}
+
+/**
+ * sanitizeString() — Limpia espacios y caracteres de control
+ * Uso general para sanitizar inputs de texto antes de procesarlos.
+ * NO sustituye las sentencias preparadas — úsalo en conjunto.
+ */
+if (!function_exists('sanitizeString')) {
+    function sanitizeString($value, int $maxLen = 500): string {
+        return mb_substr(trim(strip_tags((string)($value ?? ''))), 0, $maxLen, 'UTF-8');
+    }
+}
