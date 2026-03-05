@@ -16,10 +16,17 @@ $_hdr_av_clase = match($_hdr_nivel) {
     2       => 'avatar-inicial--nivel-2',
     default => 'avatar-inicial--nivel-3',
 };
+
+// Cache buster: timestamp del archivo (cambia solo cuando se modifica el CSS/JS)
+$_pub = __DIR__ . '/../../publico';
+$_v_inter      = @filemtime($_pub . '/fonts/inter.css')           ?: APP_BUILD ?? date('Ymd');
+$_v_modern     = @filemtime($_pub . '/css/modern-components.css') ?: APP_BUILD ?? date('Ymd');
+$_v_hdrfix     = @filemtime($_pub . '/css/header-fix.css')        ?: APP_BUILD ?? date('Ymd');
+$_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js') ?: APP_BUILD ?? date('Ymd');
 ?>
 
 <!-- Fuente Inter — LOCAL (100% offline, sin CDN) -->
-<link rel="stylesheet" href="<?= APP_URL ?>/publico/fonts/inter.css">
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/fonts/inter.css?v=<?= $_v_inter ?>">
 
 <!-- Favicon absoluto — funciona en CUALQUIER ruta de la app -->
 <link rel="icon"             type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
@@ -28,13 +35,13 @@ $_hdr_av_clase = match($_hdr_nivel) {
 <link rel="shortcut icon"    type="image/x-icon"              href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 
 <!-- modern-components.css garantiza estilos de avatar en todas las vistas -->
-<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css?v=<?= $_v_modern ?>">
 
 <!-- CSS Fix para header flotante moderno -->
-<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/header-fix.css">
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/header-fix.css?v=<?= $_v_hdrfix ?>">
 
 <!-- SweetAlert2 Local (offline-ready) -->
-<script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+<script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js?v=<?= $_v_swal ?>"></script>
 
 <!-- Header -->
 <header class="header">

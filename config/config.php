@@ -1,7 +1,8 @@
 <?php
 /**
  * Configuración Base de la Aplicación
- * Sistema ISPEB - Gestión de Expedientes Digitales
+ * SIGED — Sistema de Gestión de Expedientes Digitales
+ * Instituto de Salud Pública del Estado Bolívar (ISPEB)
  */
 
 // ===================================================
@@ -66,6 +67,11 @@ if (!defined('APP_VERSION')) {
     define('APP_VERSION', '3.5.0');
 }
 
+// Número de build para cache busting (auto-generado al modificar config)
+if (!defined('APP_BUILD')) {
+    define('APP_BUILD', '20260305');
+}
+
 // ===================================================
 // ZONA HORARIA
 // ===================================================
@@ -110,18 +116,24 @@ if (!defined('ALLOWED_EXTENSIONS')) {
 // MODO DE DEPURACIÓN
 // ===================================================
 
-// Activar en desarrollo, desactivar en producción
+// PRODUCCIÓN: false → errores ocultos al usuario, guardados en log
+// DESARROLLO: true  → errores visibles en pantalla
 if (!defined('APP_DEBUG')) {
-    define('APP_DEBUG', true);
+    define('APP_DEBUG', false);
 }
 
 // Configurar reporte de errores según modo debug
 if (APP_DEBUG) {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
 } else {
+    // PRODUCCIÓN — nunca revelar rutas de servidor
     error_reporting(0);
     ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    ini_set('log_errors', 1);
+    // Los errores se guardan en el log de Apache/XAMPP
 }
 
 // ===================================================
