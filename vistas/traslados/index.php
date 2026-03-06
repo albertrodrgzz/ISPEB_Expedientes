@@ -19,7 +19,7 @@ if (!verificarNivel(2)) {
 $db = getDB();
 
 // --- DEPARTAMENTOS ---
-$stmtDeps = $db->query("SELECT * FROM departamentos ORDER BY nombre ASC");
+$stmtDeps = $db->query("SELECT * FROM departamentos WHERE estado = 'activo' ORDER BY nombre ASC");
 $departamentos = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
 $departamentosJson = json_encode($departamentos);
 
@@ -78,8 +78,6 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
         .dept-arrow { color: #94A3B8; font-size: 14px; font-weight: 700; }
         .dept-old { color: #64748B; text-decoration: line-through; opacity: 0.75; font-size: 12px; }
         .dept-new { color: #0F4C81; font-weight: 600; }
-        /* File input modal */
-        .swal2-file { background: #fff !important; border: 2px solid #e2e8f0 !important; border-radius: 8px !important; padding: 10px !important; font-size: 14px !important; width: 100% !important; }
     </style>
 </head>
 <body>
@@ -254,7 +252,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
     </div>
 
     <script>
-    const APP_URL = "<?= APP_URL ?>";
+    if (typeof APP_URL === 'undefined') { var APP_URL = "<?= APP_URL ?>"; }
     const DEPARTAMENTOS = <?= $departamentosJson ?>;
 
     // ===== FILTROS =====
@@ -291,6 +289,17 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
 
     document.addEventListener('DOMContentLoaded', aplicarFiltros);
 
+    /** Actualiza el label del file-input moderno en el modal Traslado */
+    function updateFileNameTraslado(input) {
+        const label = input.parentElement.querySelector('.file-input-label');
+        const span  = label ? label.querySelector('.file-name') : null;
+        if (span && input.files && input.files[0]) {
+            const f = input.files[0];
+            span.textContent = f.name.length > 35 ? f.name.substring(0, 32) + '...' : f.name;
+            label.classList.add('has-file');
+        }
+    }
+
     // ===== MODAL REGISTRAR TRASLADO =====
     async function abrirModalTraslado() {
         try {
@@ -307,49 +316,68 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
             const deptOptions = DEPARTAMENTOS.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
 
             const { value: formValues } = await Swal.fire({
-                title: '<div style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;color:#1e293b"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg><span>Registrar Traslado</span></div>',
-                width: '700px',
+                title: '<div style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;color:#1e293b"><?= Icon::get("repeat") ?><span>Registrar Traslado</span></div>',
+                width: '680px',
+                customClass: { popup: 'swal-modern-popup' },
                 html: `
-                    <style>
-                        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-                        .form-group{text-align:left}
-                        .form-label{display:block;font-weight:600;margin-bottom:7px;color:#334155;font-size:13px}
-                        .form-input,.form-select{width:100%;padding:10px 13px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:all .2s;font-family:inherit}
-                        .form-input:focus,.form-select:focus{border-color:#8B5CF6;outline:none;box-shadow:0 0 0 3px rgba(139,92,246,.1)}
-                        .dept-preview{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;font-size:13px;color:#64748B;display:flex;align-items:center;gap:8px;margin-top:4px}
-                    </style>
-                    <div style="max-width:650px;margin:0 auto;text-align:left">
-                        <div class="form-group" style="margin-bottom:16px">
-                            <label class="form-label">Funcionario <span style="color:#ef4444">*</span></label>
-                            <select id="swal-funcionario" class="form-select">
+                    <div class="swal-form-grid" style="margin-bottom:20px">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('user') ?>
+                                Funcionario
+                            </label>
+                            <select id="swal-funcionario" class="swal2-select">
                                 <option value="">Seleccione un funcionario...</option>
                                 ${funcionarios.map(f => `<option value="${f.id}" data-dept="${f.departamento_nombre || 'No definido'}">${f.nombres} ${f.apellidos} (${f.cedula})</option>`).join('')}
                             </select>
                         </div>
-                        <div class="dept-preview" id="dept-actual-preview">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        <div class="swal-hint show" id="dept-actual-preview" style="display:flex;align-items:center;gap:8px;">
+                            <?= Icon::get('building') ?>
                             <span>Dept. Actual: <strong id="dept-actual-text">— Seleccione un funcionario —</strong></span>
                         </div>
-                        <div class="form-row" style="margin-top:16px">
-                            <div class="form-group">
-                                <label class="form-label">Nuevo Departamento <span style="color:#ef4444">*</span></label>
-                                <select id="swal-dept-nuevo" class="form-select">
-                                    <option value="">Seleccione destino...</option>
-                                    ${deptOptions}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Fecha Efectiva <span style="color:#ef4444">*</span></label>
-                                <input type="date" id="swal-fecha" class="form-input" value="<?= date('Y-m-d') ?>">
-                            </div>
+                    </div>
+
+                    <div class="swal-form-grid-2col" style="margin-bottom:20px">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('arrow-right') ?>
+                                Nuevo Departamento
+                            </label>
+                            <select id="swal-dept-nuevo" class="swal2-select">
+                                <option value="">Seleccione destino...</option>
+                                ${deptOptions}
+                            </select>
                         </div>
-                        <div class="form-group" style="margin-bottom:16px">
-                            <label class="form-label">Motivo / Resolución <span style="color:#ef4444">*</span></label>
-                            <input type="text" id="swal-motivo" class="form-input" placeholder="Ej: Resolución RRHH-2024-001">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('calendar') ?>
+                                Fecha Efectiva
+                            </label>
+                            <input type="date" id="swal-fecha" class="swal2-input" value="<?= date('Y-m-d') ?>">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Orden de Traslado (PDF — opcional)</label>
-                            <input type="file" id="swal-archivo" class="swal2-file" accept="application/pdf">
+                    </div>
+
+                    <div class="swal-form-grid" style="margin-bottom:20px">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('file-text') ?>
+                                Motivo / Resolución
+                            </label>
+                            <input type="text" id="swal-motivo" class="swal2-input" placeholder="Ej: Resolución RRHH-2024-001">
+                        </div>
+                        <div class="swal-form-group">
+                            <label class="swal-label">
+                                <?= Icon::get('upload') ?>
+                                Orden de Traslado (PDF — opcional)
+                            </label>
+                            <div class="file-input-modern">
+                                <input type="file" id="swal-archivo" accept="application/pdf" class="file-input-hidden" onchange="updateFileNameTraslado(this)">
+                                <label for="swal-archivo" class="file-input-label">
+                                    <?= Icon::get('upload') ?>
+                                    <span class="file-name">Seleccionar PDF...</span>
+                                </label>
+                            </div>
+                            <small class="swal-helper">Máximo 5 MB</small>
                         </div>
                     </div>
                 `,

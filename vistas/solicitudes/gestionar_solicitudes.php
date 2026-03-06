@@ -425,9 +425,12 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <script>
-    const CSRF_TOKEN = '<?= $csrf_token ?>';
-    const APP_URL    = '<?= APP_URL ?>';
-    const AJAX_URL   = APP_URL + '/vistas/solicitudes/ajax/procesar_solicitud.php';
+    // APP_URL ya está declarado por header.php con guard. Evitar redeclaración con 'const'.
+    if (typeof CSRF_TOKEN === 'undefined') {
+        var CSRF_TOKEN = '<?= $csrf_token ?>';
+    }
+    const AJAX_URL = APP_URL + '/vistas/solicitudes/ajax/procesar_solicitud.php';
+
 
     function formatFechaGestion(dateStr) {
         if (!dateStr) return '';

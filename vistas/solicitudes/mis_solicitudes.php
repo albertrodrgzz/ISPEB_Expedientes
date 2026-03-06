@@ -51,9 +51,10 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
-    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
+    <!-- SweetAlert2 en <head> para que esté disponible antes de cualquier click -->
+    <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <style>
         /* ── Solicitudes Grid ──────────────────────────────── */
         .solicitudes-grid {
@@ -335,11 +336,12 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div><!-- /.content-wrapper -->
     </div><!-- /.main-content -->
 
-
-    <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <script>
-    const CSRF_TOKEN = '<?= $csrf_token ?>';
-    const APP_URL    = '<?= APP_URL ?>';
+    // APP_URL ya está declarado por header.php (var APP_URL con guard).
+    // Usar 'var' con comprobación para evitar SyntaxError por redeclaración de 'const'.
+    if (typeof CSRF_TOKEN === 'undefined') {
+        var CSRF_TOKEN = '<?= $csrf_token ?>';
+    }
 
     /* =====================================================================
        UTILIDADES

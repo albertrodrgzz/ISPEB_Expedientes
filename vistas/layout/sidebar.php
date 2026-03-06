@@ -387,7 +387,7 @@ function toggleSubmenu(element) {
     const badge = document.getElementById('badge-solicitudes');
     if (!badge) return;   // no visible para nivel 3
 
-    const API_URL = (typeof APP_URL !== 'undefined' ? APP_URL : '') + '/api/contar_solicitudes.php';
+    const API_URL = '<?= APP_URL ?>/api/contar_solicitudes.php';
 
     function actualizarBadge() {
         fetch(API_URL, { credentials: 'same-origin' })
@@ -403,7 +403,7 @@ function toggleSubmenu(element) {
                     badge.classList.remove('visible');
                 }
             })
-            .catch(() => {/* fallo silencioso, no romper la UI */});
+            .catch(err => console.error('[SIGED] Error cargando notificaciones:', err));
     }
 
     // Ejecutar al cargar y luego cada 60 s

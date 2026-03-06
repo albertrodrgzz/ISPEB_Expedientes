@@ -156,7 +156,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - <?php echo APP_NAME; ?></title>
+    <title>Inicio de Sesión - <?php echo APP_NAME; ?></title>
     <link rel="icon" type="image/png" href="publico/imagenes/isotipo.png">
     <link rel="shortcut icon" href="publico/imagenes/isotipo.png">
     <link rel="stylesheet" href="publico/css/responsive.css">

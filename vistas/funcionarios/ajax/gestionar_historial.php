@@ -581,29 +581,65 @@ function registrarAmonestacion($pdo) {
  * Guarda un archivo
  */
 function guardarArchivoHistorial($funcionario_id, $tipo, $archivo) {
+    // ── 1. Validar extensión declarada ──────────────────────────────────────────
     $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
     $extensiones_validas = ['pdf', 'jpg', 'jpeg', 'png'];
-    
-    if (!in_array($extension, $extensiones_validas)) throw new Exception('Formato no válido (PDF/JPG/PNG)', 400);
 
-    $max_size = 5 * 1024 * 1024;
-    if ($archivo['size'] > $max_size) throw new Exception('Archivo muy grande (máx 5MB)', 400);
+    if (!in_array($extension, $extensiones_validas)) {
+        throw new Exception('Formato no válido. Solo se aceptan PDF, JPG y PNG.', 400);
+    }
 
+    // ── 2. Validar tamaño ───────────────────────────────────────────────────────
+    $max_size = 5 * 1024 * 1024; // 5 MB
+    if ($archivo['size'] > $max_size) {
+        throw new Exception('El archivo supera el límite de 5MB permitido.', 400);
+    }
+
+    // ── 3. *** ANTI-MALWARE *** Validar MIME real del archivo ──────────────────
+    // Verifica la firma del archivo (magic bytes) sin importar la extensión.
+    // Un .txt renombrado a .pdf tendrá MIME text/plain y será rechazado.
+    if (!function_exists('finfo_open')) {
+        throw new Exception('El servidor no soporta validación de archivos (finfo). Contacte al administrador.', 500);
+    }
+    $finfo     = finfo_open(FILEINFO_MIME_TYPE);
+    $mime_real = finfo_file($finfo, $archivo['tmp_name']);
+    finfo_close($finfo);
+
+    $mimes_permitidos = [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+    ];
+
+    if (!in_array($mime_real, $mimes_permitidos)) {
+        throw new Exception(
+            'El contenido real del archivo no coincide con el tipo permitido. ' .
+            'Tipo detectado: ' . $mime_real . '. Solo se aceptan PDF, JPG y PNG auténticos.',
+            400
+        );
+    }
+
+    // ── 4. Crear directorio y guardar ───────────────────────────────────────────
     $dir_base = '../../../subidas/funcionarios/' . $funcionario_id . '/' . $tipo;
-    if (!file_exists($dir_base)) mkdir($dir_base, 0755, true);
+    if (!file_exists($dir_base)) {
+        mkdir($dir_base, 0755, true);
+    }
 
     $nombre_archivo = $tipo . '_' . date('Ymd_His') . '.' . $extension;
-    $ruta_completa = $dir_base . '/' . $nombre_archivo;
-    $ruta_relativa = 'subidas/funcionarios/' . $funcionario_id . '/' . $tipo . '/' . $nombre_archivo;
+    $ruta_completa  = $dir_base . '/' . $nombre_archivo;
+    $ruta_relativa  = 'subidas/funcionarios/' . $funcionario_id . '/' . $tipo . '/' . $nombre_archivo;
 
-    if (!move_uploaded_file($archivo['tmp_name'], $ruta_completa)) throw new Exception('Error al guardar archivo', 500);
+    if (!move_uploaded_file($archivo['tmp_name'], $ruta_completa)) {
+        throw new Exception('Error al guardar el archivo en el servidor. Verifique permisos.', 500);
+    }
 
     chmod($ruta_completa, 0644);
 
     return [
-        'ruta' => $ruta_relativa,
+        'ruta'            => $ruta_relativa,
         'nombre_original' => basename($archivo['name']),
-        'tipo_archivo' => $extension
+        'tipo_archivo'    => $extension,
+        'mime_validado'   => $mime_real,
     ];
 }
 

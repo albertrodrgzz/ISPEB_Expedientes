@@ -33,15 +33,15 @@ function verificarSesion() {
  */
 function verificarNivel($nivel_requerido) {
     verificarSesion();
-    
+
     if (!isset($_SESSION['nivel_acceso'])) {
         return false;
     }
-    
+
     // Nivel 1 tiene acceso a todo
     // Nivel 2 tiene acceso a nivel 2 y 3
     // Nivel 3 solo tiene acceso a nivel 3
-    return $_SESSION['nivel_acceso'] <= $nivel_requerido;
+    return (int)$_SESSION['nivel_acceso'] <= (int)$nivel_requerido;
 }
 
 /**
@@ -52,28 +52,21 @@ function verificarNivel($nivel_requerido) {
  */
 function verificarDepartamento($funcionario_id) {
     verificarSesion();
-    
-    // Nivel 1 puede editar a cualquiera
-    if ($_SESSION['nivel_acceso'] == 1) {
+
+    $nivel = (int)($_SESSION['nivel_acceso'] ?? 3);
+
+    // Nivel 1: acceso total sin restricciones
+    if ($nivel === 1) {
         return true;
     }
-    
-    // Nivel 2: Verificar si es del mismo departamento
-    if ($_SESSION['nivel_acceso'] == 2 && $_SESSION['cargo'] == 'Jefe de Departamento') {
-        $db = getDB();
-        $stmt = $db->prepare("SELECT departamento_id FROM funcionarios WHERE id = ?");
-        $stmt->execute([$funcionario_id]);
-        $funcionario = $stmt->fetch();
-        
-        return $funcionario && $funcionario['departamento_id'] == $_SESSION['departamento_id'];
-    }
-    
-    // Nivel 2 (Secretaria) puede editar a cualquiera
-    if ($_SESSION['nivel_acceso'] == 2) {
+
+    // Nivel 2 (Administrador/Coordinador/Jefe): acceso total a LECTURA y EDICIÓN
+    // El nivel 2 puede ver y editar expedientes de cualquier funcionario.
+    if ($nivel === 2) {
         return true;
     }
-    
-    // Nivel 3 no puede editar
+
+    // Nivel 3: no puede editar ni ver expedientes de otros
     return false;
 }
 
@@ -84,7 +77,7 @@ function verificarDepartamento($funcionario_id) {
  */
 function puedeEliminar() {
     verificarSesion();
-    return $_SESSION['nivel_acceso'] <= 2;
+    return (int)($_SESSION['nivel_acceso'] ?? 3) <= 2;
 }
 
 /**
@@ -94,7 +87,7 @@ function puedeEliminar() {
  */
 function puedeAprobarDespidos() {
     verificarSesion();
-    return $_SESSION['nivel_acceso'] == 1;
+    return (int)($_SESSION['nivel_acceso'] ?? 3) === 1;
 }
 
 /**

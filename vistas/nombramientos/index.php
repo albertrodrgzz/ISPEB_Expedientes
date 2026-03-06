@@ -153,12 +153,11 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
                                         <td><?= htmlspecialchars($nom['departamento'] ?? 'N/A') ?></td>
                                         <td style="text-align: center;">
                                             <?php if ($nom['ruta_archivo_pdf']): ?>
-                                                <a href="<?= APP_URL . '/' . $nom['ruta_archivo_pdf'] ?>" 
-                                                   target="_blank" 
-                                                   class="btn-icon" 
-                                                   title="Ver documento">
-                                                    <?= Icon::get('eye') ?>
-                                                </a>
+                                                <button type="button"
+                                                        class="btn-icon"
+                                                        title="Ver documento"
+                                                        onclick="abrirPDF('<?= addslashes(APP_URL . '/' . $nom['ruta_archivo_pdf']) ?>')">                                                    <?= Icon::get('eye') ?>
+                                                </button>
                                             <?php else: ?>
                                                 <span style="color: var(--color-text-lighter);">-</span>
                                             <?php endif; ?>
@@ -174,11 +173,16 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
     </div>
 
     <script>
-    // CSRF Token - Debug
-    const CSRF_TOKEN = '<?= $_SESSION["csrf_token"] ?? "TOKEN_VACIO" ?>';
-    console.log('[DEBUG] CSRF Token:', CSRF_TOKEN);
-    console.log('[DEBUG] Longitud:', CSRF_TOKEN.length);
-    
+    // APP_URL ya está declarado por header.php. Usar var+guard para evitar SyntaxError.
+    if (typeof CSRF_TOKEN === 'undefined') {
+        var CSRF_TOKEN = '<?= $_SESSION["csrf_token"] ?? "" ?>';
+    }
+
+    /** Abre PDF/imagen en nueva pestaña forzando visualización inline (evita descarga) */
+    function abrirPDF(url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
     let funcionariosData = [];
     let cargosData = [];
 

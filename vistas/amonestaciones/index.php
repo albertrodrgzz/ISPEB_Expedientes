@@ -79,8 +79,6 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
         .badge-leve     { background: #FEF3C7; color: #92400E; }
         .badge-grave    { background: #FFEDD5; color: #C2410C; }
         .badge-muy_grave{ background: #FEE2E2; color: #B91C1C; font-weight: 700; }
-        /* File input modal */
-        .swal2-file { background:#fff !important; border:2px solid #e2e8f0 !important; border-radius:8px !important; padding:10px !important; font-size:14px !important; width:100% !important; }
     </style>
 </head>
 <body>
@@ -269,7 +267,7 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
     </div>
 
     <script>
-    const APP_URL = "<?= APP_URL ?>";
+    if (typeof APP_URL === 'undefined') { var APP_URL = "<?= APP_URL ?>"; }
 
     // ===== FILTROS =====
     function aplicarFiltros() {
@@ -309,6 +307,17 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
 
     document.addEventListener('DOMContentLoaded', aplicarFiltros);
 
+    /** Actualiza el label del file-input moderno en el modal Amonestacion */
+    function updateFileNameAmonestacion(input) {
+        const label = input.parentElement.querySelector('.file-input-label');
+        const span  = label ? label.querySelector('.file-name') : null;
+        if (span && input.files && input.files[0]) {
+            const f = input.files[0];
+            span.textContent = f.name.length > 35 ? f.name.substring(0, 32) + '...' : f.name;
+            label.classList.add('has-file');
+        }
+    }
+
     // ===== MODAL REGISTRAR AMONESTACIÓN =====
     async function abrirModalAmonestacion() {
         try {
@@ -323,51 +332,75 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
             Swal.close();
 
             const { value: formValues } = await Swal.fire({
-                title: '<div style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;color:#1e293b"><svg width="24" height="24" fill="none" stroke="#EF4444" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg><span>Registrar Amonestación</span></div>',
-                width: '700px',
+                title: '<div style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;color:#1e293b"><?= Icon::get("alert-triangle") ?><span>Registrar Amonestación</span></div>',
+                width: '680px',
+                customClass: { popup: 'swal-modern-popup' },
                 html: `
-                    <style>
-                        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-                        .form-group{text-align:left;margin-bottom:16px}
-                        .form-label{display:block;font-weight:600;margin-bottom:7px;color:#334155;font-size:13px}
-                        .form-input,.form-select,.form-textarea{width:100%;padding:10px 13px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:all .2s;font-family:inherit;box-sizing:border-box}
-                        .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#EF4444;outline:none;box-shadow:0 0 0 3px rgba(239,68,68,.1)}
-                        .form-textarea{resize:vertical;min-height:70px}
-                    </style>
-                    <div style="max-width:650px;margin:0 auto;text-align:left">
-                        <div class="form-group">
-                            <label class="form-label">Funcionario <span style="color:#ef4444">*</span></label>
-                            <select id="swal-funcionario" class="form-select">
+                    <div class="swal-form-grid" style="margin-bottom:20px">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('user') ?>
+                                Funcionario
+                            </label>
+                            <select id="swal-funcionario" class="swal2-select">
                                 <option value="">Seleccione un funcionario...</option>
                                 ${funcionarios.map(f => `<option value="${f.id}">${f.nombres} ${f.apellidos} (${f.cedula})</option>`).join('')}
                             </select>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Fecha del Evento <span style="color:#ef4444">*</span></label>
-                                <input type="date" id="swal-fecha" class="form-input" value="<?= date('Y-m-d') ?>">
+                    </div>
+
+                    <div class="swal-form-grid-2col" style="margin-bottom:20px">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('calendar') ?>
+                                Fecha del Evento
+                            </label>
+                            <input type="date" id="swal-fecha" class="swal2-input" value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('alert-triangle') ?>
+                                Gravedad de la Falta
+                            </label>
+                            <select id="swal-tipo" class="swal2-select">
+                                <option value="leve">Leve</option>
+                                <option value="grave">Grave</option>
+                                <option value="muy_grave">Muy Grave</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="swal-form-grid" style="margin-bottom:20px">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('file-text') ?>
+                                Motivo de la falta
+                            </label>
+                            <textarea id="swal-motivo" class="swal2-textarea" style="min-height:80px" placeholder="Describa brevemente lo sucedido..."></textarea>
+                        </div>
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('shield') ?>
+                                Sanción Aplicada
+                            </label>
+                            <input type="text" id="swal-sancion" class="swal2-input" placeholder="Ej: Amonestación escrita, Suspensión de 3 días...">
+                        </div>
+                    </div>
+
+                    <div class="swal-form-grid">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <?= Icon::get('upload') ?>
+                                Acta de Amonestación (PDF)
+                            </label>
+                            <div class="file-input-modern">
+                                <input type="file" id="swal-archivo" accept="application/pdf" class="file-input-hidden" onchange="updateFileNameAmonestacion(this)">
+                                <label for="swal-archivo" class="file-input-label">
+                                    <?= Icon::get('upload') ?>
+                                    <span class="file-name">Seleccionar PDF firmado...</span>
+                                </label>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Gravedad de la Falta <span style="color:#ef4444">*</span></label>
-                                <select id="swal-tipo" class="form-select">
-                                    <option value="leve">Leve</option>
-                                    <option value="grave">Grave</option>
-                                    <option value="muy_grave">Muy Grave</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Motivo de la falta <span style="color:#ef4444">*</span></label>
-                            <textarea id="swal-motivo" class="form-textarea" placeholder="Describa brevemente lo sucedido..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Sanción Aplicada <span style="color:#ef4444">*</span></label>
-                            <input type="text" id="swal-sancion" class="form-input" placeholder="Ej: Amonestación escrita, Suspensión de 3 días...">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Acta de Amonestación (PDF) <span style="color:#ef4444">*</span></label>
-                            <input type="file" id="swal-archivo" class="swal2-file" accept="application/pdf">
-                            <div style="font-size:12px;color:#94A3B8;margin-top:5px;">El acta firmada es obligatoria.</div>
+                            <small class="swal-helper">El acta firmada es obligatoria · Máx 5 MB</small>
                         </div>
                     </div>
                 `,

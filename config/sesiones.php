@@ -36,22 +36,24 @@ if (session_status() === PHP_SESSION_NONE) {
  * Cierra la sesión si ha estado inactiva por más de 30 minutos
  */
 function verificarTimeoutSesion() {
-    $timeout = 1800; // 30 minutos en segundos
-    
+    // Usar SESSION_LIFETIME definido en config/config.php (ej. 1800 = 30 min, 60 = 1 min para pruebas)
+    $timeout = defined('SESSION_LIFETIME') ? (int)SESSION_LIFETIME : 1800;
+
     if (isset($_SESSION['ultimo_acceso'])) {
         $inactivo = time() - $_SESSION['ultimo_acceso'];
-        
+
         if ($inactivo > $timeout) {
-            // Sesión expirada por inactividad
+            // Sesión expirada por inactividad → destruir y redirigir al login
             session_unset();
             session_destroy();
             header('Location: ' . APP_URL . '/index.php?error=sesion_expirada');
             exit;
         }
     }
-    
-    // Actualizar último acceso
-    $_SESSION['ultimo_acceso'] = time();
+
+    // Actualizar marca de última actividad en cada solicitud
+    $_SESSION['ultima_actividad'] = time();
+    $_SESSION['ultimo_acceso']    = time();
 }
 
 /**

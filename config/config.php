@@ -64,7 +64,7 @@ if (!defined('APP_NAME')) {
 
 // Versión de la aplicación
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '3.5.0');
+    define('APP_VERSION', '4.7.5');
 }
 
 // Número de build para cache busting (auto-generado al modificar config)
