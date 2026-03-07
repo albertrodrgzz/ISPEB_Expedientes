@@ -1,0 +1,251 @@
+<?php
+/**
+ * BARRA DE NAVEGACIÓN INFERIOR — MÓVIL
+ * SIGED Enterprise — Solo visible en pantallas < 1024px
+ * Se oculta automáticamente en desktop via CSS (.mobile-bottom-nav { display:none } en lg+)
+ */
+$_bn_nivel   = (int)($_SESSION['nivel_acceso'] ?? 3);
+$_bn_cur_dir = basename(dirname($_SERVER['PHP_SELF']));
+$_bn_cur_pg  = basename($_SERVER['PHP_SELF']);
+$_bn_func_id = $_SESSION['funcionario_id'] ?? 0;
+
+/**
+ * Íconos SVG inline compactos
+ */
+function bn_icon(string $name): string {
+    $icons = [
+        'home'      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+        'users'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+        'folder'    => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+        'chart'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+        'send'      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+        'user'      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        'inbox'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+        'more'      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
+        'settings'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12H4M20 12h2"/></svg>',
+    ];
+    return $icons[$name] ?? $icons['home'];
+}
+
+/**
+ * Determinar ítems según nivel
+ */
+if ($_bn_nivel >= 3) {
+    // Nivel 3 — Portal empleado
+    $items = [
+        ['label' => 'Inicio',    'icon' => 'home',   'url' => '/vistas/dashboard/index.php',                        'dir' => 'dashboard'],
+        ['label' => 'Mi Perfil', 'icon' => 'user',   'url' => "/vistas/funcionarios/ver.php?id={$_bn_func_id}",     'dir' => 'funcionarios'],
+        ['label' => 'Docs',      'icon' => 'folder', 'url' => '/vistas/reportes/constancia_trabajo.php',            'dir' => 'reportes'],
+        ['label' => 'Solicitudes','icon'=> 'send',   'url' => '/vistas/solicitudes/mis_solicitudes.php',            'dir' => 'solicitudes'],
+    ];
+} else {
+    // Nivel 1 y 2 — Administración
+    $items = [
+        ['label' => 'Inicio',       'icon' => 'home',    'url' => '/vistas/dashboard/index.php',                  'dir' => 'dashboard'],
+        ['label' => 'Personal',     'icon' => 'users',   'url' => '/vistas/funcionarios/index.php',               'dir' => 'funcionarios'],
+        ['label' => 'Reportes',     'icon' => 'chart',   'url' => '/vistas/reportes/index.php',                   'dir' => 'reportes'],
+        ['label' => 'Solicitudes',  'icon' => 'inbox',   'url' => '/vistas/solicitudes/gestionar_solicitudes.php','dir' => 'solicitudes', 'badge' => true],
+        ['label' => 'Más',          'icon' => 'more',    'url' => '#',                                            'dir' => '__more__',    'more' => true],
+    ];
+}
+?>
+<nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navegación principal">
+    <?php foreach ($items as $item):
+        $isActive = isset($item['dir']) && $item['dir'] === $_bn_cur_dir && !isset($item['more']);
+        $isMore   = !empty($item['more']);
+        $url      = $isMore ? 'javascript:void(0)' : APP_URL . $item['url'];
+    ?>
+        <a href="<?= $url ?>"
+           class="<?= $isActive ? 'active' : '' ?>"
+           <?= $isMore ? 'onclick="toggleMobileMore(this)" aria-expanded="false"' : '' ?>
+           aria-label="<?= htmlspecialchars($item['label']) ?>">
+            <?= bn_icon($item['icon']) ?>
+            <span><?= htmlspecialchars($item['label']) ?></span>
+            <?php if (!empty($item['badge'])): ?>
+                <span class="nav-badge-mobile" id="mobile-badge-solicitudes" style="display:none"></span>
+            <?php endif; ?>
+        </a>
+    <?php endforeach; ?>
+</nav>
+
+<?php if ($_bn_nivel < 3): ?>
+<!-- Panel "Más" para nivel 1/2 — aparece al pulsar el botón "Más" -->
+<div class="mobile-more-panel" id="mobileMorePanel">
+    <div class="mobile-more-overlay" id="mobileMoreOverlay" onclick="closeMobileMore()"></div>
+    <div class="mobile-more-sheet">
+        <div class="mobile-more-handle"></div>
+        <div class="mobile-more-grid">
+            <a href="<?= APP_URL ?>/vistas/expedientes/index.php"   class="mobile-more-item <?= $_bn_cur_dir==='expedientes'?'active':'' ?>">
+                <?= bn_icon('folder') ?><span>Expedientes</span>
+            </a>
+            <a href="<?= APP_URL ?>/vistas/vacaciones/index.php"    class="mobile-more-item <?= $_bn_cur_dir==='vacaciones'?'active':'' ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <span>Vacaciones</span>
+            </a>
+            <a href="<?= APP_URL ?>/vistas/nombramientos/index.php" class="mobile-more-item <?= $_bn_cur_dir==='nombramientos'?'active':'' ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span>Nombramientos</span>
+            </a>
+            <a href="<?= APP_URL ?>/vistas/traslados/index.php"     class="mobile-more-item <?= $_bn_cur_dir==='traslados'?'active':'' ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                <span>Traslados</span>
+            </a>
+            <a href="<?= APP_URL ?>/vistas/amonestaciones/index.php" class="mobile-more-item <?= $_bn_cur_dir==='amonestaciones'?'active':'' ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Amonestaciones</span>
+            </a>
+            <?php if ($_bn_nivel <= 1): ?>
+            <a href="<?= APP_URL ?>/vistas/admin/index.php"         class="mobile-more-item <?= $_bn_cur_dir==='admin'?'active':'' ?>">
+                <?= bn_icon('settings') ?>
+                <span>Administración</span>
+            </a>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<style>
+/* ===== PANEL "MÁS" — BOTTOM SHEET ===== */
+.mobile-more-panel {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+}
+
+.mobile-more-panel.open {
+    display: block;
+}
+
+.mobile-more-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+}
+
+.mobile-more-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 12px 20px 24px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0));
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
+    animation: slide-up-sheet 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slide-up-sheet {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.mobile-more-handle {
+    width: 40px;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin: 0 auto 20px;
+}
+
+.mobile-more-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.mobile-more-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 8px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+}
+
+.mobile-more-item svg {
+    width: 22px;
+    height: 22px;
+    stroke: #64748b;
+    stroke-width: 2;
+    fill: none;
+    transition: stroke 0.2s ease;
+}
+
+.mobile-more-item:active,
+.mobile-more-item.active {
+    background: #e0f2fe;
+    color: #0F4C81;
+}
+
+.mobile-more-item.active svg,
+.mobile-more-item:active svg {
+    stroke: #0F4C81;
+}
+
+/* Ocultar en desktop */
+@media (min-width: 1024px) {
+    .mobile-bottom-nav,
+    .mobile-more-panel {
+        display: none !important;
+    }
+}
+</style>
+
+<script>
+/**
+ * Panel "Más" — Bottom Sheet
+ */
+function toggleMobileMore(btn) {
+    const panel = document.getElementById('mobileMorePanel');
+    if (!panel) return;
+    const isOpen = panel.classList.contains('open');
+    if (isOpen) {
+        closeMobileMore();
+    } else {
+        panel.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeMobileMore() {
+    const panel = document.getElementById('mobileMorePanel');
+    const btn   = document.querySelector('.mobile-bottom-nav a[onclick]');
+    if (!panel) return;
+    panel.classList.remove('open');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+}
+
+// Sincronizar badge de solicitudes con el bottom nav
+(function syncMobileBadge() {
+    const desktopBadge = document.getElementById('badge-solicitudes');
+    const mobileBadge  = document.getElementById('mobile-badge-solicitudes');
+    if (!desktopBadge || !mobileBadge) return;
+
+    const observer = new MutationObserver(() => {
+        const count = desktopBadge.textContent.trim();
+        if (count && desktopBadge.classList.contains('visible')) {
+            mobileBadge.textContent = count;
+            mobileBadge.style.display = 'block';
+        } else {
+            mobileBadge.style.display = 'none';
+        }
+    });
+
+    observer.observe(desktopBadge, { childList: true, attributes: true, attributeFilter: ['class'] });
+})();
+</script>

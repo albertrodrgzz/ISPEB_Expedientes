@@ -40,6 +40,13 @@ $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js'
 <!-- CSS Fix para header flotante moderno -->
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/header-fix.css?v=<?= $_v_hdrfix ?>">
 
+<!-- ★ MOBILE-FIRST SYSTEM — cargado ÚLTIMO para máxima prioridad ★ -->
+<?php $_v_mf = @filemtime(__DIR__ . '/../../publico/css/mobile-first.css') ?: date('Ymd'); ?>
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/mobile-first.css?v=<?= $_v_mf ?>">
+
+<!-- Viewport meta mejorado — previene zoom en iOS -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
 <!-- SweetAlert2 Local (offline-ready) -->
 <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js?v=<?= $_v_swal ?>"></script>
 
@@ -106,3 +113,6 @@ function confirmarCerrarSesion() {
     });
 }
 </script>
+
+<!-- ★ BARRA DE NAVEGACIÓN INFERIOR (solo móvil < 1024px) ★ -->
+<?php include __DIR__ . '/bottom-nav.php'; ?>
