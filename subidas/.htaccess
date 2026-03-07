@@ -66,10 +66,11 @@ RemoveType    .php .php5 .php7 .php8 .phtml .phar
     # No hay directiva extra: la exclusión de PHP ya los protege.
 </FilesMatch>
 
-# ── 6. CABECERA DE DESCARGA PARA PDFs (evitar ejecución en browser) ──────────
+# ── 6. CABECERA DE PREVISUALIZACIÓN PARA PDFs ──────────
 <FilesMatch "(?i)\.pdf$">
     <IfModule mod_headers.c>
-        Header set Content-Disposition "attachment"
+        Header set Content-Type "application/pdf"
+        Header set Content-Disposition "inline"
         Header set X-Content-Type-Options "nosniff"
     </IfModule>
 </FilesMatch>
