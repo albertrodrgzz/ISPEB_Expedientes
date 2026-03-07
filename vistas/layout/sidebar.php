@@ -276,6 +276,7 @@ require_once __DIR__ . '/../../config/icons.php';
     </nav>
 </aside>
 
+
 <script>
 /**
  * Toggle submenu (acordeón)
