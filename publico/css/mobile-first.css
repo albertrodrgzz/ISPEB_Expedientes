@@ -104,7 +104,12 @@ body {
    MOBILE BASE — 0px+
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ─── Hamburguesa: OCULTA en móvil/tablet ─── */
+/* ─── Hamburguesa del header: solo visible en laptop 1024-1279px ─── */
+.menu-toggle-header {
+  display: none !important;
+}
+
+/* ─── Hamburguesa original del sidebar: siempre oculta en base ─── */
 .menu-toggle {
   display: none !important;
 }
@@ -251,6 +256,7 @@ body {
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
+  margin-top: 0 !important;   /* anular margin-top: 70px de estilos.css */
   padding: 0 !important;
   padding-bottom: var(--mf-bn-h) !important;
   border-radius: 0 !important;
@@ -917,55 +923,60 @@ input::placeholder, textarea::placeholder { color: var(--mf-text-3) !important; 
   /* ─── Ocultar bottom nav ─── */
   .mobile-bottom-nav, .mobile-more-panel { display: none !important; }
 
-  /* ─── HAMBURGUESA visible — con 3 líneas SVG ─── */
-  .menu-toggle {
+  /* ─── HAMBURGUESA en sidebar.php — siempre oculta (la del header la reemplaza) ─── */
+  .menu-toggle:not(.menu-toggle-header) { display: none !important; }
+
+  /* ─── HAMBURGUESA inline en el header ─── */
+  .menu-toggle-header {
     display: flex !important;
-    position: fixed !important;
-    top: 12px !important;
-    left: 14px !important;
-    z-index: var(--z-toggle) !important;
-    width: 42px !important;
-    height: 42px !important;
+    position: relative !important;
+    top: auto !important; left: auto !important;
+    z-index: 1 !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
     border-radius: var(--r-md) !important;
-    background: var(--mf-blue) !important;
-    border: none !important;
+    background: rgba(15,76,129,.1) !important;
+    border: 1.5px solid rgba(15,76,129,.18) !important;
     cursor: pointer !important;
     align-items: center !important;
     justify-content: center !important;
-    box-shadow: 0 2px 14px rgba(15,76,129,.35) !important;
-    transition: background .18s var(--ease), box-shadow .18s var(--ease) !important;
+    transition: background .18s var(--ease) !important;
     padding: 0 !important;
-    /* color: white → hace que currentColor = white en el SVG */
-    color: white !important;
+    color: var(--mf-blue) !important;
+    flex-shrink: 0 !important;
   }
 
-  /* El SVG dentro del botón usa currentColor → hereda white */
-  .menu-toggle svg {
+  .menu-toggle-header svg {
     width: 20px !important;
     height: 20px !important;
-    stroke: white !important;
+    stroke: var(--mf-blue) !important;
     fill: none !important;
     display: block !important;
   }
 
-  /* Si hay spans de animación manual */
-  .menu-toggle span {
+  .menu-toggle-header span {
     display: block !important;
     width: 18px !important;
     height: 2px !important;
-    background: white !important;
-    margin: 3px 0 !important;
+    background: var(--mf-blue) !important;
+    margin: 3px auto !important;
     border-radius: 2px !important;
     transition: all .25s var(--ease) !important;
   }
 
-  .menu-toggle:hover { background: var(--mf-blue-light) !important; box-shadow: 0 4px 18px rgba(2,136,209,.4) !important; }
-  .menu-toggle.active { background: var(--mf-blue-light) !important; }
-
-  /* Span animaciones hamburguesa→X */
-  .menu-toggle.active span:nth-child(1) { transform: translateY(5px) rotate(45deg) !important; }
-  .menu-toggle.active span:nth-child(2) { opacity: 0 !important; transform: translateX(-6px) !important; }
-  .menu-toggle.active span:nth-child(3) { transform: translateY(-5px) rotate(-45deg) !important; }
+  .menu-toggle-header:hover {
+    background: rgba(15,76,129,.16) !important;
+  }
+  .menu-toggle-header.active {
+    background: var(--mf-blue) !important;
+    border-color: var(--mf-blue) !important;
+  }
+  .menu-toggle-header.active svg { stroke: white !important; }
+  .menu-toggle-header.active span { background: white !important; }
+  .menu-toggle-header.active span:nth-child(1) { transform: translateY(5px) rotate(45deg) !important; }
+  .menu-toggle-header.active span:nth-child(2) { opacity: 0 !important; }
+  .menu-toggle-header.active span:nth-child(3) { transform: translateY(-5px) rotate(-45deg) !important; }
 
   /* ─── Sidebar overlay ─── */
   .sidebar {
@@ -973,7 +984,7 @@ input::placeholder, textarea::placeholder { color: var(--mf-text-3) !important; 
     border-radius: 0 var(--r-xl) var(--r-xl) 0 !important;
   }
 
-  /* ─── Header: sticky full-width + padding hamburguesa ─── */
+  /* ─── Header: sticky full-width, padding simétrico (hamburguesa está inline) ─── */
   .header {
     position: sticky !important;
     top: 0 !important;
@@ -982,14 +993,25 @@ input::placeholder, textarea::placeholder { color: var(--mf-text-3) !important; 
     width: 100% !important;
     border-radius: 0 !important;
     border-bottom: 1px solid var(--mf-border) !important;
-    padding: 0 24px 0 68px !important;
+    padding: 0 22px !important;
     height: var(--mf-header-h) !important;
     margin: 0 !important;
-    box-shadow: 0 2px 12px rgba(0,0,0,.07) !important;
+    gap: 12px !important;
+    box-shadow: 0 2px 14px rgba(0,0,0,.08) !important;
     background: var(--mf-surface) !important;
   }
 
-  .page-title { font-size: 21px !important; }
+  /* header-left: flex para alinear hamburguesa + título */
+  .header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  .page-title { font-size: 20px !important; }
   .user-info { max-width: 180px !important; display: flex !important; }
   .user-name { font-size: 13px !important; }
   .user-avatar { width: 38px !important; height: 38px !important; }
@@ -1000,8 +1022,8 @@ input::placeholder, textarea::placeholder { color: var(--mf-text-3) !important; 
     margin-left: 0 !important;
     padding-bottom: 28px !important;
   }
-  .content-wrapper { padding: 20px 22px !important; }
-  .main-content > .page-header { padding: 20px 22px !important; padding-bottom: 0 !important; }
+  .content-wrapper { padding: 20px 24px !important; }
+  .main-content > .page-header { padding: 20px 24px !important; padding-bottom: 0 !important; }
 
   /* ─── KPI: 4 columnas ─── */
   .kpi-grid {
@@ -1059,7 +1081,7 @@ input::placeholder, textarea::placeholder { color: var(--mf-text-3) !important; 
 @media (min-width: 1280px) {
 
   /* ─── Limpiar todo lo de móvil ─── */
-  .menu-toggle { display: none !important; }
+  .menu-toggle, .menu-toggle-header { display: none !important; }
   .mobile-bottom-nav, .mobile-more-panel { display: none !important; }
   .sidebar-overlay { display: none !important; }
 
@@ -1096,7 +1118,7 @@ input::placeholder, textarea::placeholder { color: var(--mf-text-3) !important; 
     z-index: 0 !important;
   }
 
-  /* ─── HEADER FLOTANTE como card redondeada ─── */
+  /* ─── HEADER FLOTANTE — card completamente redondeada ─── */
   .header {
     position: fixed !important;
     top: var(--mf-outer) !important;
@@ -1105,8 +1127,8 @@ input::placeholder, textarea::placeholder { color: var(--mf-text-3) !important; 
     width: auto !important;
     height: var(--mf-header-h) !important;
     margin: 0 !important;
-    padding: 0 26px !important;
-    border-radius: var(--r-lg) !important;
+    padding: 0 28px !important;
+    border-radius: var(--r-xl) !important;   /* 20px — totalmente redondeado */
     border: none !important;
     border-bottom: none !important;
     box-shadow: var(--sh-header) !important;
@@ -1123,28 +1145,39 @@ input::placeholder, textarea::placeholder { color: var(--mf-text-3) !important; 
   .user-role { font-size: 11px !important; }
   .btn-logout { width: 38px !important; height: 38px !important; border-radius: 50% !important; }
 
-  /* ─── MAIN CONTENT: margen correcto para sidebar flotante ─── */
+  /* ─── MAIN CONTENT — ocupa todo el ancho restante ─── */
   .main-content {
+    /* Empujar a la derecha del sidebar flotante */
     margin-left: calc(var(--mf-sidebar-w) + var(--mf-outer) + var(--mf-gap)) !important;
-    margin-right: 0 !important;
+    margin-right: var(--mf-outer) !important;
     margin-top: 0 !important;
-    /* Top padding = header height + outer margin + breathing room */
-    padding: calc(var(--mf-header-h) + var(--mf-outer) + 14px) var(--mf-outer) 32px !important;
+    margin-bottom: 0 !important;
+    /* Espacio arriba para el header flotante: header-h + outer + respiración */
+    padding-top: calc(var(--mf-header-h) + var(--mf-outer) + 16px) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 36px !important;
     background: var(--mf-bg) !important;
     min-height: 100dvh !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    width: auto !important;          /* no 100% — margin-right hace el control */
+    box-sizing: border-box !important;
   }
 
-  /* El content-wrapper ya tiene su propio padding, evitar doble padding */
+  /* Content wrapper sin padding horizontal adicional —
+     el main-content ya controla los márgenes laterales */
   .content-wrapper {
-    padding: 22px 24px !important;
+    padding: 0 24px 24px !important;
     background: transparent !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  /* page-header fuera de content-wrapper */
+  /* page-header directo en main-content */
   .main-content > .page-header {
-    padding: 0 24px var(--mf-outer) !important;
+    padding: 0 24px 16px !important;
+    margin-bottom: 0 !important;
   }
 
   /* ─── KPI: 4 columnas ─── */

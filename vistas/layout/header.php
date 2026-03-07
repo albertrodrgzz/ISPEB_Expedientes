@@ -53,6 +53,10 @@ $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js'
 <!-- Header -->
 <header class="header">
     <div class="header-left">
+        <!-- Hamburguesa — solo visible en laptop (1024-1279px) vía CSS -->
+        <button class="menu-toggle menu-toggle-header" id="menuToggleHeader" aria-label="Abrir menú">
+            <?= Icon::get('menu') ?>
+        </button>
         <h1 class="page-title"><?= htmlspecialchars($pageTitle ?? 'Vista General') ?></h1>
     </div>
 
@@ -85,6 +89,34 @@ $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js'
 if (typeof APP_URL === 'undefined') {
     var APP_URL = '<?= addslashes(APP_URL) ?>';
 }
+
+/* Sincronizar el botón hamburguesa del header con el sidebar */
+document.addEventListener('DOMContentLoaded', function() {
+    var toggleHeader = document.getElementById('menuToggleHeader');
+    var toggleSidebar = document.getElementById('menuToggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+
+    if (toggleHeader && (sidebar || toggleSidebar)) {
+        toggleHeader.addEventListener('click', function() {
+            // Disparar el mismo comportamiento que el botón original
+            if (toggleSidebar) {
+                toggleSidebar.click();
+            } else if (sidebar) {
+                sidebar.classList.toggle('active');
+                if (overlay) overlay.classList.toggle('active');
+            }
+            toggleHeader.classList.toggle('active');
+        });
+
+        // Sincronizar estado activo cuando el sidebar cierra
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                toggleHeader.classList.remove('active');
+            });
+        }
+    }
+});
 
 /**
  * Confirmar cierre de sesión con SweetAlert2
