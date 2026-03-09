@@ -147,3 +147,50 @@
 .sidebar-nav {
     padding: 12px 0 !important;
 }
+
+/* ===== MOBILE SIDEBAR FIXES ===== */
+@media (max-width: 1024px) {
+    /* Sidebar must be on top of overlay */
+    .sidebar {
+        z-index: 1000 !important;
+    }
+
+    /* Overlay behind sidebar but above content */
+    .sidebar-overlay {
+        z-index: 999 !important;
+        display: block !important;
+        pointer-events: none;
+    }
+
+    .sidebar-overlay.active {
+        pointer-events: auto !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    /* Hamburger button always above overlay and sidebar */
+    .menu-toggle {
+        z-index: 1100 !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Header with rounded bottom corners on mobile (since it starts at top-left edge) */
+    .header {
+        border-radius: 0 0 16px 16px !important;
+        margin: 0 !important;
+    }
+}
+
+@media (min-width: 1025px) {
+    /* Desktop: hide overlay and hamburger */
+    .sidebar-overlay {
+        display: none !important;
+        pointer-events: none !important;
+    }
+
+    .menu-toggle {
+        display: none !important;
+    }
+}

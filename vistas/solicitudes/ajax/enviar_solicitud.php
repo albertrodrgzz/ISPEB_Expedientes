@@ -61,6 +61,19 @@ try {
 
     $pdo = getDB();
 
+    // Validar LOTTT: vacaciones solo tras 1 año de servicio
+    if ($tipo_solicitud === 'vacaciones') {
+        $stmtFec = $pdo->prepare("SELECT fecha_ingreso FROM funcionarios WHERE id = ?");
+        $stmtFec->execute([$funcionario_id]);
+        $fecha_ingreso_str = $stmtFec->fetchColumn();
+        if ($fecha_ingreso_str) {
+            $anios = (new DateTime('today'))->diff(new DateTime($fecha_ingreso_str))->y;
+            if ($anios < 1) {
+                throw new Exception('Según la LOTTT, debes cumplir al menos 1 año de servicio para solicitar vacaciones.', 400);
+            }
+        }
+    }
+
     // Prevenir solicitudes duplicadas activas del mismo tipo
     $stmt = $pdo->prepare("
         SELECT COUNT(*) FROM solicitudes_empleados

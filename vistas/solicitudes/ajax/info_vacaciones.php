@@ -70,9 +70,10 @@ try {
     // ── 3. Días que le corresponden (LOTTT) ───────────────────────────────────
     // 15 días el primer año + 1 día adicional por cada año de antigüedad
     // Máximo referencial: 15 + años de servicio
-    $dias_base       = 15;
-    $dias_adicionales = min($anios_servicio, 30); // hasta 30 días adicionales razonables
-    $dias_derecho    = $dias_base + $dias_adicionales;
+    // LOTTT: requiere 1 año de servicio mínimo. Año 1: 15 días. +1 día por año adicional (máx 30).
+    $dias_base        = 15;
+    $dias_adicionales = ($anios_servicio >= 1) ? min($anios_servicio - 1, 15) : 0;
+    $dias_derecho     = ($anios_servicio >= 1) ? ($dias_base + $dias_adicionales) : 0;
 
     // ── 4. Días ya gozados (historial_administrativo aprobado, período actual) ─
     $stmt = $pdo->prepare("
@@ -150,6 +151,7 @@ try {
         'dias_derecho'     => $dias_derecho,
         'dias_base'        => $dias_base,
         'dias_adicionales' => $dias_adicionales,
+        'tiene_derecho'    => ($anios_servicio >= 1),
         'dias_tomados'     => $dias_tomados,
         'dias_en_tramite'  => $dias_en_tramite,
         'dias_disponibles' => $dias_disponibles,

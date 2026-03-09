@@ -409,6 +409,15 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                  + 'border:1.5px solid ' + color + '30;border-left:4px solid ' + color + ';'
                  + 'border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left;">';
 
+        // If no right to vacations yet, show warning
+        if (!info.tiene_derecho) {
+            return '<div style="background:rgba(245,158,11,.08);border:1.5px solid #f59e0b30;border-left:4px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:16px;">'
+                 + '<div style="font-weight:700;font-size:13px;color:#d97706;margin-bottom:6px;">&#9888; Sin derecho a vacaciones aún</div>'
+                 + '<div style="font-size:12px;color:#64748b;">Según la LOTTT, el funcionario debe cumplir <strong>1 año de servicio</strong> para tener derecho a vacaciones.<br>'
+                 + 'Fecha de ingreso: <strong>' + info.fecha_ingreso + '</strong> &mdash; Antigüedad actual: <strong>' + info.anios_servicio + ' año(s) y ' + info.meses_parciales + ' mes(es)</strong>.</div>'
+                 + '</div>';
+        }
+
         html += '<div style="font-weight:700;font-size:13px;color:' + color + ';margin-bottom:10px;">'
               + iconTop + ' Saldo Vacacional &ndash; Periodo ' + info.periodo_actual.inicio + ' al ' + info.periodo_actual.fin
               + '</div>';

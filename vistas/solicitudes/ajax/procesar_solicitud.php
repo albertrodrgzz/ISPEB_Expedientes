@@ -107,58 +107,53 @@ try {
     //   FLUJO: APROBAR (Transacción ACID)
     // ════════════════════════════════════════════════
 
-    // Validar archivo obligatorio
-    if (!isset($_FILES['archivo_aprobacion']) || $_FILES['archivo_aprobacion']['error'] !== UPLOAD_ERR_OK) {
-        $php_error = $_FILES['archivo_aprobacion']['error'] ?? -1;
-        $msg = match((int)$php_error) {
-            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'El archivo excede el tamaño máximo permitido.',
-            UPLOAD_ERR_PARTIAL  => 'El archivo se subió parcialmente. Intente de nuevo.',
-            UPLOAD_ERR_NO_FILE  => 'Debe adjuntar el memo de aprobación firmado.',
-            default             => 'Error al subir el archivo (código: ' . $php_error . ').'
-        };
-        throw new Exception($msg, 400);
+    // Archivo de aprobación (opcional: PDF, JPG o PNG)
+    $func_id       = (int) $solicitud['funcionario_id'];
+    $ruta_relativa = null;
+    $nombre_archivo_orig = null;
+
+    $archivo_subido = isset($_FILES['archivo_aprobacion']) && $_FILES['archivo_aprobacion']['error'] === UPLOAD_ERR_OK;
+
+    if ($archivo_subido) {
+        $archivo = $_FILES['archivo_aprobacion'];
+
+        // Validar extensión
+        $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['pdf', 'jpg', 'jpeg', 'png'])) {
+            throw new Exception('Formato de archivo no permitido. Use PDF, JPG o PNG.', 400);
+        }
+
+        // Validar tamaño (máx 5 MB)
+        if ($archivo['size'] > 5 * 1024 * 1024) {
+            throw new Exception('El archivo excede el tamaño máximo de 5 MB.', 400);
+        }
+
+        // Validar MIME type
+        $finfo    = finfo_open(FILEINFO_MIME_TYPE);
+        $mime     = finfo_file($finfo, $archivo['tmp_name']);
+        finfo_close($finfo);
+        $mimes_ok = ['application/pdf', 'image/jpeg', 'image/png'];
+        if (!in_array($mime, $mimes_ok)) {
+            throw new Exception('El contenido del archivo no corresponde a PDF/JPG/PNG.', 400);
+        }
+
+        // Preparar directorio de destino
+        $dir_rel = 'subidas/solicitudes/' . $func_id;
+        $dir_abs = ROOT_PATH . '/' . $dir_rel;
+        if (!is_dir($dir_abs) && !mkdir($dir_abs, 0755, true)) {
+            throw new Exception('No se pudo crear el directorio de destino.', 500);
+        }
+
+        $nombre_guardar = 'aval_' . $solicitud_id . '_' . date('Ymd_His') . '.' . $ext;
+        $ruta_abs       = $dir_abs . '/' . $nombre_guardar;
+        $ruta_relativa  = $dir_rel . '/' . $nombre_guardar;
+        $nombre_archivo_orig = basename($archivo['name']);
+
+        if (!move_uploaded_file($archivo['tmp_name'], $ruta_abs)) {
+            throw new Exception('Error al guardar el archivo en el servidor.', 500);
+        }
+        chmod($ruta_abs, 0644);
     }
-
-    $archivo = $_FILES['archivo_aprobacion'];
-
-    // Validar extensión
-    $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-    if (!in_array($ext, ['pdf', 'jpg', 'jpeg', 'png'])) {
-        throw new Exception('Formato de archivo no permitido. Use PDF, JPG o PNG.', 400);
-    }
-
-    // Validar tamaño (máx 5 MB)
-    if ($archivo['size'] > 5 * 1024 * 1024) {
-        throw new Exception('El archivo excede el tamaño máximo de 5 MB.', 400);
-    }
-
-    // Validar MIME type (seguridad adicional)
-    $finfo     = finfo_open(FILEINFO_MIME_TYPE);
-    $mime      = finfo_file($finfo, $archivo['tmp_name']);
-    finfo_close($finfo);
-    $mimes_ok  = ['application/pdf', 'image/jpeg', 'image/png'];
-    if (!in_array($mime, $mimes_ok)) {
-        throw new Exception('El contenido del archivo no corresponde a PDF/JPG/PNG.', 400);
-    }
-
-    // Preparar directorio de destino
-    $func_id    = (int) $solicitud['funcionario_id'];
-    $dir_rel    = 'subidas/solicitudes/' . $func_id;
-    $dir_abs    = ROOT_PATH . '/' . $dir_rel;
-    if (!is_dir($dir_abs) && !mkdir($dir_abs, 0755, true)) {
-        throw new Exception('No se pudo crear el directorio de destino.', 500);
-    }
-
-    // Nombre único para evitar colisiones
-    $nombre_archivo = 'aval_' . $solicitud_id . '_' . date('Ymd_His') . '.' . $ext;
-    $ruta_abs       = $dir_abs . '/' . $nombre_archivo;
-    $ruta_relativa  = $dir_rel . '/' . $nombre_archivo;
-
-    // Mover archivo ANTES de la transacción (no se puede hacer rollback de IO)
-    if (!move_uploaded_file($archivo['tmp_name'], $ruta_abs)) {
-        throw new Exception('Error al guardar el archivo en el servidor.', 500);
-    }
-    chmod($ruta_abs, 0644);
 
     // ── INICIO DE TRANSACCIÓN ACID ────────────────────────────────────────────
     $pdo->beginTransaction();
@@ -222,8 +217,8 @@ try {
             $solicitud['fecha_inicio'],
             $solicitud['fecha_fin'],
             $detalles,
-            $ruta_relativa,                  // misma ruta del memo
-            basename($archivo['name']),
+            $ruta_relativa,                  // ruta del memo (null si no se adjuntó)
+            $nombre_archivo_orig,
             $revisor_id
         ]);
 

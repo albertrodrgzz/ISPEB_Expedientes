@@ -902,6 +902,7 @@ body {
 
     .header {
         padding-left: calc(var(--spacing-xl) + 60px);
+        border-radius: 0 0 var(--radius-xl) var(--radius-xl);
     }
 
     .kpi-grid {

@@ -449,10 +449,10 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <input type="hidden" name="accion"            value="aprobar">
                 <input type="hidden" name="csrf_token"        value="<?= $csrf_token ?>">
 
-                <!-- Documento obligatorio -->
+                <!-- Documento (opcional) -->
                 <div class="mf-group">
                     <label class="mf-label">
-                        Memo / Aval Firmado y Sellado <span class="mf-req">*</span>
+                        Memo / Aval Firmado y Sellado <span style="font-size:11px;color:#94a3b8;font-weight:400;">(opcional)</span>
                     </label>
                     <div class="file-drop-zone" id="dropZone" onclick="document.getElementById('memoFile').click()">
                         <input type="file" id="memoFile" name="archivo_aprobacion"

@@ -138,7 +138,7 @@ try {
     echo $content;
     
     // Registrar en auditoría (después de enviar el archivo)
-    registrarAuditoria('EXPORTAR_BD', 'sistema', null, 'Exportación de base de datos completa');
+    registrarAuditoria('EXPORTAR_BD', 'sistema', null, null, ['descripcion' => 'Exportación de base de datos completa', 'fecha' => date('Y-m-d H:i:s')]);
     
 } catch (Exception $e) {
     // Limpiar buffer si existe
