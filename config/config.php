@@ -4,71 +4,68 @@
  * SIGED — Sistema de Gestión de Expedientes Digitales
  * Instituto de Salud Pública del Estado Bolívar (ISPEB)
  *
- * ╔══════════════════════════════════════════════════════════════╗
- * ║  CORRECCIÓN CRÍTICA v4.8 — Compatibilidad con Render + HTTPS ║
- * ║  Problema resuelto: Mixed Content / SSL Termination Proxy    ║
- * ╚══════════════════════════════════════════════════════════════╝
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  VERSIÓN DEFINITIVA — Anti-Mixed Content para Render + Docker   ║
+ * ╚══════════════════════════════════════════════════════════════════╝
  */
 
 // ===================================================
-// CONFIGURACIÓN DE URL DINÁMICA — CORREGIDA
+// CONFIGURACIÓN DE URL — MÉTODO MULTICAPA
 // ===================================================
 
 /**
  * detectarAppUrl()
  *
- * PROBLEMA ORIGINAL:
- *   La función anterior usaba $_SERVER['HTTPS'] y $_SERVER['SERVER_PORT']
- *   para detectar el protocolo. En Render (y cualquier plataforma con
- *   reverse proxy / load balancer con SSL termination), la conexión entre
- *   el load balancer y el contenedor PHP es HTTP puro. Por lo tanto:
- *     - $_SERVER['HTTPS']       → vacío o "off"
- *     - $_SERVER['SERVER_PORT'] → 80 (no 443)
- *   Resultado: APP_URL se generaba con "http://" cuando el cliente
- *   realmente usaba "https://", causando errores de Mixed Content en el
- *   navegador que bloqueaban TODOS los assets CSS/JS.
+ * MÉTODO DEFINITIVO PARA RENDER:
+ * ─────────────────────────────────────────────────────────────────
+ * CAPA 1 (más confiable): Variable de entorno APP_URL
+ *   → La defines en el Dashboard de Render:
+ *     Environment > Add Variable > APP_URL = https://siged.onrender.com
+ *   → Bypasea TODA detección automática. Siempre gana.
  *
- * SOLUCIÓN:
- *   Render (y la mayoría de reverse proxies: Nginx, Cloudflare, AWS ALB)
- *   inyectan la cabecera HTTP_X_FORWARDED_PROTO con el protocolo ORIGINAL
- *   del cliente. Esta función la lee PRIMERO antes de revisar $_SERVER.
+ * CAPA 2: HTTP_X_FORWARDED_PROTO
+ *   → Header que inyecta Render con el protocolo real del cliente.
  *
- * ORDEN DE PRIORIDAD (de mayor a menor confianza):
- *   1. HTTP_X_FORWARDED_PROTO  → Cabecera del reverse proxy (Render, Nginx)
- *   2. HTTP_X_FORWARDED_SSL    → Alternativa usada por algunos proxies
- *   3. $_SERVER['HTTPS']       → Apache/PHP nativo (local, servidor directo)
- *   4. $_SERVER['SERVER_PORT'] → Último recurso (puerto 443 = HTTPS)
+ * CAPA 3: HTTP_X_FORWARDED_SSL
+ *   → Alternativa usada por HAProxy y otros balanceadores.
  *
- * GARANTÍA EXTRA:
- *   La URL retornada NUNCA termina en "/" para que al concatenar rutas
- *   como APP_URL . '/publico/css/...' no resulten dobles barras.
+ * CAPA 4: $_SERVER['HTTPS']
+ *   → Solo funciona si Apache maneja SSL directamente (desarrollo local).
+ *
+ * CAPA 5: SERVER_PORT = 443
+ *   → Último recurso. Falso en Render (usa puerto dinámico interno).
  */
 function detectarAppUrl(): string
 {
-    // ── PASO 1: Detectar protocolo con soporte para reverse proxy ──────────
-    $protocol = 'http'; // valor por defecto seguro
+    // ══════════════════════════════════════════════════════════════
+    // CAPA 1 — Variable de entorno APP_URL (SOLUCIÓN DEFINITIVA)
+    // ══════════════════════════════════════════════════════════════
+    // Configura esto en Render: Environment > Add Variable
+    //   Nombre: APP_URL
+    //   Valor:  https://siged.onrender.com
+    $envUrl = getenv('APP_URL');
+    if (!empty($envUrl) && filter_var($envUrl, FILTER_VALIDATE_URL)) {
+        return rtrim($envUrl, '/');
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // CAPA 2-5 — Detección automática de protocolo (fallback)
+    // ══════════════════════════════════════════════════════════════
+    $protocol = 'http';
 
     if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
-        // Render, Nginx, AWS ALB, Cloudflare → cabecera estándar del proxy
-        // Puede venir como "https" o "https, http" (cuando hay cadenas de proxies)
-        $forwarded = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])[0]));
-        if ($forwarded === 'https') {
+        $fwd = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])[0]));
+        if ($fwd === 'https') {
             $protocol = 'https';
         }
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
-        // Algunos balanceadores usan esta cabecera alternativa
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on') {
         $protocol = 'https';
     } elseif (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') {
-        // Apache/PHP con SSL directo (desarrollo local con XAMPP + SSL, por ejemplo)
         $protocol = 'https';
     } elseif (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) {
-        // Último recurso: inferir por puerto
         $protocol = 'https';
     }
 
-    // ── PASO 2: Obtener el host del request ────────────────────────────────
-    // HTTP_X_FORWARDED_HOST → cuando el proxy reescribe el host
-    // HTTP_HOST            → estándar (incluye puerto si no es 80/443)
     $host = '';
     if (!empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
         $host = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_HOST'])[0]));
@@ -77,25 +74,10 @@ function detectarAppUrl(): string
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     }
 
-    // ── PASO 3: Construir la URL base ──────────────────────────────────────
-    // En Render el contenedor se sirve desde la raíz ("/"), no desde un
-    // subdirectorio. Dockerfile copia los archivos a /var/www/html/ y
-    // Apache sirve desde ahí → sin subfolder en la URL.
-    //
-    // Si en el futuro deploys en cPanel con subfolder (ej: /APP3/),
-    // cambia $basePath a la ruta correspondiente o detéctala dinámicamente.
-    $basePath = '';
-
-    // ── PASO 4: Ensamblar y limpiar la URL ─────────────────────────────────
-    $url = $protocol . '://' . $host . $basePath;
-
-    // GARANTÍA: eliminar barra final para evitar dobles "//"
-    // Correcto:   APP_URL . '/publico/css/estilos.css'
-    // Incorrecto: APP_URL . '/publico/css/estilos.css' con APP_URL = "https://host/"
-    return rtrim($url, '/');
+    // En Render el app sirve desde la raiz "/" — sin subfolder en la URL.
+    return rtrim($protocol . '://' . $host, '/');
 }
 
-// Definir APP_URL dinámicamente (solo una vez)
 if (!defined('APP_URL')) {
     define('APP_URL', detectarAppUrl());
 }
@@ -109,10 +91,9 @@ if (!defined('APP_NAME')) {
 }
 
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '4.8.0');
+    define('APP_VERSION', '4.8.1');
 }
 
-// Build para cache busting — actualizar en cada deploy
 if (!defined('APP_BUILD')) {
     define('APP_BUILD', '20260309');
 }
@@ -124,7 +105,7 @@ if (!defined('APP_BUILD')) {
 date_default_timezone_set('America/Caracas');
 
 // ===================================================
-// RUTAS DEL SISTEMA (filesystem, no URLs)
+// RUTAS DE FILESYSTEM
 // ===================================================
 
 if (!defined('ROOT_PATH')) {
@@ -144,7 +125,7 @@ if (!defined('CONFIG_PATH')) {
 // ===================================================
 
 if (!defined('MAX_FILE_SIZE')) {
-    define('MAX_FILE_SIZE', 5242880); // 5 MB
+    define('MAX_FILE_SIZE', 5242880);
 }
 
 if (!defined('ALLOWED_EXTENSIONS')) {
@@ -152,7 +133,7 @@ if (!defined('ALLOWED_EXTENSIONS')) {
 }
 
 // ===================================================
-// MODO DE DEPURACIÓN
+// MODO DEBUG
 // ===================================================
 
 if (!defined('APP_DEBUG')) {
@@ -179,43 +160,31 @@ if (!defined('SESSION_NAME')) {
 }
 
 if (!defined('SESSION_LIFETIME')) {
-    define('SESSION_LIFETIME', 1800); // 30 minutos
+    define('SESSION_LIFETIME', 1800);
 }
 
 // ===================================================
 // HELPERS DE SEGURIDAD — Anti-XSS
 // ===================================================
 
-/**
- * e() — Escape seguro para HTML (OWASP XSS Prevention Rule #1)
- */
 if (!function_exists('e')) {
     function e($value): string {
         return htmlspecialchars((string)($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }
 
-/**
- * eAttr() — Escape para atributos HTML
- */
 if (!function_exists('eAttr')) {
     function eAttr($value): string {
         return htmlspecialchars((string)($value ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 }
 
-/**
- * eJs() — Escape seguro para contexto JavaScript inline
- */
 if (!function_exists('eJs')) {
     function eJs($value): string {
         return addslashes(strip_tags((string)($value ?? '')));
     }
 }
 
-/**
- * sanitizeInt() — Forzar entero válido
- */
 if (!function_exists('sanitizeInt')) {
     function sanitizeInt($value, int $default = 0): int {
         $filtered = filter_var($value, FILTER_VALIDATE_INT);
@@ -223,9 +192,6 @@ if (!function_exists('sanitizeInt')) {
     }
 }
 
-/**
- * sanitizeString() — Limpia espacios y caracteres de control
- */
 if (!function_exists('sanitizeString')) {
     function sanitizeString($value, int $maxLen = 500): string {
         return mb_substr(trim(strip_tags((string)($value ?? ''))), 0, $maxLen, 'UTF-8');
