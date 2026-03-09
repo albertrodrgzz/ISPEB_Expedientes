@@ -651,7 +651,7 @@
                 </div>
             <?php endif; ?>
             
-            <form method="POST" action="">
+            <form method="POST" action="<?= APP_URL ?>/">
                 <div class="form-group">
                     <label for="username">Usuario</label>
                     <input 
