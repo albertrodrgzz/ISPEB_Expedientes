@@ -3,52 +3,99 @@
  * Configuración Base de la Aplicación
  * SIGED — Sistema de Gestión de Expedientes Digitales
  * Instituto de Salud Pública del Estado Bolívar (ISPEB)
+ *
+ * ╔══════════════════════════════════════════════════════════════╗
+ * ║  CORRECCIÓN CRÍTICA v4.8 — Compatibilidad con Render + HTTPS ║
+ * ║  Problema resuelto: Mixed Content / SSL Termination Proxy    ║
+ * ╚══════════════════════════════════════════════════════════════╝
  */
 
 // ===================================================
-// CONFIGURACIÓN DE URL DINÁMICA
+// CONFIGURACIÓN DE URL DINÁMICA — CORREGIDA
 // ===================================================
 
 /**
- * Detecta automáticamente la URL base de la aplicación
- * Funciona en desarrollo (localhost) y producción
+ * detectarAppUrl()
+ *
+ * PROBLEMA ORIGINAL:
+ *   La función anterior usaba $_SERVER['HTTPS'] y $_SERVER['SERVER_PORT']
+ *   para detectar el protocolo. En Render (y cualquier plataforma con
+ *   reverse proxy / load balancer con SSL termination), la conexión entre
+ *   el load balancer y el contenedor PHP es HTTP puro. Por lo tanto:
+ *     - $_SERVER['HTTPS']       → vacío o "off"
+ *     - $_SERVER['SERVER_PORT'] → 80 (no 443)
+ *   Resultado: APP_URL se generaba con "http://" cuando el cliente
+ *   realmente usaba "https://", causando errores de Mixed Content en el
+ *   navegador que bloqueaban TODOS los assets CSS/JS.
+ *
+ * SOLUCIÓN:
+ *   Render (y la mayoría de reverse proxies: Nginx, Cloudflare, AWS ALB)
+ *   inyectan la cabecera HTTP_X_FORWARDED_PROTO con el protocolo ORIGINAL
+ *   del cliente. Esta función la lee PRIMERO antes de revisar $_SERVER.
+ *
+ * ORDEN DE PRIORIDAD (de mayor a menor confianza):
+ *   1. HTTP_X_FORWARDED_PROTO  → Cabecera del reverse proxy (Render, Nginx)
+ *   2. HTTP_X_FORWARDED_SSL    → Alternativa usada por algunos proxies
+ *   3. $_SERVER['HTTPS']       → Apache/PHP nativo (local, servidor directo)
+ *   4. $_SERVER['SERVER_PORT'] → Último recurso (puerto 443 = HTTPS)
+ *
+ * GARANTÍA EXTRA:
+ *   La URL retornada NUNCA termina en "/" para que al concatenar rutas
+ *   como APP_URL . '/publico/css/...' no resulten dobles barras.
  */
-function detectarAppUrl() {
-    // Detectar protocolo (HTTP o HTTPS)
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || 
-                ($_SERVER['SERVER_PORT'] ?? 80) == 443 ? 'https' : 'http';
-    
-    // Detectar host
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    
-    // Detectar ruta base usando SCRIPT_FILENAME y DOCUMENT_ROOT
-    $scriptPath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_FILENAME']));
-    $documentRoot = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
-    
-    // Obtener la ruta relativa desde document root
-    $basePath = str_replace($documentRoot, '', $scriptPath);
-    
-    // Para archivos en subdirectorios, subir al directorio raíz de la app
-    // Si estamos en /APP3/config o /APP3/vistas/algo, necesitamos /APP3
-    if (strpos($basePath, '/config') !== false) {
-        $basePath = dirname($basePath);
-    } elseif (strpos($basePath, '/vistas') !== false) {
-        $basePath = dirname(dirname($basePath));
-    } elseif (strpos($basePath, '/lib') !== false) {
-        $basePath = dirname($basePath);
+function detectarAppUrl(): string
+{
+    // ── PASO 1: Detectar protocolo con soporte para reverse proxy ──────────
+    $protocol = 'http'; // valor por defecto seguro
+
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        // Render, Nginx, AWS ALB, Cloudflare → cabecera estándar del proxy
+        // Puede venir como "https" o "https, http" (cuando hay cadenas de proxies)
+        $forwarded = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])[0]));
+        if ($forwarded === 'https') {
+            $protocol = 'https';
+        }
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
+        // Algunos balanceadores usan esta cabecera alternativa
+        $protocol = 'https';
+    } elseif (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') {
+        // Apache/PHP con SSL directo (desarrollo local con XAMPP + SSL, por ejemplo)
+        $protocol = 'https';
+    } elseif (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) {
+        // Último recurso: inferir por puerto
+        $protocol = 'https';
     }
-    
-    // Limpiar la ruta base
-    if ($basePath === '/' || $basePath === '\\') {
-        $basePath = '';
+
+    // ── PASO 2: Obtener el host del request ────────────────────────────────
+    // HTTP_X_FORWARDED_HOST → cuando el proxy reescribe el host
+    // HTTP_HOST            → estándar (incluye puerto si no es 80/443)
+    $host = '';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+        $host = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_HOST'])[0]));
     }
-    
-    $basePath = str_replace('\\', '/', $basePath);
-    
-    return $protocol . '://' . $host . $basePath;
+    if (empty($host)) {
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    }
+
+    // ── PASO 3: Construir la URL base ──────────────────────────────────────
+    // En Render el contenedor se sirve desde la raíz ("/"), no desde un
+    // subdirectorio. Dockerfile copia los archivos a /var/www/html/ y
+    // Apache sirve desde ahí → sin subfolder en la URL.
+    //
+    // Si en el futuro deploys en cPanel con subfolder (ej: /APP3/),
+    // cambia $basePath a la ruta correspondiente o detéctala dinámicamente.
+    $basePath = '';
+
+    // ── PASO 4: Ensamblar y limpiar la URL ─────────────────────────────────
+    $url = $protocol . '://' . $host . $basePath;
+
+    // GARANTÍA: eliminar barra final para evitar dobles "//"
+    // Correcto:   APP_URL . '/publico/css/estilos.css'
+    // Incorrecto: APP_URL . '/publico/css/estilos.css' con APP_URL = "https://host/"
+    return rtrim($url, '/');
 }
 
-// Definir APP_URL dinámicamente
+// Definir APP_URL dinámicamente (solo una vez)
 if (!defined('APP_URL')) {
     define('APP_URL', detectarAppUrl());
 }
@@ -57,43 +104,37 @@ if (!defined('APP_URL')) {
 // CONFIGURACIÓN GENERAL
 // ===================================================
 
-// Nombre de la aplicación
 if (!defined('APP_NAME')) {
     define('APP_NAME', 'SIGED');
 }
 
-// Versión de la aplicación
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '4.7.5');
+    define('APP_VERSION', '4.8.0');
 }
 
-// Número de build para cache busting (auto-generado al modificar config)
+// Build para cache busting — actualizar en cada deploy
 if (!defined('APP_BUILD')) {
-    define('APP_BUILD', '20260305');
+    define('APP_BUILD', '20260309');
 }
 
 // ===================================================
 // ZONA HORARIA
 // ===================================================
 
-// Configurar zona horaria de Venezuela
 date_default_timezone_set('America/Caracas');
 
 // ===================================================
-// RUTAS DEL SISTEMA
+// RUTAS DEL SISTEMA (filesystem, no URLs)
 // ===================================================
 
-// Directorio raíz
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', dirname(__DIR__));
 }
 
-// Directorio de subidas
 if (!defined('UPLOAD_PATH')) {
     define('UPLOAD_PATH', ROOT_PATH . '/subidas/');
 }
 
-// Directorio de configuración
 if (!defined('CONFIG_PATH')) {
     define('CONFIG_PATH', ROOT_PATH . '/config/');
 }
@@ -102,12 +143,10 @@ if (!defined('CONFIG_PATH')) {
 // CONFIGURACIÓN DE ARCHIVOS
 // ===================================================
 
-// Tamaño máximo de archivo (5MB)
 if (!defined('MAX_FILE_SIZE')) {
-    define('MAX_FILE_SIZE', 5242880);
+    define('MAX_FILE_SIZE', 5242880); // 5 MB
 }
 
-// Extensiones permitidas
 if (!defined('ALLOWED_EXTENSIONS')) {
     define('ALLOWED_EXTENSIONS', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']);
 }
@@ -116,38 +155,31 @@ if (!defined('ALLOWED_EXTENSIONS')) {
 // MODO DE DEPURACIÓN
 // ===================================================
 
-// PRODUCCIÓN: false → errores ocultos al usuario, guardados en log
-// DESARROLLO: true  → errores visibles en pantalla
 if (!defined('APP_DEBUG')) {
     define('APP_DEBUG', false);
 }
 
-// Configurar reporte de errores según modo debug
 if (APP_DEBUG) {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
 } else {
-    // PRODUCCIÓN — nunca revelar rutas de servidor
     error_reporting(0);
     ini_set('display_errors', 0);
     ini_set('display_startup_errors', 0);
     ini_set('log_errors', 1);
-    // Los errores se guardan en el log de Apache/XAMPP
 }
 
 // ===================================================
 // CONFIGURACIÓN DE SESIÓN
 // ===================================================
 
-// Nombre de la sesión
 if (!defined('SESSION_NAME')) {
     define('SESSION_NAME', 'ISPEB_SESSION');
 }
 
-// Tiempo de expiración de sesión (30 minutos)
 if (!defined('SESSION_LIFETIME')) {
-    define('SESSION_LIFETIME', 1800);
+    define('SESSION_LIFETIME', 1800); // 30 minutos
 }
 
 // ===================================================
@@ -156,16 +188,6 @@ if (!defined('SESSION_LIFETIME')) {
 
 /**
  * e() — Escape seguro para HTML (OWASP XSS Prevention Rule #1)
- *
- * Úsalo en TODAS las vistas al hacer echo de datos de BD o usuarios:
- *   <?= e($variable) ?>
- *   <?php echo e($nombre) ?>
- *
- * Protege contra: <script>, onclick=, javascript:, y cualquier
- * etiqueta/atributo HTML inyectado por el usuario.
- *
- * @param  mixed  $value  Valor a escapar (string, int, null)
- * @return string         Valor seguro para insertar en HTML
  */
 if (!function_exists('e')) {
     function e($value): string {
@@ -174,8 +196,7 @@ if (!function_exists('e')) {
 }
 
 /**
- * eAttr() — Escape para atributos HTML (value=, placeholder=, title=, etc.)
- * Uso: <input value="<?= eAttr($variable) ?>">
+ * eAttr() — Escape para atributos HTML
  */
 if (!function_exists('eAttr')) {
     function eAttr($value): string {
@@ -185,8 +206,6 @@ if (!function_exists('eAttr')) {
 
 /**
  * eJs() — Escape seguro para contexto JavaScript inline
- * Uso: var nombre = "<?= eJs($variable) ?>";
- * NUNCA uses e() dentro de <script>, usa eJs() en su lugar.
  */
 if (!function_exists('eJs')) {
     function eJs($value): string {
@@ -195,8 +214,7 @@ if (!function_exists('eJs')) {
 }
 
 /**
- * sanitizeInt() — Forzar entero válido (evita inyección tipo "1 OR 1=1")
- * Uso en IDs GET/POST: $id = sanitizeInt($_GET['id'] ?? 0);
+ * sanitizeInt() — Forzar entero válido
  */
 if (!function_exists('sanitizeInt')) {
     function sanitizeInt($value, int $default = 0): int {
@@ -207,8 +225,6 @@ if (!function_exists('sanitizeInt')) {
 
 /**
  * sanitizeString() — Limpia espacios y caracteres de control
- * Uso general para sanitizar inputs de texto antes de procesarlos.
- * NO sustituye las sentencias preparadas — úsalo en conjunto.
  */
 if (!function_exists('sanitizeString')) {
     function sanitizeString($value, int $maxLen = 500): string {

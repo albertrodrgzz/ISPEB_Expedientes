@@ -31,7 +31,7 @@ USE `ispeb_expedientes`;
 
 DROP TABLE IF EXISTS `auditoria`;
 CREATE TABLE `auditoria` (
-  `id` int(10) UNSIGNED NOT NULL,
+  `id` int(10) UNSIGNED NOT NULL PRIMARY KEY,
   `usuario_id` int(10) UNSIGNED DEFAULT NULL,
   `accion` varchar(100) NOT NULL COMMENT 'Ej: LOGIN, CREAR_FUNCIONARIO, ELIMINAR_DOCUMENTO',
   `tabla_afectada` varchar(50) DEFAULT NULL,
@@ -470,7 +470,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- Indices de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
-  ADD PRIMARY KEY (`id`),
+  
   ADD KEY `idx_usuario` (`usuario_id`),
   ADD KEY `idx_accion` (`accion`),
   ADD KEY `idx_fecha` (`created_at`);

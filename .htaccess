@@ -1,6 +1,6 @@
 # ╔═══════════════════════════════════════════════════════════════════╗
-# ║  .HTACCESS MAESTRO — SIGED v3.5                                    ║
-# ║  Compatible con .htaccess (sin DirectoryMatch ni LimitRequestBody) ║
+# ║  .HTACCESS MAESTRO — SIGED v4.8                                    ║
+# ║  Corregido para Render (Docker + Apache) sin subfolder /APP3/      ║
 # ╚═══════════════════════════════════════════════════════════════════╝
 
 # ── 1. DESHABILITAR LISTADO DE DIRECTORIOS ───────────────────────────────────
@@ -12,16 +12,35 @@ Options -Indexes -MultiViews
     Deny from all
 </Files>
 
-# ── 3. BLOQUEAR ACCESO A DIRECTORIOS SENSIBLES (via RewriteRule) ────────────
-# Excepciones públicas PRIMERO (deben ir ANTES de las reglas de bloqueo)
+# ── 3. REGLAS DE REESCRITURA ─────────────────────────────────────────────────
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /APP3/
 
-    # EXCEPCIÓN: config/logout.php debe ser accesible (cierre de sesión)
+    # ─── CRÍTICO: RewriteBase debe ser "/" en Render ─────────────────────────
+    # En Render, el Dockerfile copia los archivos a /var/www/html/ (raíz).
+    # Si usas RewriteBase /APP3/ en producción, Apache buscará /APP3/publico/
+    # que NO existe → los assets devuelven 404.
+    # Cambiar a "/" corrige el enrutamiento en el contenedor Docker.
+    RewriteBase /
+
+    # ─── EXCEPCIÓN #1: Paso libre a todos los assets en /publico/ ────────────
+    # MOTIVO: Sin esta regla, la RewriteRule de bloqueo de carpetas sensibles
+    # podría interceptar peticiones que, aunque empiezan con letras como
+    # "p-u-b-l-i-c-o", en algunos motores de regex coinciden con patrones
+    # inesperados. Esta línea garantiza que /publico/ NUNCA sea bloqueado.
+    RewriteRule ^publico(/.*)?$ - [L]
+
+    # ─── EXCEPCIÓN #2: Paso libre a /subidas/ ────────────────────────────────
+    # Los archivos subidos (PDFs, imágenes) deben ser accesibles directamente.
+    # Su propio .htaccess ya bloquea la ejecución de PHP en esa carpeta.
+    RewriteRule ^subidas(/.*)?$ - [L]
+
+    # ─── EXCEPCIÓN #3: config/logout.php debe ser accesible ──────────────────
     RewriteRule ^config/logout\.php$ - [L]
 
-    # Bloquear acceso HTTP directo al resto de config/, database/, modelos/, lib/
+    # ─── BLOQUEAR acceso HTTP directo a carpetas de código fuente ────────────
+    # Después de las excepciones [L] de arriba, esta regla solo aplica a
+    # rutas que NO hayan sido excluidas previamente.
     RewriteRule ^(config|database|modelos|lib)(/.*)?$ - [F,L]
 </IfModule>
 
