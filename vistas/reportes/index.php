@@ -166,7 +166,10 @@ $tipos_eventos = $stmt->fetch()['total'];
     <?php include '../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <?php include '../layout/header.php'; ?>
+        <?php 
+        $pageTitle = Icon::get('pie-chart') . ' Reportes y Documentos';
+        include '../layout/header.php'; 
+        ?>
         
         <!-- Header con botón -->
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">

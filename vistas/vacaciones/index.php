@@ -86,18 +86,13 @@ $vacaciones = $stmt->fetchAll();
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php 
+        $pageTitle = 'Gestión de Vacaciones';
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
         
         <div class="content-wrapper">
-            <div class="page-header">
-                <div class="header-title">
-                    <h1>Gestión de Vacaciones</h1>
-                </div>
-                <button class="btn-primary" onclick="abrirModalVacaciones()">
-                    <?= Icon::get('plus') ?>
-                    Nueva Solicitud
-                </button>
-            </div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom: 24px;"><button class="btn-primary" onclick="abrirModalVacaciones()"><?= Icon::get('plus') ?> Nueva Solicitud</button></div>
 
             <div class="kpi-grid">
                 <div class="kpi-card color-blue">

@@ -70,21 +70,17 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
     <?php include '../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <?php include '../layout/header.php'; ?>
-        
-        <!-- Header con botón -->
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1 style="font-size: 28px; font-weight: 700; color: var(--color-text); margin: 0; display: flex; align-items: center; gap: 12px;">
-                <?= Icon::get('file-text') ?>
-                Nombramientos
-            </h1>
-            <button class="btn-primary" onclick="abrirModalNombramiento()">
-                <?= Icon::get('plus') ?>
-                Nuevo Nombramiento
-            </button>
-        </div>
+        <?php 
+        $pageTitle = Icon::get('file-text') . ' Nombramientos';
+        include '../layout/header.php'; 
+        ?>
 
-        <!-- KPI Cards -->
+        
+        <div style="display:flex; justify-content:flex-end; margin-bottom: 20px;">
+            <button class="btn-primary" onclick="abrirModalNombramiento()">
+                <?= Icon::get('plus') ?> Nuevo Nombramiento
+            </button>
+        </div><!-- KPI Cards -->
         <div class="kpi-grid" style="margin-bottom: 30px;">
             <div class="kpi-card">
                 <div class="kpi-icon gradient-blue">

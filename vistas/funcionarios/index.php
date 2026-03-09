@@ -53,18 +53,15 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php 
+        $pageTitle = Icon::get('users') . ' Directorio de Funcionarios';
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
         
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1>
-                <?= Icon::get('users') ?>
-                Directorio de Funcionarios
-            </h1>
+        <div style="display:flex; justify-content:flex-end; padding: 24px 24px 0 24px;">
             <?php if (verificarNivel(2)): ?>
                 <a href="crear.php" class="btn-primary">
-                    <?= Icon::get('plus') ?>
-                    Nuevo Funcionario
+                    <?= Icon::get('plus') ?> Nuevo Funcionario
                 </a>
             <?php endif; ?>
         </div>

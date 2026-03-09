@@ -203,19 +203,14 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php 
+        $pageTitle = 'Mis Solicitudes';
+        
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
 
         <div class="content-wrapper">
-            <div class="page-header">
-                <div class="header-title">
-                    <h1>Mis Solicitudes</h1>
-                    <p style="color:#64748b;font-size:13.5px;margin-top:4px;">Gestiona tus solicitudes de vacaciones y permisos</p>
-                </div>
-                <button class="btn-primary" onclick="abrirModalNuevaSolicitud()">
-                    <?= Icon::get('plus') ?>
-                    Nueva Solicitud
-                </button>
-            </div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom: 24px;"><button class="btn-primary" onclick="abrirModalNuevaSolicitud()"><?= Icon::get('plus') ?> Nueva Solicitud</button></div>
 
             <!-- KPI Cards -->
             <div class="kpi-grid">

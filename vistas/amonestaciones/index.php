@@ -85,17 +85,15 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php 
+        $pageTitle = 'Amonestaciones';
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
 
         <div class="content-wrapper">
-            <!-- Header -->
-            <div class="page-header">
-                <div class="header-title">
-                    <h1>Amonestaciones</h1>
-                </div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom: 24px;">
                 <button class="btn-primary" onclick="abrirModalAmonestacion()">
-                    <?= Icon::get('plus') ?>
-                    Registrar Falta
+                    <?= Icon::get('plus') ?> Registrar Falta
                 </button>
             </div>
 

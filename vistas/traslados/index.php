@@ -84,19 +84,13 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php 
+        $pageTitle = 'Traslados';
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
 
         <div class="content-wrapper">
-            <!-- Header -->
-            <div class="page-header">
-                <div class="header-title">
-                    <h1>Gestión de Traslados</h1>
-                </div>
-                <button class="btn-primary" onclick="abrirModalTraslado()">
-                    <?= Icon::get('plus') ?>
-                    Registrar Traslado
-                </button>
-            </div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom: 24px;"><button class="btn-primary" onclick="abrirModalTraslado()"><?= Icon::get('plus') ?> Registrar Traslado</button></div>
 
             <!-- KPI Cards -->
             <div class="kpi-grid">

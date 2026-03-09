@@ -70,15 +70,10 @@ $documentos = $stmt->fetchAll();
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
-
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1>
-                <?= Icon::get('file') ?>
-                Expedientes Digitales
-            </h1>
-        </div>
+        <?php 
+        $pageTitle = Icon::get('file') . ' Expedientes Digitales';
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
 
         <!-- KPI Cards -->
         <div class="kpi-grid">

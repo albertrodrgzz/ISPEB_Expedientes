@@ -989,7 +989,7 @@ if (isset($_SESSION['registro_pendiente_cedula'])) {
                 select.innerHTML = '<option value="">Seleccione una pregunta...</option>';
                 preguntasDisponibles.forEach(pregunta => {
                     const option = document.createElement('option');
-                    option.value = pregunta.pregunta;
+                    option.value = pregunta.id;
                     option.textContent = pregunta.pregunta;
                     select.appendChild(option);
                 });

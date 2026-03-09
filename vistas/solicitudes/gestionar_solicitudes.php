@@ -167,15 +167,13 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php 
+        $pageTitle = 'Bandeja de Solicitudes';
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
 
         <div class="content-wrapper">
-            <div class="page-header">
-                <div class="header-title">
-                    <h1>Bandeja de Solicitudes</h1>
-                    <p style="color:#64748b;font-size:13.5px;margin-top:4px;">Aprueba o rechaza las solicitudes de empleados</p>
-                </div>
-            </div>
+            
 
             <!-- KPI Cards -->
             <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">

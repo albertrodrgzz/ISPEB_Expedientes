@@ -47,14 +47,10 @@ $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js'
         <button class="menu-toggle menu-toggle-header" id="menuToggleHeader" aria-label="Abrir menú">
             <?= Icon::get('menu') ?>
         </button>
-        <h1 class="page-title"><?= htmlspecialchars($pageTitle ?? 'Vista General') ?></h1>
+        <h1 class="page-title"><?= $pageTitle ?? 'Vista General' ?></h1>
     </div>
 
     <div class="header-right">
-        <?php if (!empty($headerAction)): ?>
-            <?= $headerAction ?>
-        <?php endif; ?>
-
         <a href="<?= APP_URL ?>/vistas/perfil/" class="user-profile" title="Mi perfil">
             <div class="user-avatar" style="
                 width: 40px; 
