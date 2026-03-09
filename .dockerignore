@@ -1,0 +1,26 @@
+# Ignorar historial de Git (muy importante por seguridad)
+.git
+.gitignore
+
+# Ignorar archivos de base de datos (ya que usarás Aiven)
+database/*.sql
+
+# Ignorar documentación y archivos de lectura
+README.md
+LICENSE
+
+# Ignorar archivos del sistema y de editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Ignorar logs de errores locales o temporales
+*.log
+error_log
+
+# Opcional: Ignorar las subidas locales para que el servidor empiece limpio
+subidas/documentos/*
+subidas/fotos/*
+!subidas/documentos/.gitkeep
+!subidas/fotos/.gitkeep
