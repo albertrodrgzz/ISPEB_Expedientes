@@ -54,123 +54,123 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
     
     <div class="main-content">
         <?php 
-        $pageTitle = Icon::get('users') . ' Directorio de Funcionarios';
+        $pageTitle = 'Directorio de Funcionarios';
         include __DIR__ . '/../layout/header.php'; 
         ?>
         
-        <div style="display:flex; justify-content:flex-end; padding: 24px 24px 0 24px;">
-            <?php if (verificarNivel(2)): ?>
-                <a href="crear.php" class="btn-primary">
-                    <?= Icon::get('plus') ?> Nuevo Funcionario
-                </a>
-            <?php endif; ?>
-        </div>
-        
-        <!-- KPI Cards (Dashboard Style) -->
-        <div class="kpi-grid">
-            <div class="kpi-card kpi-primary">
-                <div class="kpi-icon">
+        <div class="module-container">
+            <!-- Header Título y Botón -->
+            <div class="module-header-title">
+                <div class="module-title-group">
                     <?= Icon::get('users') ?>
+                    <h2 class="module-title-text">Directorio de Funcionarios</h2>
                 </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">Total Funcionarios</div>
-                    <div class="kpi-value"><?= $total_funcionarios ?></div>
+                <?php if (verificarNivel(2)): ?>
+                    <a href="crear.php" class="btn-primary" style="padding: 10px 20px; border-radius: 8px;">
+                        <?= Icon::get('plus') ?> Nuevo Funcionario
+                    </a>
+                <?php endif; ?>
+            </div>
+            
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card-solid bg-solid-blue">
+                    <div class="kpi-icon">
+                        <?= Icon::get('users') ?>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Total Funcionarios</div>
+                        <div class="kpi-value"><?= $total_funcionarios ?></div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card-solid bg-solid-green">
+                    <div class="kpi-icon">
+                        <?= Icon::get('check-circle') ?>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Activos</div>
+                        <div class="kpi-value"><?= $funcionarios_activos ?></div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card-solid bg-solid-orange">
+                    <div class="kpi-icon">
+                        <?= Icon::get('sun') ?>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">En Vacaciones</div>
+                        <div class="kpi-value"><?= $funcionarios_vacaciones ?></div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card-solid bg-solid-cyan">
+                    <div class="kpi-icon">
+                        <?= Icon::get('star') ?>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Nuevos (30 días)</div>
+                        <div class="kpi-value"><?= $funcionarios_nuevos ?></div>
+                    </div>
                 </div>
             </div>
             
-            <div class="kpi-card kpi-success">
-                <div class="kpi-icon">
-                    <?= Icon::get('check-circle') ?>
+            <!-- Filtros Flat -->
+            <div class="flat-filter-bar" style="margin-top: 32px;">
+                <div class="filter-item" style="flex: 2;">
+                    <label class="filter-label">BUSCAR</label>
+                    <input type="text" id="buscarFuncionario" class="form-control" placeholder="Nombre, cédula...">
                 </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">Activos</div>
-                    <div class="kpi-value"><?= $funcionarios_activos ?></div>
+                
+                <div class="filter-item" style="flex: 1.5;">
+                    <label class="filter-label">DEPARTAMENTO</label>
+                    <select id="filtroDepartamento" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($departamentos as $dep):
+                            $depVal = strtolower($dep['nombre']);
+                        ?>
+                            <option value="<?= htmlspecialchars($depVal) ?>" <?= $filtros['departamento_id'] == $dep['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($dep['nombre']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 1.5;">
+                    <label class="filter-label">CARGO</label>
+                    <select id="filtroCargo" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($cargos as $cargo):
+                            $cargoVal = strtolower($cargo['nombre_cargo']);
+                        ?>
+                            <option value="<?= htmlspecialchars($cargoVal) ?>" <?= $filtros['cargo_id'] == $cargo['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cargo['nombre_cargo']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 1;">
+                    <label class="filter-label">ESTADO</label>
+                    <select id="filtroEstado" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="activo" <?= $filtros['estado'] === 'activo' ? 'selected' : '' ?>>Activo</option>
+                        <option value="vacaciones" <?= $filtros['estado'] === 'vacaciones' ? 'selected' : '' ?>>Vacaciones</option>
+                        <option value="inactivo" <?= $filtros['estado'] === 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 0 0 auto;">
+                    <button id="btnLimpiar" class="btn-flat-outline">
+                        Limpiar
+                    </button>
                 </div>
             </div>
             
-            <div class="kpi-card kpi-warning">
-                <div class="kpi-icon">
-                    <?= Icon::get('sun') ?>
-                </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">En Vacaciones</div>
-                    <div class="kpi-value"><?= $funcionarios_vacaciones ?></div>
-                </div>
-            </div>
-            
-            <div class="kpi-card kpi-info">
-                <div class="kpi-icon">
-                    <?= Icon::get('star') ?>
-                </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">Nuevos (30 días)</div>
-                    <div class="kpi-value"><?= $funcionarios_nuevos ?></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Filtros Completos Horizontal -->
-        <div class="card-modern">
-            <div class="card-body" style="padding: 20px;">
-                <div class="filters-grid" style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1fr 100px; gap: 16px; align-items: end;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">BUSCAR</label>
-                        <input type="text" id="buscarFuncionario" class="form-control" placeholder="Nombre, cédula..." style="padding: 8px 12px; height: 38px; font-size: 14px;">
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">DEPARTAMENTO</label>
-                        <select id="filtroDepartamento" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
-                            <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dep):
-                                $depVal = strtolower($dep['nombre']);
-                            ?>
-                                <option value="<?= htmlspecialchars($depVal) ?>" <?= $filtros['departamento_id'] == $dep['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($dep['nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">CARGO</label>
-                        <select id="filtroCargo" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
-                            <option value="">Todos</option>
-                            <?php foreach ($cargos as $cargo):
-                                $cargoVal = strtolower($cargo['nombre_cargo']);
-                            ?>
-                                <option value="<?= htmlspecialchars($cargoVal) ?>" <?= $filtros['cargo_id'] == $cargo['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($cargo['nombre_cargo']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">ESTADO</label>
-                        <select id="filtroEstado" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
-                            <option value="">Todos</option>
-                            <option value="activo" <?= $filtros['estado'] === 'activo' ? 'selected' : '' ?>>Activo</option>
-                            <option value="vacaciones" <?= $filtros['estado'] === 'vacaciones' ? 'selected' : '' ?>>Vacaciones</option>
-                            <option value="inactivo" <?= $filtros['estado'] === 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <button id="btnLimpiar" class="btn-secondary" style="height: 38px; width: 100%; display: flex; align-items: center; justify-content: center; padding: 0;">
-                            <?= Icon::get('x', 'width: 16px; height: 16px; margin-right: 4px;') ?> Limpiar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Tabla -->
-        <div class="card-modern">
-            <div class="card-body">
-                <div class="table-wrapper">
-                    <table id="tablaFuncionarios" class="table-modern">
-                        <thead>
+            <!-- Tabla -->
+            <div class="table-wrapper">
+                <table id="tablaFuncionarios" class="table-modern">
+                    <thead>
                             <tr>
                                 <th>Funcionario</th>
                                 <th>Cargo</th>
@@ -267,10 +267,9 @@ $funcionarios_nuevos = count(array_filter($funcionarios, fn($f) =>
                 <!-- Contador de resultados -->
                 <div style="padding: 12px 16px; border-top: 1px solid var(--color-border-light); font-size: 13px; color: var(--color-text-light);">
                     Mostrando <strong id="contadorVisible">0</strong> de <strong id="contadorTotal">0</strong> funcionarios
-                </div>
-            </div>
-        </div>
-    </div>
+                </div> <!-- End Table Wrapper -->
+            </div> <!-- End Module Container -->
+        </div> <!-- End Main Content -->
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {

@@ -379,8 +379,8 @@ if ($tipo === 'historial') {
             if (empty($descripcion)) $descripcion = '—';
 
             $tipo   = mb_convert_encoding($m['tipo_evento'],'ISO-8859-1','UTF-8');
-            $fecha  = $m['fecha_evento'] ? date('d/m/Y', strtotime($m['fecha_evento'])) : '—';
-            $fin    = $m['fecha_fin']    ? date('d/m/Y', strtotime($m['fecha_fin']))    : '—';
+            $fecha  = $m['fecha_evento'] ? date('d/m/Y', strtotime($m['fecha_evento'])) : '-';
+            $fin    = $m['fecha_fin']    ? date('d/m/Y', strtotime($m['fecha_fin']))    : '-';
             $desc   = mb_convert_encoding(substr($descripcion,0,120),'ISO-8859-1','UTF-8');
 
             $pdf->Cell(30,7,$tipo,  1,0,'C',$fill);

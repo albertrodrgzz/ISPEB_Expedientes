@@ -60,7 +60,6 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
     <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
-    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
     <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
@@ -71,102 +70,130 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
     
     <div class="main-content">
         <?php 
-        $pageTitle = Icon::get('file-text') . ' Nombramientos';
+        $pageTitle = 'Nombramientos';
         include '../layout/header.php'; 
         ?>
 
-        
-        <div style="display:flex; justify-content:flex-end; margin-bottom: 20px;">
-            <button class="btn-primary" onclick="abrirModalNombramiento()">
-                <?= Icon::get('plus') ?> Nuevo Nombramiento
-            </button>
-        </div><!-- KPI Cards -->
-        <div class="kpi-grid" style="margin-bottom: 30px;">
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-blue">
+        <div class="module-container">
+            <!-- Header Título y Botón -->
+            <div class="module-header-title">
+                <div class="module-title-group">
                     <?= Icon::get('file-text') ?>
+                    <h2 class="module-title-text">Nombramientos</h2>
                 </div>
-                <div class="kpi-details">
-                    <div class="kpi-value"><?= number_format($total_nombramientos) ?></div>
-                    <div class="kpi-label">Total Nombramientos</div>
+                <button class="btn-primary" onclick="abrirModalNombramiento()" style="padding: 10px 20px; border-radius: 8px;">
+                    <?= Icon::get('plus') ?> Nuevo Nombramiento
+                </button>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card-solid bg-solid-blue">
+                    <div class="kpi-icon">
+                        <?= Icon::get('file-text') ?>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Total Nombramientos</div>
+                        <div class="kpi-value"><?= number_format($total_nombramientos) ?></div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card-solid bg-solid-green">
+                    <div class="kpi-icon">
+                        <?= Icon::get('calendar') ?>
+                    </div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Nombramientos <?= date('Y') ?></div>
+                        <div class="kpi-value"><?= number_format($nombramientos_anio) ?></div>
+                    </div>
                 </div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-cyan">
-                    <?= Icon::get('calendar') ?>
-                </div>
-                <div class="kpi-details">
-                    <div class="kpi-value"><?= number_format($nombramientos_anio) ?></div>
-                    <div class="kpi-label">Nombramientos <?= date('Y') ?></div>
+
+            <!-- Filtros Flat -->
+            <div class="flat-filter-bar" style="margin-top: 32px;">
+                <div class="filter-item" style="flex: 2;">
+                    <label class="filter-label">BUSCAR</label>
+                    <input type="text" id="buscarNombramiento" class="form-control" placeholder="Buscar por cédula, nombre, cargo...">
                 </div>
             </div>
-        </div>
 
-        <!-- Tabla de registros -->
-        <div class="card-modern">
-            <div class="card-body">
-                <div style="margin-bottom: 20px;">
-                    <input type="text" 
-                           id="buscarNombramiento" 
-                           class="search-input" 
-                           placeholder="Buscar por c&eacute;dula, nombre, cargo...">
-                </div>
-
-                <div class="table-wrapper">
-                    <table id="tablaNombramientos" class="table-modern">
-                        <thead>
+            <!-- Tabla -->
+            <div class="table-wrapper">
+                <table id="tablaNombramientos" class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Funcionario</th>
+                            <th>Fecha</th>
+                            <th>Cargo</th>
+                            <th>Departamento</th>
+                            <th style="text-align:center;width:80px;">Acta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($nombramientos)): ?>
                             <tr>
-                                <th>Fecha</th>
-                                <th>Funcionario</th>
-                                <th>Cédula</th>
-                                <th>Cargo</th>
-                                <th>Departamento</th>
-                                <th style="text-align: center; width: 80px;">Documento</th>
+                                <td colspan="5">
+                                    <div class="empty-st">
+                                        <div class="empty-st-ico">
+                                            <?= Icon::get('file-text') ?>
+                                        </div>
+                                        <p class="empty-state-title">Sin nombramientos registrados</p>
+                                        <p class="empty-state-desc">Los nombramientos aparecerán aquí una vez que sean registrados.</p>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($nombramientos)): ?>
+                        <?php else: ?>
+                            <?php foreach ($nombramientos as $nom):
+                                $nombre_completo = $nom['nombres'] . ' ' . $nom['apellidos'];
+                                $iniciales = strtoupper(mb_substr($nom['nombres'],0,1) . mb_substr($nom['apellidos'],0,1));
+                                $colors = ['#0F4C81','#0288D1','#8B5CF6','#10B981','#F59E0B','#14B8A6'];
+                                $color = $colors[abs(crc32($nom['cedula'])) % count($colors)];
+                            ?>
                                 <tr>
-                                    <td colspan="6">
-                                        <div class="empty-state">
-                                            <div class="empty-state-icon">
-                                                <?= Icon::get('file-text', 'width: 64px; height: 64px; opacity: 0.3;') ?>
+                                    <td>
+                                        <div class="fn-cell">
+                                            <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)">
+                                                <?= $iniciales ?>
                                             </div>
-                                            <div class="empty-state-title">No hay nombramientos registrados</div>
-                                            <p class="empty-state-description">Los nombramientos aparecerán aquí una vez que sean registrados</p>
+                                            <div class="fn-info">
+                                                <strong><?= htmlspecialchars($nombre_completo) ?></strong>
+                                                <small><span class="fn-cedula"><?= htmlspecialchars($nom['cedula']) ?></span></small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="white-space:nowrap;"><?= date('d/m/Y', strtotime($nom['fecha_evento'])) ?></td>
+                                    <td>
+                                        <span style="font-size:13px;font-weight:600;color:#1A2332;">
+                                            <?= htmlspecialchars($nom['cargo_actual'] ?? 'N/A') ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="font-size:13px;color:#64748B;">
+                                            <?= htmlspecialchars($nom['departamento'] ?? 'N/A') ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="tbl-actions">
+                                            <?php if ($nom['ruta_archivo_pdf']): ?>
+                                                <button type="button"
+                                                        class="btn-ic ic-pdf"
+                                                        title="Ver documento"
+                                                        onclick="abrirPDF('<?= addslashes(APP_URL . '/' . $nom['ruta_archivo_pdf']) ?>')">
+                                                    <?= Icon::get('file-text') ?>
+                                                </button>
+                                            <?php else: ?>
+                                                <span style="color:#CBD5E1;font-size:12px;">—</span>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($nombramientos as $nom): ?>
-                                    <tr>
-                                        <td><?= date('d/m/Y', strtotime($nom['fecha_evento'])) ?></td>
-                                        <td><strong><?= htmlspecialchars($nom['nombres'] . ' ' . $nom['apellidos']) ?></strong></td>
-                                        <td><?= htmlspecialchars($nom['cedula']) ?></td>
-                                        <td>
-                                            <span class="badge badge-success"><?= htmlspecialchars($nom['cargo_actual'] ?? 'N/A') ?></span>
-                                        </td>
-                                        <td><?= htmlspecialchars($nom['departamento'] ?? 'N/A') ?></td>
-                                        <td style="text-align: center;">
-                                            <?php if ($nom['ruta_archivo_pdf']): ?>
-                                                <button type="button"
-                                                        class="btn-icon"
-                                                        title="Ver documento"
-                                                        onclick="abrirPDF('<?= addslashes(APP_URL . '/' . $nom['ruta_archivo_pdf']) ?>')">                                                    <?= Icon::get('eye') ?>
-                                                </button>
-                                            <?php else: ?>
-                                                <span style="color: var(--color-text-lighter);">-</span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div> <!-- End Table Wrapper -->
+        </div> <!-- End Module Container -->
+    </div> <!-- End Main Content -->
 
     <script>
     // APP_URL ya está declarado por header.php. Usar var+guard para evitar SyntaxError.

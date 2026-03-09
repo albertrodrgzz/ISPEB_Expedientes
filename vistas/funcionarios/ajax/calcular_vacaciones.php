@@ -96,6 +96,7 @@ try {
             WHERE funcionario_id = ?
             AND tipo_evento = 'VACACION'
             AND YEAR(fecha_evento) = YEAR(CURDATE())
+            AND (fecha_fin < CURDATE() OR (fecha_fin IS NULL AND fecha_evento < CURDATE()))
         ");
         $stmt->execute([$funcionario_id]);
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);

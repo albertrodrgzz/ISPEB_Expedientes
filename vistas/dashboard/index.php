@@ -355,44 +355,44 @@ if ($nivel_acceso >= 3) {
         <div class="content-wrapper">
             <!-- KPIs -->
             <div class="kpi-grid">
-                <div class="kpi-card kpi-primary">
+                <div class="kpi-card-solid bg-solid-blue">
                     <div class="kpi-icon"><?php echo Icon::get('users'); ?></div>
-                    <div class="kpi-content">
+                    <div class="kpi-details">
                         <div class="kpi-label">Total Personal</div>
                         <div class="kpi-value"><?php echo $total_personal; ?></div>
                     </div>
                 </div>
 
-                <div class="kpi-card kpi-success">
+                <div class="kpi-card-solid bg-solid-green">
                     <div class="kpi-icon"><?php echo Icon::get('check-circle'); ?></div>
-                    <div class="kpi-content">
+                    <div class="kpi-details">
                         <div class="kpi-label">Activos</div>
                         <div class="kpi-value"><?php echo $activos; ?></div>
                     </div>
                 </div>
 
-                <div class="kpi-card kpi-warning">
+                <div class="kpi-card-solid bg-solid-orange">
                     <div class="kpi-icon"><?php echo Icon::get('sun'); ?></div>
-                    <div class="kpi-content">
+                    <div class="kpi-details">
                         <div class="kpi-label">De Vacaciones</div>
                         <div class="kpi-value"><?php echo $de_vacaciones; ?></div>
                     </div>
                 </div>
 
-                <div class="kpi-card kpi-info">
+                <div class="kpi-card-solid bg-solid-purple">
                     <div class="kpi-icon"><?php echo Icon::get('bell'); ?></div>
-                    <div class="kpi-content">
+                    <div class="kpi-details">
                         <div class="kpi-label">Nombr. Recientes</div>
                         <div class="kpi-value"><?php echo $por_vencer; ?></div>
                     </div>
                 </div>
 
                 <?php if ($sol_pendientes > 0): ?>
-                <div class="kpi-card" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); border-left: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(217,119,6,0.35);">
-                    <div class="kpi-icon" style="color: rgba(255,255,255,0.9)"><?php echo Icon::get('inbox'); ?></div>
-                    <div class="kpi-content">
-                        <div class="kpi-label" style="color: rgba(255,255,255,0.85)">Solicitudes Pendientes</div>
-                        <div class="kpi-value" style="color: #ffffff"><?php echo $sol_pendientes; ?></div>
+                <div class="kpi-card-solid bg-solid-red">
+                    <div class="kpi-icon"><?php echo Icon::get('inbox'); ?></div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Solicitudes Pendientes</div>
+                        <div class="kpi-value"><?php echo $sol_pendientes; ?></div>
                     </div>
                 </div>
                 <?php endif; ?>

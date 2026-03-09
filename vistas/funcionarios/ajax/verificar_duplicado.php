@@ -49,7 +49,7 @@ try {
 
     $db = getDB();
 
-    $sql    = "SELECT id, nombres, apellidos FROM funcionarios WHERE {$campo} = ?";
+    $sql    = "SELECT id, nombres, apellidos FROM funcionarios WHERE REPLACE(REPLACE(REPLACE(LOWER({$campo}), 'v-', ''), '-', ''), '.', '') = ?";
     $params = [$valor];
 
     if ($excluir_id > 0) {

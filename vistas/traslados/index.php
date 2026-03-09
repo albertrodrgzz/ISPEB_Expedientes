@@ -66,7 +66,6 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
     <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
-    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
 
@@ -89,79 +88,91 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
         include __DIR__ . '/../layout/header.php'; 
         ?>
 
-        <div class="content-wrapper">
-            <div style="display:flex; justify-content:flex-end; margin-bottom: 24px;"><button class="btn-primary" onclick="abrirModalTraslado()"><?= Icon::get('plus') ?> Registrar Traslado</button></div>
+        <div class="module-container">
+            <!-- Header Título y Botón -->
+            <div class="module-header-title">
+                <div class="module-title-group">
+                    <?= Icon::get('refresh-cw') ?>
+                    <h2 class="module-title-text">Traslados</h2>
+                </div>
+                <button class="btn-primary" onclick="abrirModalTraslado()" style="padding: 10px 20px; border-radius: 8px;">
+                    <?= Icon::get('plus') ?> Registrar Traslado
+                </button>
+            </div>
 
             <!-- KPI Cards -->
             <div class="kpi-grid">
-                <div class="kpi-card color-purple">
+                <div class="kpi-card-solid bg-solid-purple">
                     <div class="kpi-icon">
                         <?= Icon::get('refresh-cw') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= number_format($traslados_mes) ?></span>
-                        <span class="kpi-label">Traslados este Mes</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Traslados este Mes</div>
+                        <div class="kpi-value"><?= number_format($traslados_mes) ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-orange">
+                
+                <div class="kpi-card-solid bg-solid-orange">
                     <div class="kpi-icon">
                         <?= Icon::get('calendar') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= number_format($traslados_anio) ?></span>
-                        <span class="kpi-label">Traslados este A&ntilde;o</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Traslados este Año</div>
+                        <div class="kpi-value"><?= number_format($traslados_anio) ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-teal">
+                
+                <div class="kpi-card-solid bg-solid-cyan">
                     <div class="kpi-icon">
                         <?= Icon::get('file-text') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= number_format($total_historico) ?></span>
-                        <span class="kpi-label">Total Hist&oacute;rico</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Total Histórico</div>
+                        <div class="kpi-value"><?= number_format($total_historico) ?></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabla con filtros -->
-            <div class="card-modern">
-                <!-- Filter Toolbar -->
-                <div class="filter-toolbar">
-                    <div class="filter-item">
-                        <label class="filter-label">Buscar</label>
-                        <input type="text" id="searchTraslado" class="form-control" placeholder="Buscar funcionario, cédula...">
-                    </div>
-                    <div class="filter-item">
-                        <label class="filter-label">Departamento Destino</label>
-                        <select id="filter-departamento" class="form-control">
-                            <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dep): ?>
-                                <option value="<?= htmlspecialchars(strtolower($dep['nombre'])) ?>">
-                                    <?= htmlspecialchars($dep['nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="filter-item">
-                        <label class="filter-label">A&ntilde;o</label>
-                        <select id="filter-anio" class="form-control">
-                            <option value="">Todos</option>
-                            <?php foreach ($anios_disponibles as $anio): ?>
-                                <option value="<?= $anio ?>"><?= $anio ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="filter-item" style="display: flex; align-items: flex-end;">
-                        <button type="button" onclick="limpiarFiltros()" class="btn-secondary" style="width: 100%;">
-                            <?= Icon::get('rotate-ccw') ?> Limpiar
-                        </button>
-                    </div>
+            <!-- Filtros Flat -->
+            <div class="flat-filter-bar" style="margin-top: 32px;">
+                <div class="filter-item" style="flex: 2;">
+                    <label class="filter-label">BUSCAR</label>
+                    <input type="text" id="searchTraslado" class="form-control" placeholder="Buscar funcionario, cédula...">
                 </div>
+                
+                <div class="filter-item" style="flex: 1.5;">
+                    <label class="filter-label">DEPARTAMENTO DESTINO</label>
+                    <select id="filter-departamento" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($departamentos as $dep): ?>
+                            <option value="<?= htmlspecialchars(strtolower($dep['nombre'])) ?>">
+                                <?= htmlspecialchars($dep['nombre']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 1;">
+                    <label class="filter-label">AÑO</label>
+                    <select id="filter-anio" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($anios_disponibles as $anio): ?>
+                            <option value="<?= $anio ?>"><?= $anio ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 0 0 auto;">
+                    <button type="button" onclick="limpiarFiltros()" class="btn-flat-outline">
+                        Limpiar
+                    </button>
+                </div>
+            </div>
 
-                <!-- Tabla -->
-                <div class="table-container">
-                    <table class="table-modern" id="tablaTraslados">
-                        <thead>
+            <!-- Tabla -->
+            <div class="table-wrapper">
+                <table class="table-modern" id="tablaTraslados">
+                    <thead>
                             <tr>
                                 <th>Funcionario</th>
                                 <th>C&eacute;dula</th>
@@ -175,11 +186,12 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                             <?php if (empty($traslados)): ?>
                                 <tr>
                                     <td colspan="6">
-                                        <div class="empty-state">
-                                            <div class="empty-state-icon">
-                                                <?= Icon::get('briefcase', 'width:48px; height:48px; opacity:0.3;') ?>
+                                        <div class="empty-st">
+                                            <div class="empty-st-ico">
+                                                <?= Icon::get('briefcase') ?>
                                             </div>
-                                            <div class="empty-state-text">No hay traslados registrados</div>
+                                            <p class="empty-state-title">Sin traslados registrados</p>
+                                            <p class="empty-state-desc">Aún no se han registrado traslados en el sistema.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -188,43 +200,51 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                                     $detalles   = json_decode($t['detalles'], true) ?? [];
                                     $dep_origen = $detalles['departamento_origen'] ?? $detalles['departamento_anterior'] ?? 'N/A';
                                     $dep_destino = $detalles['departamento_destino'] ?? $detalles['departamento_nuevo'] ?? 'N/A';
-                                    $motivo     = $detalles['motivo'] ?? $detalles['observaciones'] ?? 'Sin motivo';
+                                    $motivo     = $detalles['motivo'] ?? $detalles['observaciones'] ?? '—';
                                     $anio_evento = date('Y', strtotime($t['fecha_evento']));
+                                    $nombre_completo = $t['nombres'] . ' ' . $t['apellidos'];
+                                    $iniciales = strtoupper(mb_substr($t['nombres'],0,1) . mb_substr($t['apellidos'],0,1));
+                                    $colors = ['#0F4C81','#0288D1','#8B5CF6','#10B981','#F59E0B','#14B8A6'];
+                                    $color = $colors[abs(crc32($t['cedula'])) % count($colors)];
                                 ?>
                                     <tr class="traslado-row"
-                                        data-search="<?= strtolower(htmlspecialchars($t['nombres'] . ' ' . $t['apellidos'] . ' ' . $t['cedula'])) ?>"
+                                        data-search="<?= strtolower(htmlspecialchars($nombre_completo . ' ' . $t['cedula'])) ?>"
                                         data-departamento="<?= strtolower(htmlspecialchars($dep_destino)) ?>"
                                         data-anio="<?= $anio_evento ?>">
                                         <td>
-                                            <div style="font-weight: 600; color: #1E293B;">
-                                                <?= htmlspecialchars($t['nombres'] . ' ' . $t['apellidos']) ?>
+                                            <div class="fn-cell">
+                                                <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)">
+                                                    <?= $iniciales ?>
+                                                </div>
+                                                <div class="fn-info">
+                                                    <strong><?= htmlspecialchars($nombre_completo) ?></strong>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td><?= htmlspecialchars($t['cedula']) ?></td>
+                                        <td><span class="fn-cedula"><?= htmlspecialchars($t['cedula']) ?></span></td>
                                         <td>
-                                            <div class="dept-change">
-                                                <span class="dept-old"><?= htmlspecialchars($dep_origen) ?></span>
-                                                <span class="dept-arrow">&rarr;</span>
-                                                <span class="dept-new"><?= htmlspecialchars($dep_destino) ?></span>
+                                            <div class="dept-flow">
+                                                <span class="dept-from"><?= htmlspecialchars($dep_origen) ?></span>
+                                                <span class="dept-arr">→</span>
+                                                <span class="dept-to"><?= htmlspecialchars($dep_destino) ?></span>
                                             </div>
                                         </td>
-                                        <td><?= date('d/m/Y', strtotime($t['fecha_evento'])) ?></td>
+                                        <td style="white-space:nowrap;"><?= date('d/m/Y', strtotime($t['fecha_evento'])) ?></td>
                                         <td>
-                                            <span style="font-size: 12px; color: #64748B;">
-                                                <?= htmlspecialchars($motivo) ?>
+                                            <span style="font-size:12.5px;color:#64748B;">
+                                                <?= htmlspecialchars(mb_substr($motivo,0,60)) ?><?= strlen($motivo)>60?'…':'' ?>
                                             </span>
                                         </td>
-                                        <td style="text-align: center;">
-                                            <div style="display: flex; justify-content: center; gap: 8px;">
+                                        <td>
+                                            <div class="tbl-actions">
                                                 <a href="../funcionarios/ver.php?id=<?= $t['funcionario_id'] ?>"
-                                                   class="btn-icon" title="Ver Expediente">
+                                                   class="btn-ic ic-view" title="Ver Expediente">
                                                     <?= Icon::get('eye') ?>
                                                 </a>
                                                 <?php if ($t['ruta_archivo_pdf']): ?>
                                                     <a href="<?= APP_URL . '/' . $t['ruta_archivo_pdf'] ?>"
                                                        target="_blank"
-                                                       class="btn-icon" title="Ver Resolución PDF"
-                                                       style="color: #EF4444;">
+                                                       class="btn-ic ic-pdf" title="Ver Resolución PDF">
                                                         <?= Icon::get('file-text') ?>
                                                     </a>
                                                 <?php endif; ?>
@@ -233,17 +253,16 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Contador -->
-                <div style="padding: 12px 20px; border-top: 1px solid #E2E8F0; font-size: 13px; color: #64748B;">
-                    Mostrando <strong id="contadorVisible">0</strong> de <strong id="contadorTotal">0</strong> traslados
-                </div>
+                    </tbody>
+                </table>
+            </div> <!-- End Table Wrapper -->
+            
+            <!-- Contador -->
+            <div class="tbl-foot" style="padding: 12px 16px; border-top: 1px solid var(--color-border-light); font-size: 13px; color: var(--color-text-light);">
+                Mostrando <strong id="contadorVisible">0</strong> de <strong id="contadorTotal">0</strong> traslados
             </div>
-        </div>
-    </div>
+        </div> <!-- End Module Container -->
+    </div> <!-- End Main Content -->
 
     <script>
     if (typeof APP_URL === 'undefined') { var APP_URL = "<?= APP_URL ?>"; }

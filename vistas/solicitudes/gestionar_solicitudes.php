@@ -42,8 +42,26 @@ $stmt = $pdo->query("
 ");
 $pendientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Historial reciente (últimos 20) ──────────────────────────────────────────
-$stmt = $pdo->query("
+
+// ── Historial ──
+$busqueda = $_GET['busqueda'] ?? '';
+$f_estado = $_GET['estado'] ?? '';
+$where = ["se.estado != 'pendiente'"];
+$params = [];
+
+if ($busqueda !== '') {
+    $where[] = "(f.cedula LIKE ? OR f.nombres LIKE ? OR f.apellidos LIKE ?)";
+    $params[] = "%$busqueda%";
+    $params[] = "%$busqueda%";
+    $params[] = "%$busqueda%";
+}
+if ($f_estado !== '') {
+    $where[] = "se.estado = ?";
+    $params[] = $f_estado;
+}
+$whereSql = implode(' AND ', $where);
+
+$stmt = $pdo->prepare("
     SELECT se.*,
            CONCAT(f.nombres,' ',f.apellidos) AS funcionario_nombre,
            f.cedula,
@@ -51,11 +69,13 @@ $stmt = $pdo->query("
     FROM   solicitudes_empleados se
     INNER JOIN funcionarios f ON se.funcionario_id = f.id
     LEFT  JOIN usuarios     u ON se.revisado_por    = u.id
-    WHERE  se.estado != 'pendiente'
+    WHERE  $whereSql
     ORDER  BY se.updated_at DESC
-    LIMIT  20
+    LIMIT  100
 ");
+$stmt->execute($params);
 $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -66,16 +86,15 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
-    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
     <style>
-        /* ── Modal de Aprobación ───────────────────────────────── */
+        /* ── Modal de Aprobación (Estilo SWAL Moderno Avanzado) ── */
         .modal-overlay {
             display: none;
             position: fixed; inset: 0; z-index: 9999;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
             align-items: center; justify-content: center;
         }
         .modal-overlay.open { display: flex; }
@@ -84,81 +103,75 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
             border-radius: 20px;
             padding: 32px;
             width: min(540px, 95vw);
-            box-shadow: 0 24px 64px rgba(0,0,0,0.2);
-            animation: modalSlideIn .25s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+            animation: modalSlideIn .3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            font-family: 'Inter', sans-serif;
+            border: none;
         }
         @keyframes modalSlideIn {
-            from { transform: translateY(-20px); opacity: 0; }
-            to   { transform: translateY(0);     opacity: 1; }
+            from { transform: translateY(-30px) scale(0.95); opacity: 0; }
+            to   { transform: translateY(0) scale(1);        opacity: 1; }
         }
         .modal-title {
-            font-size: 19px; font-weight: 700; color: #1e293b;
-            margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+            font-size: 24px; font-weight: 700; color: #1e293b;
+            margin-bottom: 8px; letter-spacing: -0.5px;
         }
-        .modal-subtitle { font-size: 13px; color: #64748b; margin-bottom: 22px; }
-        .mf-group { margin-bottom: 16px; }
+        .modal-subtitle { font-size: 14px; color: #64748b; margin-bottom: 24px; display: flex; align-items: center; gap: 6px; }
+        .mf-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
         .mf-label {
-            display: block; font-size: 13px; font-weight: 600; color: #334155;
-            margin-bottom: 6px;
+            font-size: 13px; font-weight: 600; color: #1e293b;
+            display: flex; align-items: center; gap: 6px;
         }
-        .mf-req { color: #ef4444; }
+        .mf-req { color: #dc2626; margin-left:2px; }
         .mf-control {
-            width: 100%; padding: 10px 13px;
-            border: 2px solid #e2e8f0; border-radius: 9px;
-            font-size: 13.5px; font-family: inherit;
-            transition: border .2s; box-sizing: border-box;
+            width: 100%; padding: 12px 16px;
+            border: 2px solid #E5E7EB; border-radius: 10px;
+            font-size: 14px; font-family: inherit;
+            transition: all .2s ease; box-sizing: border-box; background: white;
         }
-        .mf-control:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 3px rgba(16,185,129,.12); }
-        .mf-textarea { resize: vertical; min-height: 80px; }
+        .mf-control:focus { 
+            border-color: #0F4C81; outline: none; 
+            box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.1); 
+        }
+        .mf-textarea { resize: vertical; min-height: 100px; }
+        
         .file-drop-zone {
-            border: 2.5px dashed #cbd5e1; border-radius: 12px;
-            padding: 22px; text-align: center;
+            border: 2px dashed #E5E7EB; border-radius: 12px;
+            padding: 24px; text-align: center;
             cursor: pointer; transition: all .2s;
-            background: #f8fafc;
+            background: #F9FAFB;
         }
         .file-drop-zone:hover, .file-drop-zone.has-file {
-            border-color: #10b981; background: #ecfdf5; color: #059669;
+            border-color: #0F4C81; background: #F0F9FF;
         }
         .file-drop-zone input[type=file] { display: none; }
-        .file-drop-zone-icon { font-size: 28px; margin-bottom: 6px; }
-        .file-drop-text { font-size: 13px; color: #64748b; font-weight: 500; }
-        .file-drop-hint { font-size: 11px; color: #94a3b8; margin-top: 3px; }
-        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
-        .btn-cancel { padding: 10px 20px; border-radius: 9px; border: 2px solid #e2e8f0;
-                      background: #fff; color: #475569; font-weight: 600; font-size: 13.5px;
-                      cursor: pointer; transition: all .2s; }
-        .btn-cancel:hover { background: #f1f5f9; }
-        .btn-confirm-approve { padding: 10px 24px; border-radius: 9px; border: none;
-                               background: linear-gradient(135deg,#10b981,#059669);
-                               color: #fff; font-weight: 700; font-size: 13.5px;
-                               cursor: pointer; transition: all .2s; }
-        .btn-confirm-approve:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,185,129,.35); }
-
-        /* ── Badges ────────────────────────────────────────────── */
-        .badge-pendiente  { background:#fef3c7;color:#92400e;border:1px solid #fcd34d; }
-        .badge-aprobada   { background:#d1fae5;color:#065f46;border:1px solid #6ee7b7; }
-        .badge-rechazada  { background:#fee2e2;color:#991b1b;border:1px solid #fca5a5; }
-        .badge-sol {
-            padding: 3px 10px; border-radius: 99px;
-            font-size: 11.5px; font-weight: 600;
+        .file-drop-zone-icon { 
+            margin-bottom: 8px; display:inline-flex; align-items:center; justify-content:center;
+            width: 48px; height: 48px; border-radius: 50%; background: #E0F2FE; color: #0EA5E9;
         }
-
-        /* ── Tipo icono ────────────────────────────────────────── */
-        .tipo-pill {
-            display:inline-flex;align-items:center;gap:5px;
-            padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;
+        .file-drop-text { font-size: 14px; color: #1e293b; font-weight: 600; margin-bottom: 4px; }
+        .file-drop-hint { font-size: 12px; color: #64748b; }
+        
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
+        .btn-cancel {
+            background: #F3F4F6; color: #1e293b; border: none;
+            padding: 12px 28px; border-radius: 10px; font-weight: 600; font-size: 14px;
+            transition: all 0.2s; cursor: pointer;
         }
-        .tipo-pill.vacaciones { background:#dbeafe;color:#1d4ed8; }
-        .tipo-pill.permiso    { background:#fce7f3;color:#be185d; }
+        .btn-cancel:hover { background: #E5E7EB; }
+        .btn-confirm-approve {
+            background: linear-gradient(135deg, #0F4C81 0%, #00a8cc 100%);
+            color: white; border: none; padding: 12px 28px; border-radius: 10px;
+            font-weight: 600; font-size: 14px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(15, 76, 129, 0.25);
+            transition: all 0.3s ease; display:flex; align-items:center; gap:8px;
+        }
+        .btn-confirm-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(15, 76, 129, 0.35);
+        }
 
         /* ── Tabs ──────────────────────────────────────────────── */
-        .tabs { display:flex;gap:6px;margin-bottom:20px; }
-        .tab-btn {
-            padding:8px 18px;border-radius:9px;border:2px solid transparent;
-            font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;
-            background:#f1f5f9;color:#64748b;
-        }
-        .tab-btn.active { background:#1e293b;color:#fff;border-color:#1e293b; }
         .tab-content { display:none; }
         .tab-content.visible { display:block; }
     </style>
@@ -172,64 +185,75 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
         include __DIR__ . '/../layout/header.php'; 
         ?>
 
-        <div class="content-wrapper">
-            
+        <div class="module-container">
+            <!-- Header Título y Botón -->
+            <div class="module-header-title">
+                <div class="module-title-group">
+                    <?= Icon::get('inbox') ?>
+                    <h2 class="module-title-text">Bandeja de Solicitudes</h2>
+                </div>
+            </div>
 
             <!-- KPI Cards -->
-            <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
-                <div class="kpi-card color-orange">
+            <div class="kpi-grid">
+                <div class="kpi-card-solid bg-solid-orange">
                     <div class="kpi-icon"><?= Icon::get('clock') ?></div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $stats['pendientes'] ?></span>
-                        <span class="kpi-label">Pendientes</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Pendientes</div>
+                        <div class="kpi-value"><?= $stats['pendientes'] ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-green">
+                
+                <div class="kpi-card-solid bg-solid-green">
                     <div class="kpi-icon"><?= Icon::get('check-circle') ?></div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $stats['aprobadas'] ?></span>
-                        <span class="kpi-label">Aprobadas</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Aprobadas</div>
+                        <div class="kpi-value"><?= $stats['aprobadas'] ?></div>
                     </div>
                 </div>
-                <div class="kpi-card" style="background:linear-gradient(135deg,rgba(239,68,68,.10),rgba(239,68,68,.05));border-color:rgba(239,68,68,.2);">
-                    <div class="kpi-icon" style="background:rgba(239,68,68,.15);color:#ef4444;"><?= Icon::get('x-circle') ?></div>
-                    <div class="kpi-content">
-                        <span class="kpi-value" style="color:#ef4444;"><?= $stats['rechazadas'] ?></span>
-                        <span class="kpi-label">Rechazadas</span>
+                
+                <div class="kpi-card-solid bg-solid-red">
+                    <div class="kpi-icon"><?= Icon::get('x-circle') ?></div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Rechazadas</div>
+                        <div class="kpi-value"><?= $stats['rechazadas'] ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-blue">
+                
+                <div class="kpi-card-solid bg-solid-blue">
                     <div class="kpi-icon"><?= Icon::get('inbox') ?></div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $stats['total'] ?></span>
-                        <span class="kpi-label">Total</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Total</div>
+                        <div class="kpi-value"><?= $stats['total'] ?></div>
                     </div>
                 </div>
             </div>
 
             <!-- Tabs: Pendientes / Historial -->
-            <div class="card-modern">
+            <div style="margin-top: 32px;">
                 <div class="tabs">
                     <button class="tab-btn active" onclick="cambiarTab('pendientes', this)">
                         <?= Icon::get('clock', 'width:14px;height:14px;') ?>
                         Pendientes
                         <?php if ($stats['pendientes'] > 0): ?>
-                            <span style="background:#ef4444;color:#fff;border-radius:99px;padding:1px 7px;font-size:11px;margin-left:4px;"><?= $stats['pendientes'] ?></span>
+                            <span style="background:#EF4444;color:#fff;border-radius:99px;padding:1px 7px;font-size:11px;margin-left:4px;font-weight:700;line-height:1.6;"><?= $stats['pendientes'] ?></span>
                         <?php endif; ?>
                     </button>
                     <button class="tab-btn" onclick="cambiarTab('historial', this)">
                         <?= Icon::get('list', 'width:14px;height:14px;') ?>
-                        Historial Reciente
+                        Historial
                     </button>
                 </div>
 
                 <!-- ── TAB PENDIENTES ─────────────────────────────────── -->
                 <div id="tab-pendientes" class="tab-content visible">
                     <?php if (empty($pendientes)): ?>
-                        <div style="text-align:center;padding:60px 20px;color:#94a3b8;">
-                            <svg width="56" height="56" fill="none" stroke="#cbd5e1" viewBox="0 0 24 24" style="margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                            <h3 style="color:#1e293b;margin-bottom:6px;">Todo al d&iacute;a</h3>
-                            <p>No hay solicitudes pendientes de revisi&oacute;n.</p>
+                        <div class="empty-st">
+                            <div class="empty-st-ico">
+                                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                            </div>
+                            <h3>Todo al día</h3>
+                            <p>No hay solicitudes pendientes de revisión.</p>
                         </div>
                     <?php else: ?>
                         <div class="table-container">
@@ -245,46 +269,46 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($pendientes as $sol): ?>
+                                    <?php foreach ($pendientes as $sol):
+                                        $iniciales = strtoupper(mb_substr($sol['funcionario_nombre'],0,1));
+                                        $colors = ['#0F4C81','#0288D1','#8B5CF6','#10B981','#F59E0B','#14B8A6'];
+                                        $color = $colors[abs(crc32($sol['cedula']??'')) % count($colors)];
+                                    ?>
                                     <tr>
                                         <td>
-                                            <div style="font-weight:600;color:#1e293b;"><?= htmlspecialchars($sol['funcionario_nombre']) ?></div>
-                                            <div style="font-size:12px;color:#64748b;"><?= htmlspecialchars($sol['cedula']) ?> · <?= htmlspecialchars($sol['departamento'] ?? 'Sin depto.') ?></div>
-                                        </td>
-                                        <td>
-                                            <span class="tipo-pill <?= $sol['tipo_solicitud'] ?>">
-                                                <?= $sol['tipo_solicitud'] === 'vacaciones'
-                                                    ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-13l-.87.5M4.21 17.5l-.87.5M20.66 17.5l-.87-.5M4.21 6.5l-.87-.5M21 12h1M2 12h1"/><circle cx="12" cy="12" r="3"/></svg> Vacaciones'
-                                                    : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Permiso' ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div style="font-size:13px;">
-                                                <?= date('d/m/Y', strtotime($sol['fecha_inicio'])) ?>
-                                                <span style="color:#94a3b8;">→</span>
-                                                <?= date('d/m/Y', strtotime($sol['fecha_fin'])) ?>
+                                            <div class="fn-cell">
+                                                <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)"><?= $iniciales ?></div>
+                                                <div class="fn-info">
+                                                    <span class="fn-name"><?= htmlspecialchars($sol['funcionario_nombre']) ?></span>
+                                                    <span class="fn-meta"><span class="fn-cedula"><?= htmlspecialchars($sol['cedula']) ?></span> · <?= htmlspecialchars($sol['departamento'] ?? '—') ?></span>
+                                                </div>
                                             </div>
                                         </td>
+                                        <td>
+                                            <span class="type-pill <?= $sol['tipo_solicitud'] ?>">
+                                                <?= $sol['tipo_solicitud'] === 'vacaciones' ? '☀️ Vacaciones' : '🕐 Permiso' ?>
+                                            </span>
+                                        </td>
+                                        <td style="font-size:13px;white-space:nowrap;">
+                                            <?= date('d/m/Y', strtotime($sol['fecha_inicio'])) ?>
+                                            <span style="color:#CBD5E1;margin:0 3px;">→</span>
+                                            <?= date('d/m/Y', strtotime($sol['fecha_fin'])) ?>
+                                        </td>
                                         <td style="max-width:200px;">
-                                            <div style="font-size:13px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px;"
-                                                 title="<?= htmlspecialchars($sol['motivo']) ?>">
-                                                <?= htmlspecialchars($sol['motivo']) ?>
+                                            <div style="font-size:13px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px;" title="<?= htmlspecialchars($sol['motivo']) ?>">
+                                                <?= htmlspecialchars(mb_substr($sol['motivo'],0,60)) ?><?= mb_strlen($sol['motivo'])>60?'…':'' ?>
                                             </div>
                                         </td>
                                         <td style="font-size:12px;color:#64748b;white-space:nowrap;">
                                             <?= date('d/m/Y H:i', strtotime($sol['created_at'])) ?>
                                         </td>
-                                        <td style="text-align:right;">
-                                            <div style="display:flex;gap:8px;justify-content:flex-end;">
-                                                <button class="btn-icon"
-                                                        style="background:rgba(16,185,129,.12);color:#059669;"
-                                                        title="Aprobar"
+                                        <td>
+                                            <div class="tbl-actions">
+                                                <button class="btn-ic ic-approve" title="Aprobar"
                                                         onclick="abrirModalAprobar(<?= $sol['id'] ?>, '<?= htmlspecialchars($sol['funcionario_nombre']) ?>', '<?= $sol['tipo_solicitud'] ?>')">
                                                     <?= Icon::get('check') ?>
                                                 </button>
-                                                <button class="btn-icon"
-                                                        style="background:rgba(239,68,68,.12);color:#ef4444;"
-                                                        title="Rechazar"
+                                                <button class="btn-ic ic-del" title="Rechazar"
                                                         onclick="rechazarSolicitud(<?= $sol['id'] ?>, '<?= htmlspecialchars($sol['funcionario_nombre']) ?>', '<?= $sol['tipo_solicitud'] ?>', '<?= $sol['fecha_inicio'] ?>', '<?= $sol['fecha_fin'] ?>')">
                                                     <?= Icon::get('x') ?>
                                                 </button>
@@ -298,11 +322,44 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php endif; ?>
                 </div>
 
-                <!-- ── TAB HISTORIAL ─────────────────────────────────── -->
+                 <!-- ── TAB HISTORIAL ─────────────────────────────────── -->
                 <div id="tab-historial" class="tab-content">
+                    
+                    <form method="GET" action="gestionar_solicitudes.php" class="flat-filter-bar" id="historialFilters">
+                        <div class="filter-group">
+                            <label class="filter-label">Funcionario / Cédula</label>
+                            <input type="text" name="busqueda" class="flat-input" placeholder="Buscar..." value="<?= htmlspecialchars($_GET['busqueda'] ?? '') ?>">
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Estado</label>
+                            <select name="estado" class="flat-input" onchange="document.getElementById('historialFilters').submit()">
+                                <option value="">Todos</option>
+                                <option value="aprobada" <?= ($_GET['estado']??'')==='aprobada'?'selected':'' ?>>Aprobada</option>
+                                <option value="rechazada" <?= ($_GET['estado']??'')==='rechazada'?'selected':'' ?>>Rechazada</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn-primary" style="padding:10px 20px; border-radius:8px;">Filtrar</button>
+                            <?php if(!empty($_GET['busqueda']) || !empty($_GET['estado'])): ?>
+                                <a href="gestionar_solicitudes.php" class="btn-clear-flat" style="display:inline-block; padding:10px 20px; margin-left:8px; border-radius:8px; border:1px solid #e2e8f0; color:#64748b; text-decoration:none;">Limpiar</a>
+                                <script>
+                                    // Make sure historial tab is active on load if filters are applied
+                                    document.addEventListener('DOMContentLoaded', () => {
+                                        document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+                                        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                                        document.getElementById('tab-pendientes').classList.remove('visible');
+                                        document.getElementById('tab-historial').classList.add('visible');
+                                    });
+                                </script>
+                            <?php endif; ?>
+                        </div>
+                    </form>
+
                     <?php if (empty($historial)): ?>
-                        <div style="text-align:center;padding:60px 20px;color:#94a3b8;">
-                            <p>No hay historial de solicitudes.</p>
+                        <div class="empty-st">
+                            <div class="empty-st-ico"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
+                            <h3>Sin historial</h3>
+                            <p>No hay solicitudes procesadas aún.</p>
                         </div>
                     <?php else: ?>
                         <div class="table-container">
@@ -318,26 +375,35 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($historial as $h): ?>
+                                    <?php foreach ($historial as $h):
+                                        $iniciales = strtoupper(mb_substr($h['funcionario_nombre'],0,1));
+                                        $colors = ['#0F4C81','#0288D1','#8B5CF6','#10B981','#F59E0B','#14B8A6'];
+                                        $color = $colors[abs(crc32($h['cedula']??'')) % count($colors)];
+                                        $stMap = ['pendiente'=>'pending','aprobada'=>'approved','rechazada'=>'rejected'];
+                                        $stClass = $stMap[$h['estado']] ?? 'inactive';
+                                    ?>
                                     <tr>
                                         <td>
-                                            <div style="font-weight:600;color:#1e293b;"><?= htmlspecialchars($h['funcionario_nombre']) ?></div>
-                                            <div style="font-size:12px;color:#64748b;"><?= htmlspecialchars($h['cedula']) ?></div>
+                                            <div class="fn-cell">
+                                                <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)"><?= $iniciales ?></div>
+                                                <div class="fn-info">
+                                                    <span class="fn-name"><?= htmlspecialchars($h['funcionario_nombre']) ?></span>
+                                                    <span class="fn-meta"><span class="fn-cedula"><?= htmlspecialchars($h['cedula']) ?></span></span>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td>
-                                            <span class="tipo-pill <?= $h['tipo_solicitud'] ?>">
-                                                <?= $h['tipo_solicitud'] === 'vacaciones'
-                                                    ? '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-13l-.87.5M4.21 17.5l-.87.5M20.66 17.5l-.87-.5M4.21 6.5l-.87-.5M21 12h1M2 12h1"/><circle cx="12" cy="12" r="3"/></svg> Vacaciones'
-                                                    : '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Permiso' ?>
+                                            <span class="type-pill <?= $h['tipo_solicitud'] ?>">
+                                                <?= $h['tipo_solicitud'] === 'vacaciones' ? '☀️ Vacaciones' : '🕐 Permiso' ?>
                                             </span>
                                         </td>
-                                        <td style="font-size:13px;">
+                                        <td style="font-size:13px;white-space:nowrap;">
                                             <?= date('d/m/Y', strtotime($h['fecha_inicio'])) ?>
-                                            <span style="color:#94a3b8;">→</span>
+                                            <span style="color:#CBD5E1;margin:0 3px;">→</span>
                                             <?= date('d/m/Y', strtotime($h['fecha_fin'])) ?>
                                         </td>
                                         <td>
-                                            <span class="badge-sol badge-<?= $h['estado'] ?>">
+                                            <span class="st-badge st-<?= $stClass ?>">
                                                 <?= ucfirst($h['estado']) ?>
                                             </span>
                                         </td>
@@ -348,7 +414,7 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <?php if ($h['ruta_archivo_aprobacion']): ?>
                                                 <a href="<?= APP_URL . '/' . htmlspecialchars($h['ruta_archivo_aprobacion']) ?>"
                                                    target="_blank"
-                                                   class="btn-icon"
+                                                   class="btn-ic ic-pdf"
                                                    title="Ver memo">
                                                     <?= Icon::get('file-text') ?>
                                                 </a>
@@ -364,8 +430,8 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php endif; ?>
                 </div>
 
-            </div><!-- /.card-modern -->
-        </div><!-- /.content-wrapper -->
+            </div><!-- /.tabs wrapper -->
+        </div><!-- /.module-container -->
     </div><!-- /.main-content -->
 
     <!-- ══════════════════════════════════════════════════════════════════════
@@ -374,9 +440,6 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="modal-overlay" id="modalAprobar">
         <div class="modal-box">
             <div class="modal-title">
-                <span style="background:#d1fae5;color:#065f46;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                    <?= Icon::get('check-circle', 'width:20px;height:20px;') ?>
-                </span>
                 Aprobar Solicitud
             </div>
             <p class="modal-subtitle" id="modalSubtitle"></p>

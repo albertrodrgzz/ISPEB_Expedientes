@@ -233,10 +233,27 @@ if ($step == 2 && isset($_SESSION['recovery_user_id'])) {
         $usuario_data = $stmt->fetch();
         
         if ($usuario_data) {
+            $lista_preguntas = [
+                1 => '¿Cuál es el nombre de tu primera mascota?',
+                2 => '¿En qué ciudad naciste?',
+                3 => '¿Cuál es el nombre de tu mejor amigo de la infancia?',
+                4 => '¿Cuál es tu comida favorita?',
+                5 => '¿Cuál es el nombre de tu escuela primaria?',
+                6 => '¿Cuál es el segundo nombre de tu madre?',
+                7 => '¿Cuál es el segundo nombre de tu padre?',
+                8 => '¿En qué año te graduaste de bachillerato?',
+                9 => '¿Cuál es tu color favorito?',
+                10 => '¿Cuál es el nombre de tu película favorita?',
+                11 => '¿Cuál es tu equipo deportivo favorito?',
+                12 => '¿Cuál es el nombre de tu libro favorito?',
+                13 => '¿Cuál es tu lugar de vacaciones favorito?',
+                14 => '¿Cuál es el nombre de tu primer trabajo?',
+                15 => '¿Cuál es tu número de la suerte?'
+            ];
             $preguntas = [
-                $usuario_data['pregunta_seguridad_1'],
-                $usuario_data['pregunta_seguridad_2'],
-                $usuario_data['pregunta_seguridad_3']
+                $lista_preguntas[$usuario_data['pregunta_seguridad_1']] ?? ('Pregunta ID: ' . $usuario_data['pregunta_seguridad_1']),
+                $lista_preguntas[$usuario_data['pregunta_seguridad_2']] ?? ('Pregunta ID: ' . $usuario_data['pregunta_seguridad_2']),
+                $lista_preguntas[$usuario_data['pregunta_seguridad_3']] ?? ('Pregunta ID: ' . $usuario_data['pregunta_seguridad_3'])
             ];
             $nombre_usuario = $usuario_data['nombres'] . ' ' . $usuario_data['apellidos'];
             $intentos_usuario = $usuario_data['intentos_fallidos'];

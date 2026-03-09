@@ -364,7 +364,7 @@ function registrarVacacion($pdo) {
         $stmt = $pdo->prepare("
             SELECT COALESCE(SUM(JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.dias_habiles'))), 0) as total_usado
             FROM historial_administrativo
-            WHERE funcionario_id = ? AND tipo_evento = 'VACACION' AND YEAR(fecha_evento) = ?
+            WHERE funcionario_id = ? AND tipo_evento = 'VACACION' AND YEAR(fecha_evento) = ? AND (fecha_fin < CURDATE() OR (fecha_fin IS NULL AND fecha_evento < CURDATE()))
         ");
         $stmt->execute([$funcionario_id, $año_actual]);
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -380,10 +380,18 @@ function registrarVacacion($pdo) {
         $dias_contados = 0;
         $fecha_actual_calculo = clone $fecha_inicio;
 
-        while ($dias_contados < $dias_habiles) {
+        while ((int)$fecha_actual_calculo->format('N') > 5) {
             $fecha_actual_calculo->modify('+1 day');
+        }
+
+        while ($dias_contados < $dias_habiles) {
             $dia_semana = (int)$fecha_actual_calculo->format('N');
-            if ($dia_semana >= 1 && $dia_semana <= 5) $dias_contados++;
+            if ($dia_semana >= 1 && $dia_semana <= 5) {
+                $dias_contados++;
+            }
+            if ($dias_contados < $dias_habiles) {
+                $fecha_actual_calculo->modify('+1 day');
+            }
         }
 
         $fecha_ultimo_dia = $fecha_actual_calculo->format('Y-m-d');

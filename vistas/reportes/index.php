@@ -171,41 +171,33 @@ $tipos_eventos = $stmt->fetch()['total'];
         include '../layout/header.php'; 
         ?>
         
-        <!-- Header con botón -->
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1 style="font-size: 28px; font-weight: 700; color: var(--color-text); margin: 0; display: flex; align-items: center; gap: 12px;">
-                <?= Icon::get('pie-chart') ?>
-                Reportes y Documentos
-            </h1>
-        </div>
-
         <!-- KPI Cards -->
         <div class="kpi-grid" style="margin-bottom: 30px;">
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-blue">
+            <div class="kpi-card-solid bg-solid-blue">
+                <div class="kpi-icon">
                     <?= Icon::get('users') ?>
                 </div>
                 <div class="kpi-details">
-                    <div class="kpi-value"><?= number_format($total_funcionarios) ?></div>
                     <div class="kpi-label">Funcionarios Activos</div>
+                    <div class="kpi-value"><?= number_format($total_funcionarios) ?></div>
                 </div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-cyan">
+            <div class="kpi-card-solid bg-solid-green">
+                <div class="kpi-icon">
                     <?= Icon::get('activity') ?>
                 </div>
                 <div class="kpi-details">
-                    <div class="kpi-value"><?= number_format($total_movimientos) ?></div>
                     <div class="kpi-label">Movimientos <?= date('Y') ?></div>
+                    <div class="kpi-value"><?= number_format($total_movimientos) ?></div>
                 </div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-icon gradient-orange">
+            <div class="kpi-card-solid bg-solid-orange">
+                <div class="kpi-icon">
                     <?= Icon::get('file-text') ?>
                 </div>
                 <div class="kpi-details">
-                    <div class="kpi-value"><?= number_format($tipos_eventos) ?></div>
                     <div class="kpi-label">Tipos de Eventos</div>
+                    <div class="kpi-value"><?= number_format($tipos_eventos) ?></div>
                 </div>
             </div>
         </div>

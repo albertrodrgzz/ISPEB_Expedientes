@@ -14,14 +14,14 @@ if (!verificarNivel(1)) {
     exit;
 }
 
-$pageTitle = 'Importar Base de Datos';
+$pageTitle = Icon::get('download') . ' Importar Base de Datos';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle . ' - ' . APP_NAME; ?></title>
+    <title>Importar Base de Datos - <?= APP_NAME ?></title>
     
     <!-- Estilos globales -->
     <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
@@ -37,15 +37,7 @@ $pageTitle = 'Importar Base de Datos';
             <?php include __DIR__ . '/../layout/header.php'; ?>
             
             <div class="content-wrapper">
-                <div class="page-header">
-                    <h1>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        <?php echo $pageTitle; ?>
-                    </h1>
+                <div style="margin-bottom: 24px;">
                     <p class="page-description">Restaure la base de datos desde un archivo SQL de respaldo</p>
                 </div>
 

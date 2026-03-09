@@ -38,6 +38,9 @@ $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js'
 <?php $_v_mf = @filemtime(__DIR__ . '/../../publico/css/mobile-first.css') ?: date('Ymd'); ?>
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/mobile-first.css?v=<?= $_v_mf ?>">
 
+<?php $_v_opt = @filemtime(__DIR__ . '/../../publico/css/siged-optimized.css') ?: date('Ymd'); ?>
+<link rel="stylesheet" href="<?= APP_URL ?>/publico/css/siged-optimized.css?v=<?= $_v_opt ?>">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js?v=<?= $_v_swal ?>"></script>
@@ -47,7 +50,7 @@ $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js'
         <button class="menu-toggle menu-toggle-header" id="menuToggleHeader" aria-label="Abrir menú">
             <?= Icon::get('menu') ?>
         </button>
-        <h1 class="page-title"><?= $pageTitle ?? 'Vista General' ?></h1>
+        <h1 class="page-title">Vista General</h1>
     </div>
 
     <div class="header-right">

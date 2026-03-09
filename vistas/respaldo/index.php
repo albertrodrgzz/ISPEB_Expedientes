@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Vista: Respaldo de Base de Datos
  * Módulo principal con opciones de exportar e importar
@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/seguridad.php';
+require_once __DIR__ . '/../../config/icons.php';
 
 // Verificar sesión y permisos (solo nivel 1 - Directores)
 verificarSesion();
@@ -14,19 +15,15 @@ if (!verificarNivel(1)) {
     exit;
 }
 
-$pageTitle = 'Respaldo de Base de Datos';
+$pageTitle = Icon::get('database') . ' Respaldo de Base de Datos';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle . ' - ' . APP_NAME; ?></title>
+    <title>Respaldo de Base de Datos - <?= APP_NAME ?></title>
     <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
-    <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
-    
-    <!-- Estilos globales -->
-    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
     
     <!-- SweetAlert2 -->
     <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
@@ -38,16 +35,8 @@ $pageTitle = 'Respaldo de Base de Datos';
         <div class="main-content">
             <?php include __DIR__ . '/../layout/header.php'; ?>
             
-            <div class="content-wrapper">
-                <div class="page-header">
-                    <h1>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <?php echo $pageTitle; ?>
-                    </h1>
+            <div class="module-container">
+                <div style="margin-bottom: 24px;">
                     <p class="page-description">Gestione los respaldos de la base de datos del sistema</p>
                 </div>
 

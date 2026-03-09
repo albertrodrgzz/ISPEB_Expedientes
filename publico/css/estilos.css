@@ -1133,6 +1133,12 @@ body {
     color: white !important;
 }
 
+/* kpi-danger = alias de color-red para compatibilidad */
+.kpi-card.kpi-danger {
+    background: var(--gradient-red) !important;
+    color: white !important;
+}
+
 /* En cards de color: texto y valor siempre blancos */
 .kpi-card[class*="color-"] .kpi-label,
 .kpi-card[class*="color-"] .kpi-value,
@@ -1143,12 +1149,19 @@ body {
 .kpi-card.kpi-warning .kpi-label,
 .kpi-card.kpi-warning .kpi-value,
 .kpi-card.kpi-info .kpi-label,
-.kpi-card.kpi-info .kpi-value {
+.kpi-card.kpi-info .kpi-value,
+.kpi-card.kpi-danger .kpi-label,
+.kpi-card.kpi-danger .kpi-value {
     color: #FFFFFF !important;
 }
 
 /* En cards de color: icono con fondo semitransparente */
-.kpi-card[class*="color-"] .kpi-icon {
+.kpi-card[class*="color-"] .kpi-icon,
+.kpi-card.kpi-primary .kpi-icon,
+.kpi-card.kpi-success .kpi-icon,
+.kpi-card.kpi-warning .kpi-icon,
+.kpi-card.kpi-info .kpi-icon,
+.kpi-card.kpi-danger .kpi-icon {
     background: rgba(255, 255, 255, 0.25) !important;
     backdrop-filter: blur(8px);
 }

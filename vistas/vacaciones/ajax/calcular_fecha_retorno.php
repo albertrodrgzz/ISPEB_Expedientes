@@ -31,14 +31,17 @@ try {
     $fecha = new DateTime($fecha_inicio);
     $dias_contados = 0;
     
-    // Avanzar solo días hábiles (lunes a viernes)
-    while ($dias_contados < $dias_habiles) {
+    while ((int)$fecha->format('N') > 5) {
         $fecha->modify('+1 day');
-        $dia_semana = (int)$fecha->format('N'); // 1=lunes, 7=domingo
-        
-        // Si es día hábil (lun-vie)
+    }
+    
+    while ($dias_contados < $dias_habiles) {
+        $dia_semana = (int)$fecha->format('N');
         if ($dia_semana >= 1 && $dia_semana <= 5) {
             $dias_contados++;
+        }
+        if ($dias_contados < $dias_habiles) {
+            $fecha->modify('+1 day');
         }
     }
     

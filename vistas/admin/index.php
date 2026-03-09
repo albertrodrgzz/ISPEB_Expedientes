@@ -7,6 +7,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/seguridad.php';
+require_once __DIR__ . '/../../config/icons.php';
 
 // Verificar sesión y permisos (solo nivel 1)
 verificarSesion();
@@ -148,7 +149,7 @@ $usuarios = $stmt->fetchAll();
         }
         
         .stat-card {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            background: var(--color-primary), var(--color-secondary));
             border-radius: var(--radius-lg);
             padding: 24px;
             color: white;
@@ -161,15 +162,15 @@ $usuarios = $stmt->fetchAll();
         }
         
         .stat-card.secondary {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: var(--color-primary);
         }
         
         .stat-card.tertiary {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: var(--color-primary);
         }
         
         .stat-card.quaternary {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            background: var(--color-primary);
         }
         
         .stat-value {
@@ -428,7 +429,10 @@ $usuarios = $stmt->fetchAll();
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php 
+        $pageTitle = Icon::get('settings') . ' Panel de Administración';
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
         
         
             

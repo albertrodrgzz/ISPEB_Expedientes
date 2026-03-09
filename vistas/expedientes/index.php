@@ -71,107 +71,104 @@ $documentos = $stmt->fetchAll();
 
     <div class="main-content">
         <?php 
-        $pageTitle = Icon::get('file') . ' Expedientes Digitales';
+        $pageTitle = 'Expedientes Digitales';
         include __DIR__ . '/../layout/header.php'; 
         ?>
 
-        <!-- KPI Cards -->
-        <div class="kpi-grid">
-            <div class="kpi-card kpi-primary">
-                <div class="kpi-icon">
+        <div class="module-container">
+            <!-- Header Título y Botón -->
+            <div class="module-header-title">
+                <div class="module-title-group">
                     <?= Icon::get('file') ?>
-                </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">Total Documentos</div>
-                    <div class="kpi-value"><?= $stats_total ?></div>
+                    <h2 class="module-title-text">Directorio de Expedientes</h2>
                 </div>
             </div>
 
-            <div class="kpi-card kpi-info">
-                <div class="kpi-icon">
-                    <?= Icon::get('clipboard') ?>
-                </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">Nombramientos</div>
-                    <div class="kpi-value"><?= $stats_nombramientos ?></div>
-                </div>
-            </div>
-
-            <div class="kpi-card kpi-success">
-                <div class="kpi-icon">
-                    <?= Icon::get('sun') ?>
-                </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">Vacaciones</div>
-                    <div class="kpi-value"><?= $stats_vacaciones ?></div>
-                </div>
-            </div>
-
-            <div class="kpi-card kpi-warning">
-                <div class="kpi-icon">
-                    <?= Icon::get('alert-triangle') ?>
-                </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">Amonestaciones</div>
-                    <div class="kpi-value"><?= $stats_amonestaciones ?></div>
-                </div>
-            </div>
-
-            <div class="kpi-card kpi-danger">
-                <div class="kpi-icon">
-                    <?= Icon::get('arrow-right') ?>
-                </div>
-                <div class="kpi-content">
-                    <div class="kpi-label">Traslados</div>
-                    <div class="kpi-value"><?= $stats_traslados ?></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filtros -->
-        <div class="card-modern">
-            <div class="card-body" style="padding: 20px;">
-                <div class="filters-grid" style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 100px; gap: 16px; align-items: end;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">BUSCAR</label>
-                        <input type="text" id="buscarExpediente" class="form-control" placeholder="Nombre, cédula, tipo..." style="padding: 8px 12px; height: 38px; font-size: 14px;">
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card-solid bg-solid-blue">
+                    <div class="kpi-icon"><?= Icon::get('file') ?></div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Total Documentos</div>
+                        <div class="kpi-value"><?= $stats_total ?></div>
                     </div>
+                </div>
 
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">TIPO DE DOCUMENTO</label>
-                        <select id="filtroTipo" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
-                            <option value="">Todos</option>
-                            <option value="nombramiento">Nombramiento</option>
-                            <option value="vacacion">Vacaciones</option>
-                            <option value="amonestacion">Amonestación</option>
-                            <option value="traslado">Traslado</option>
-                            <option value="remocion">Remoción</option>
-                        </select>
+                <div class="kpi-card-solid bg-solid-green">
+                    <div class="kpi-icon"><?= Icon::get('clipboard') ?></div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Nombramientos</div>
+                        <div class="kpi-value"><?= $stats_nombramientos ?></div>
                     </div>
+                </div>
 
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block; color: var(--color-text-light);">FUNCIONARIO</label>
-                        <select id="filtroFuncionario" class="form-control" style="padding: 8px 12px; height: 38px; font-size: 14px;">
-                            <option value="">Todos</option>
-                            <?php foreach ($funcionarios_lista as $func): ?>
-                                <option value="<?= $func['id'] ?>"><?= htmlspecialchars($func['nombre_completo']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                <div class="kpi-card-solid bg-solid-orange">
+                    <div class="kpi-icon"><?= Icon::get('sun') ?></div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Vacaciones</div>
+                        <div class="kpi-value"><?= $stats_vacaciones ?></div>
                     </div>
+                </div>
 
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <button id="btnLimpiar" class="btn-secondary" style="height: 38px; width: 100%; display: flex; align-items: center; justify-content: center; padding: 0;">
-                            <?= Icon::get('x', 'width: 16px; height: 16px; margin-right: 4px;') ?> Limpiar
-                        </button>
+                <div class="kpi-card-solid bg-solid-red">
+                    <div class="kpi-icon"><?= Icon::get('alert-triangle') ?></div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Amonestaciones</div>
+                        <div class="kpi-value"><?= $stats_amonestaciones ?></div>
+                    </div>
+                </div>
+
+                <div class="kpi-card-solid" style="background-color: #0f766e; color: white;">
+                    <div class="kpi-icon" style="background-color: rgba(255,255,255,0.2); color: white;"><?= Icon::get('arrow-right') ?></div>
+                    <div class="kpi-details">
+                        <div class="kpi-label" style="color: rgba(255,255,255,0.9);">Traslados</div>
+                        <div class="kpi-value" style="color: white;"><?= $stats_traslados ?></div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Tabla -->
-        <div class="card-modern">
-            <div class="card-body">
-                <div class="table-wrapper">
+            <!-- Filtros -->
+            <div class="flat-filter-bar">
+                <div class="filter-group">
+                    <label>BUSCAR</label>
+                    <input type="text" id="buscarExpediente" class="flat-input" placeholder="Nombre, cédula, tipo...">
+                </div>
+
+                <div class="filter-group">
+                    <label>TIPO DE DOCUMENTO</label>
+                    <select id="filtroTipo" class="flat-input">
+                        <option value="">Todos</option>
+                        <option value="nombramiento">Nombramiento</option>
+                        <option value="vacacion">Vacaciones</option>
+                        <option value="amonestacion">Amonestación</option>
+                        <option value="traslado">Traslado</option>
+                        <option value="remocion">Remoción</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>FUNCIONARIO</label>
+                    <select id="filtroFuncionario" class="flat-input">
+                        <option value="">Todos</option>
+                        <?php foreach ($funcionarios_lista as $func): ?>
+                            <option value="<?= $func['id'] ?>"><?= htmlspecialchars($func['nombre_completo']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="filter-group" style="justify-content: flex-end;">
+                    <button id="btnLimpiar" class="btn-flat-outline" style="padding:10px 20px; font-weight:600; font-size:14px; color:#64748B; background:transparent; border:1px solid #CBD5E1; border-radius:10px; cursor:pointer; transition:all 0.2s ease; display:flex; align-items:center; gap:6px;">
+                        <?= Icon::get('x') ?> Limpiar
+                    </button>
+                    <!-- Hover CSS incrustado temporal para solucionar el diseño -->
+                    <style>
+                        #btnLimpiar:hover { background: #F1F5F9; color: #0F4C81; border-color: #94A3B8; }
+                    </style>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="table-wrapper">
                     <table id="tablaExpedientes" class="table-modern">
                         <thead>
                             <tr>
@@ -264,12 +261,11 @@ $documentos = $stmt->fetchAll();
                     </table>
                 </div>
                 <!-- Contador -->
-                <div style="padding:12px 16px;border-top:1px solid var(--color-border-light);font-size:13px;color:var(--color-text-light);">
+                <div style="padding:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:500;">
                     Mostrando <strong id="contadorVisible">0</strong> de <strong id="contadorTotal">0</strong> documentos
                 </div>
             </div>
-        </div>
-
+        </div><!-- /.module-container -->
     </div><!-- /main-content -->
 
     <script>

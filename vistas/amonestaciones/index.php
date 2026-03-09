@@ -90,92 +90,101 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
         include __DIR__ . '/../layout/header.php'; 
         ?>
 
-        <div class="content-wrapper">
-            <div style="display:flex; justify-content:flex-end; margin-bottom: 24px;">
-                <button class="btn-primary" onclick="abrirModalAmonestacion()">
+        <div class="module-container">
+            <!-- Header Título y Botón -->
+            <div class="module-header-title">
+                <div class="module-title-group">
+                    <?= Icon::get('alert-triangle') ?>
+                    <h2 class="module-title-text">Amonestaciones</h2>
+                </div>
+                <button class="btn-primary" onclick="abrirModalAmonestacion()" style="padding: 10px 20px; border-radius: 8px;">
                     <?= Icon::get('plus') ?> Registrar Falta
                 </button>
             </div>
 
             <!-- KPI Cards -->
             <div class="kpi-grid">
-                <div class="kpi-card color-orange">
+                <div class="kpi-card-solid bg-solid-orange">
                     <div class="kpi-icon">
                         <?= Icon::get('calendar') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= number_format($total_mes) ?></span>
-                        <span class="kpi-label">Faltas este Mes</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Faltas este Mes</div>
+                        <div class="kpi-value"><?= number_format($total_mes) ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-red">
+                
+                <div class="kpi-card-solid bg-solid-red">
                     <div class="kpi-icon">
                         <?= Icon::get('alert-circle') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= number_format($total_graves) ?></span>
-                        <span class="kpi-label">Graves / Muy Graves</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Graves / Muy Graves</div>
+                        <div class="kpi-value"><?= number_format($total_graves) ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-cyan">
+                
+                <div class="kpi-card-solid bg-solid-cyan">
                     <div class="kpi-icon">
                         <?= Icon::get('file-text') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= number_format($total_historico) ?></span>
-                        <span class="kpi-label">Total Hist&oacute;rico</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Total Histórico</div>
+                        <div class="kpi-value"><?= number_format($total_historico) ?></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabla con filtros -->
-            <div class="card-modern">
-                <!-- Filter Toolbar -->
-                <div class="filter-toolbar">
-                    <div class="filter-item">
-                        <label class="filter-label">Buscar</label>
-                        <input type="text" id="searchAmonestacion" class="form-control" placeholder="Buscar funcionario, cédula...">
-                    </div>
-                    <div class="filter-item">
-                        <label class="filter-label">Gravedad</label>
-                        <select id="filter-gravedad" class="form-control">
-                            <option value="">Todas</option>
-                            <option value="leve">Leve</option>
-                            <option value="grave">Grave</option>
-                            <option value="muy_grave">Muy Grave</option>
-                        </select>
-                    </div>
-                    <div class="filter-item">
-                        <label class="filter-label">Departamento</label>
-                        <select id="filter-departamento" class="form-control">
-                            <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dep): ?>
-                                <option value="<?= strtolower(htmlspecialchars($dep['nombre'])) ?>">
-                                    <?= htmlspecialchars($dep['nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="filter-item">
-                        <label class="filter-label">A&ntilde;o</label>
-                        <select id="filter-anio" class="form-control">
-                            <option value="">Todos</option>
-                            <?php foreach ($anios_disponibles as $anio): ?>
-                                <option value="<?= $anio ?>"><?= $anio ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="filter-item" style="display: flex; align-items: flex-end;">
-                        <button type="button" onclick="limpiarFiltros()" class="btn-secondary" style="width: 100%;">
-                            <?= Icon::get('rotate-ccw') ?> Limpiar
-                        </button>
-                    </div>
+            <!-- Filtros Flat -->
+            <div class="flat-filter-bar" style="margin-top: 32px;">
+                <div class="filter-item" style="flex: 2;">
+                    <label class="filter-label">BUSCAR</label>
+                    <input type="text" id="searchAmonestacion" class="form-control" placeholder="Buscar funcionario, cédula...">
                 </div>
+                
+                <div class="filter-item" style="flex: 1.5;">
+                    <label class="filter-label">GRAVEDAD</label>
+                    <select id="filter-gravedad" class="form-control">
+                        <option value="">Todas</option>
+                        <option value="leve">Leve</option>
+                        <option value="grave">Grave</option>
+                        <option value="muy_grave">Muy Grave</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 1.5;">
+                    <label class="filter-label">DEPARTAMENTO</label>
+                    <select id="filter-departamento" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($departamentos as $dep): ?>
+                            <option value="<?= strtolower(htmlspecialchars($dep['nombre'])) ?>">
+                                <?= htmlspecialchars($dep['nombre']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 1;">
+                    <label class="filter-label">AÑO</label>
+                    <select id="filter-anio" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($anios_disponibles as $anio): ?>
+                            <option value="<?= $anio ?>"><?= $anio ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 0 0 auto;">
+                    <button type="button" onclick="limpiarFiltros()" class="btn-flat-outline">
+                        Limpiar
+                    </button>
+                </div>
+            </div>
 
-                <!-- Tabla -->
-                <div class="table-container">
-                    <table class="table-modern" id="tablaAmonestaciones">
-                        <thead>
+            <!-- Tabla -->
+            <div class="table-wrapper">
+                <table class="table-modern" id="tablaAmonestaciones">
+                    <thead>
                             <tr>
                                 <th>Funcionario</th>
                                 <th>Fecha</th>
@@ -189,61 +198,72 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
                             <?php if (empty($amonestaciones)): ?>
                                 <tr>
                                     <td colspan="6">
-                                        <div class="empty-state">
-                                            <div class="empty-state-icon">
-                                                <?= Icon::get('check-circle', 'width:48px; height:48px; opacity:0.3;') ?>
+                                        <div class="empty-st">
+                                            <div class="empty-st-ico">
+                                                <?= Icon::get('check-circle') ?>
                                             </div>
-                                            <div class="empty-state-text">No hay amonestaciones registradas</div>
-                                            <p style="font-size: 13px; color: #94A3B8; margin-top: 4px;">Todo el personal tiene historial limpio.</p>
+                                            <p class="empty-state-title">Sin amonestaciones</p>
+                                            <p class="empty-state-desc">Todo el personal tiene historial limpio.</p>
                                         </div>
                                     </td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($amonestaciones as $a):
                                     $tipo = $a['tipo_falta'] ?? 'leve';
-                                    $label = ucfirst(str_replace('_', ' ', $tipo));
+                                    $label = match($tipo) {
+                                        'grave'     => 'Grave',
+                                        'muy_grave' => 'Muy Grave',
+                                        default     => 'Leve'
+                                    };
                                     $anio_evento = date('Y', strtotime($a['fecha_evento']));
                                     $dept_data = strtolower($a['departamento'] ?? '');
+                                    $nombre_completo = $a['nombres'] . ' ' . $a['apellidos'];
+                                    $iniciales = strtoupper(mb_substr($a['nombres'],0,1) . mb_substr($a['apellidos'],0,1));
+                                    $colors = ['#EF4444','#0F4C81','#8B5CF6','#F59E0B','#10B981','#0288D1'];
+                                    $color = $colors[abs(crc32($a['cedula'])) % count($colors)];
                                 ?>
                                     <tr class="amonestacion-row"
-                                        data-search="<?= strtolower(htmlspecialchars($a['nombres'] . ' ' . $a['apellidos'] . ' ' . $a['cedula'])) ?>"
+                                        data-search="<?= strtolower(htmlspecialchars($nombre_completo . ' ' . $a['cedula'])) ?>"
                                         data-gravedad="<?= htmlspecialchars($tipo) ?>"
                                         data-departamento="<?= htmlspecialchars($dept_data) ?>"
                                         data-anio="<?= $anio_evento ?>">
                                         <td>
-                                            <div style="font-weight: 600; color: #1E293B;">
-                                                <?= htmlspecialchars($a['nombres'] . ' ' . $a['apellidos']) ?>
+                                            <div class="fn-cell">
+                                                <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)">
+                                                    <?= $iniciales ?>
+                                                </div>
+                                                <div class="fn-info">
+                                                    <strong><?= htmlspecialchars($nombre_completo) ?></strong>
+                                                    <small><?= htmlspecialchars($a['cedula']) ?></small>
+                                                </div>
                                             </div>
-                                            <small style="color: #64748B;"><?= htmlspecialchars($a['cedula']) ?></small>
                                         </td>
-                                        <td><?= date('d/m/Y', strtotime($a['fecha_evento'])) ?></td>
+                                        <td style="white-space:nowrap;"><?= date('d/m/Y', strtotime($a['fecha_evento'])) ?></td>
                                         <td>
-                                            <span class="badge badge-<?= htmlspecialchars($tipo) ?>"
-                                                  style="padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;">
+                                            <span class="st-badge st-<?= htmlspecialchars($tipo) ?>">
                                                 <?= htmlspecialchars($label) ?>
                                             </span>
                                         </td>
                                         <td>
-                                            <span style="font-size: 13px; color: #334155;">
-                                                <?= htmlspecialchars($a['motivo'] ?? '—') ?>
+                                            <span style="font-size:13px;color:#334155;">
+                                                <?= htmlspecialchars(mb_substr($a['motivo'] ?? '—', 0, 70)) ?><?= strlen($a['motivo']??'')>70?'…':'' ?>
                                             </span>
                                         </td>
                                         <td>
-                                            <span style="font-size: 13px; color: #64748B;">
+                                            <span style="font-size:12.5px;color:#64748B;">
                                                 <?= htmlspecialchars($a['sancion'] ?? '—') ?>
                                             </span>
                                         </td>
-                                        <td style="text-align: center;">
-                                            <div style="display: flex; justify-content: center; gap: 8px;">
+                                        <td>
+                                            <div class="tbl-actions">
                                                 <a href="../funcionarios/ver.php?id=<?= $a['funcionario_id'] ?>"
-                                                   class="btn-icon" title="Ver Expediente">
+                                                   class="btn-ic ic-view" title="Ver Expediente">
                                                     <?= Icon::get('eye') ?>
                                                 </a>
                                                 <?php if ($a['ruta_archivo_pdf']): ?>
                                                     <a href="<?= APP_URL . '/' . $a['ruta_archivo_pdf'] ?>"
                                                        target="_blank"
-                                                       class="btn-icon" title="Ver Acta PDF"
-                                                       style="color: #EF4444;">
+                                                       class="btn-ic ic-pdf" title="Ver Acta PDF">
                                                         <?= Icon::get('file-text') ?>
                                                     </a>
                                                 <?php endif; ?>
@@ -252,17 +272,16 @@ $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetc
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Contador -->
-                <div style="padding: 12px 20px; border-top: 1px solid #E2E8F0; font-size: 13px; color: #64748B;">
-                    Mostrando <strong id="contadorVisible">0</strong> de <strong id="contadorTotal">0</strong> amonestaciones
-                </div>
+                    </tbody>
+                </table>
+            </div> <!-- End Table Wrapper -->
+            
+            <!-- Contador -->
+            <div class="tbl-foot" style="padding: 12px 16px; border-top: 1px solid var(--color-border-light); font-size: 13px; color: var(--color-text-light);">
+                Mostrando <strong id="contadorVisible">0</strong> de <strong id="contadorTotal">0</strong> amonestaciones
             </div>
-        </div>
-    </div>
+        </div> <!-- End Module Container -->
+    </div> <!-- End Main Content -->
 
     <script>
     if (typeof APP_URL === 'undefined') { var APP_URL = "<?= APP_URL ?>"; }

@@ -91,94 +91,112 @@ $vacaciones = $stmt->fetchAll();
         include __DIR__ . '/../layout/header.php'; 
         ?>
         
-        <div class="content-wrapper">
-            <div style="display:flex; justify-content:flex-end; margin-bottom: 24px;"><button class="btn-primary" onclick="abrirModalVacaciones()"><?= Icon::get('plus') ?> Nueva Solicitud</button></div>
+        <div class="module-container">
+            <!-- Header Título y Botón -->
+            <div class="module-header-title">
+                <div class="module-title-group">
+                    <?= Icon::get('sun') ?>
+                    <h2 class="module-title-text">Vacaciones</h2>
+                </div>
+                <button class="btn-primary" onclick="abrirModalVacaciones()" style="padding: 10px 20px; border-radius: 8px;">
+                    <?= Icon::get('plus') ?> Nueva Solicitud
+                </button>
+            </div>
 
+            <!-- KPI Cards -->
             <div class="kpi-grid">
-                <div class="kpi-card color-blue">
+                <div class="kpi-card-solid bg-solid-blue">
                     <div class="kpi-icon">
                         <?= Icon::get('users') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $total_empleados_con_vacaciones ?></span>
-                        <span class="kpi-label">Empleados Hist&oacute;rico</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Empleados Histórico</div>
+                        <div class="kpi-value"><?= $total_empleados_con_vacaciones ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-green">
+                
+                <div class="kpi-card-solid bg-solid-green">
                     <div class="kpi-icon">
                         <?= Icon::get('sun') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $empleados_en_vacaciones ?></span>
-                        <span class="kpi-label">De Vacaciones Hoy</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">De Vacaciones Hoy</div>
+                        <div class="kpi-value"><?= $empleados_en_vacaciones ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-orange">
+                
+                <div class="kpi-card-solid bg-solid-orange">
                     <div class="kpi-icon">
                         <?= Icon::get('clock') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $dias_usados_anio ?></span>
-                        <span class="kpi-label">D&iacute;as Usados (<?= date('Y') ?>)</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Días Usados (<?= date('Y') ?>)</div>
+                        <div class="kpi-value"><?= $dias_usados_anio ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-purple">
+                
+                <div class="kpi-card-solid bg-solid-purple">
                     <div class="kpi-icon">
                         <?= Icon::get('calendar') ?>
                     </div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $vacaciones_programadas ?></span>
-                        <span class="kpi-label">Programadas</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Programadas</div>
+                        <div class="kpi-value"><?= $vacaciones_programadas ?></div>
                     </div>
                 </div>
             </div>
 
-            <div class="card-modern">
-                <div class="filter-toolbar">
-                    <div class="filter-item">
-                        <label class="filter-label">Buscar</label>
-                        <input type="text" id="searchVacaciones" class="form-control" placeholder="Buscar funcionario...">
-                    </div>
-                    <div class="filter-item">
-                        <label class="filter-label">Departamento</label>
-                        <select id="filter-departamento" class="form-control">
-                            <option value="">Todos</option>
-                            <?php foreach ($departamentos as $dept): ?>
-                                <option value="<?php echo $dept['nombre']; ?>"><?php echo htmlspecialchars($dept['nombre']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="filter-item">
-                        <label class="filter-label">Estado</label>
-                        <select id="filter-estado" class="form-control">
-                            <option value="">Todos</option>
-                            <option value="Programada">Programada</option>
-                            <option value="En curso">En curso</option>
-                            <option value="Finalizada">Finalizada</option>
-                        </select>
-                    </div>
-                    <div class="filter-item">
-                        <label class="filter-label">Año</label>
-                        <select id="filter-anio" class="form-control">
-                            <option value="">Todos</option>
-                            <?php 
-                            $currentYear = date('Y');
-                            for ($i = $currentYear; $i >= $currentYear - 5; $i--): 
-                            ?>
-                                <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
-                            <?php endfor; ?>
-                        </select>
-                    </div>
-                    <div class="filter-item" style="display: flex; align-items: flex-end;">
-                        <button type="button" onclick="limpiarFiltros()" class="btn-secondary" style="width: 100%;">
-                            <?= Icon::get('rotate-ccw') ?> Limpiar
-                        </button>
-                    </div>
+            <!-- Filtros Flat -->
+            <div class="flat-filter-bar" style="margin-top: 32px;">
+                <div class="filter-item" style="flex: 2;">
+                    <label class="filter-label">BUSCAR</label>
+                    <input type="text" id="searchVacaciones" class="form-control" placeholder="Buscar funcionario...">
                 </div>
+                
+                <div class="filter-item" style="flex: 1.5;">
+                    <label class="filter-label">DEPARTAMENTO</label>
+                    <select id="filter-departamento" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($departamentos as $dept): ?>
+                            <option value="<?php echo htmlspecialchars($dept['nombre']); ?>"><?php echo htmlspecialchars($dept['nombre']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 1.5;">
+                    <label class="filter-label">ESTADO</label>
+                    <select id="filter-estado" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="Programada">Programada</option>
+                        <option value="En curso">En curso</option>
+                        <option value="Finalizada">Finalizada</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 1;">
+                    <label class="filter-label">AÑO</label>
+                    <select id="filter-anio" class="form-control">
+                        <option value="">Todos</option>
+                        <?php 
+                        $currentYear = date('Y');
+                        for ($i = $currentYear; $i >= $currentYear - 5; $i--): 
+                        ?>
+                            <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="flex: 0 0 auto;">
+                    <button type="button" onclick="limpiarFiltros()" class="btn-flat-outline">
+                        Limpiar
+                    </button>
+                </div>
+            </div>
 
-                <div class="table-container">
-                    <table class="table-modern" id="vacacionesTable">
-                        <thead>
+            <!-- Tabla -->
+            <div class="table-wrapper">
+                <table class="table-modern" id="vacacionesTable">
+                    <thead>
                             <tr>
                                 <th>Funcionario</th>
                                 <th>Cédula</th>
@@ -193,63 +211,72 @@ $vacaciones = $stmt->fetchAll();
                             <?php if (empty($vacaciones)): ?>
                                 <tr>
                                     <td colspan="7">
-                                        <div class="empty-state">
-                                            <div class="empty-state-icon">
-                                                <?= Icon::get('sun', 'width:48px; height:48px; opacity:0.3;') ?>
+                                        <div class="empty-st">
+                                            <div class="empty-st-ico">
+                                                <?= Icon::get('sun') ?>
                                             </div>
-                                            <div class="empty-state-text">No hay registros de vacaciones</div>
+                                            <p class="empty-state-title">Sin registros de vacaciones</p>
+                                            <p class="empty-state-desc">Las vacaciones registradas aparecerán aquí.</p>
                                         </div>
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($vacaciones as $vac): ?>
-                                    <tr class="vacacion-row" 
-                                        data-empleado="<?php echo strtolower($vac['nombres'] . ' ' . $vac['apellidos'] . ' ' . $vac['cedula']); ?>"
+                                <?php foreach ($vacaciones as $vac):
+                                    $nombre_completo = $vac['nombres'] . ' ' . $vac['apellidos'];
+                                    $iniciales = strtoupper(mb_substr($vac['nombres'],0,1) . mb_substr($vac['apellidos'],0,1));
+                                    $colors = ['#0F4C81','#0288D1','#8B5CF6','#10B981','#F59E0B','#14B8A6'];
+                                    $color = $colors[abs(crc32($vac['cedula'])) % count($colors)];
+                                    $badgeStyle = match($vac['estado_vacacion']) {
+                                        'En curso'   => 'background:#D1FAE5;color:#065F46;',
+                                        'Programada' => 'background:#FEF3C7;color:#92400E;',
+                                        default      => 'background:#F1F5F9;color:#475569;'
+                                    };
+                                ?>
+                                    <tr class="vacacion-row"
+                                        data-empleado="<?php echo strtolower($nombre_completo . ' ' . $vac['cedula']); ?>"
                                         data-departamento="<?php echo $vac['departamento']; ?>"
                                         data-estado="<?php echo $vac['estado_vacacion']; ?>"
                                         data-anio="<?php echo date('Y', strtotime($vac['fecha_inicio'])); ?>">
                                         <td>
-                                            <div style="font-weight: 600; color: #1E293B;">
-                                                <?php echo htmlspecialchars($vac['nombres'] . ' ' . $vac['apellidos']); ?>
+                                            <div class="fn-cell">
+                                                <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)">
+                                                    <?= $iniciales ?>
+                                                </div>
+                                                <div class="fn-info">
+                                                    <strong><?php echo htmlspecialchars($nombre_completo); ?></strong>
+                                                    <small><span class="fn-cedula"><?php echo htmlspecialchars($vac['cedula']); ?></span></small>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td><?php echo htmlspecialchars($vac['cedula']); ?></td>
-                                        <td><span style="font-size: 13px; color: #64748B;"><?php echo htmlspecialchars($vac['departamento']); ?></span></td>
+                                        <td style="font-size:13px;color:#64748B;"><?php echo htmlspecialchars($vac['departamento']); ?></td>
                                         <td>
-                                            <div style="font-size: 13px;">
-                                                <?php echo date('d/m/Y', strtotime($vac['fecha_inicio'])); ?> 
-                                                <span style="color: #94A3B8;">&rarr;</span> 
+                                            <span style="font-size:13px;white-space:nowrap;">
+                                                <?php echo date('d/m/Y', strtotime($vac['fecha_inicio'])); ?>
+                                                <span style="color:#CBD5E1;margin:0 3px;">→</span>
                                                 <?php echo date('d/m/Y', strtotime($vac['fecha_fin'])); ?>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span style="background: #F1F5F9; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 12px; color: #475569;">
-                                                <?php echo $vac['dias_totales']; ?> días
                                             </span>
                                         </td>
                                         <td>
-                                            <?php
-                                            $badgeClass = 'badge-info'; 
-                                            if ($vac['estado_vacacion'] == 'Finalizada') $badgeClass = 'badge-secondary';
-                                            if ($vac['estado_vacacion'] == 'En curso') $badgeClass = 'badge-success';
-                                            if ($vac['estado_vacacion'] == 'Programada') $badgeClass = 'badge-warning';
-                                            ?>
-                                            <span class="badge <?php echo $badgeClass; ?>">
+                                            <span style="background:#F1F5F9;padding:3px 9px;border-radius:6px;font-weight:700;font-size:12px;color:#475569;white-space:nowrap;">
+                                                <?php echo $vac['dias_totales']; ?>d
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span style="<?= $badgeStyle ?>padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap;">
                                                 <?php echo $vac['estado_vacacion']; ?>
                                             </span>
                                         </td>
-                                        <td style="text-align: right;">
-                                            <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                                                <a href="../funcionarios/ver.php?id=<?php echo $vac['funcionario_id']; ?>" 
-                                                   class="btn-icon" 
+                                        <td>
+                                            <div class="tbl-actions">
+                                                <a href="../funcionarios/ver.php?id=<?php echo $vac['funcionario_id']; ?>"
+                                                   class="btn-ic ic-view"
                                                    title="Ver Expediente">
                                                     <?= Icon::get('eye') ?>
                                                 </a>
                                                 <?php if ($vac['ruta_archivo']): ?>
-                                                    <a href="../../<?php echo $vac['ruta_archivo']; ?>" 
-                                                       target="_blank" 
-                                                       class="btn-icon" 
-                                                       style="color: #EF4444;"
+                                                    <a href="../../<?php echo $vac['ruta_archivo']; ?>"
+                                                       target="_blank"
+                                                       class="btn-ic ic-pdf"
                                                        title="Descargar PDF">
                                                         <?= Icon::get('file-text') ?>
                                                     </a>
@@ -259,12 +286,11 @@ $vacaciones = $stmt->fetchAll();
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+                    </tbody>
+                </table>
+            </div> <!-- End Table Wrapper -->
+        </div> <!-- End Module Container -->
+    </div> <!-- End Main Content -->
     
     <script src="../../publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     
@@ -380,15 +406,9 @@ $vacaciones = $stmt->fetchAll();
                     title: '<div style="display: flex; align-items: center; gap: 12px; justify-content: center; font-size: 22px; font-weight: 700; color: #1e293b;"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span>Nueva Vacación</span></div>',
                     html: `
                         <style>
-                            .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
-                            .form-group { text-align: left; }
-                            .form-label { display: flex; align-items: center; gap: 7px; font-weight: 600; margin-bottom: 9px; color: #334155; font-size: 13px; }
-                            .form-input, .form-select, .form-textarea { width: 100%; padding: 10px 13px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13.5px; transition: all 0.2s; background: white; font-family: inherit; }
-                            .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #06d6a0; outline: none; box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.1); }
-                            .form-textarea { resize: vertical; min-height: 70px; }
                             .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
                             .file-input-button { width: 100%; padding: 11px 14px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 2px dashed #cbd5e1; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 9px; font-weight: 500; color: #475569; font-size: 13px; }
-                            .file-input-button:hover { border-color: #06d6a0; background: #f0fdfa; color: #06d6a0; }
+                            .file-input-button:hover { border-color: #0F4C81; background: #eff6ff; color: #0F4C81; }
                             .file-input-button.has-file { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-color: #06d6a0; color: #059669; }
                             .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
                             .info-box { background: linear-gradient(135deg, #1e3a5f 0%, #1565a0 100%); border-left: 3px solid #f59e0b; padding: 11px 14px; border-radius: 8px; margin-top: 10px; }
@@ -404,12 +424,12 @@ $vacaciones = $stmt->fetchAll();
                             .error-message { background: #fee2e2; border-left: 3px solid #ef4444; padding: 11px 14px; border-radius: 8px; margin-bottom: 18px; display: none; color: #991b1b; font-size: 12px; font-weight: 500; }
                         </style>
                         <div style="max-width: 750px; margin: 0 auto;">
-                            <div class="form-group" style="margin-bottom: 18px;">
-                                <label class="form-label">
+                            <div class="swal-form-group" style="margin-bottom: 18px;">
+                                <label class="swal-label">
                                     <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                     Funcionario <span style="color: #ef4444;">*</span>
                                 </label>
-                                <select id="swal-funcionario" class="form-select">
+                                <select id="swal-funcionario" class="swal2-select">
                                     <option value="">Seleccionar...</option>
                                     ${funcionarios.map(f => `
                                         <option value="${f.id}">
@@ -439,20 +459,20 @@ $vacaciones = $stmt->fetchAll();
                                 </div>
                             </div>
 
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">
+                            <div class="swal-form-grid-2col">
+                                <div class="swal-form-group">
+                                    <label class="swal-label">
                                         <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         Fecha Inicio <span style="color: #ef4444;">*</span>
                                     </label>
-                                    <input type="date" id="swal-fecha-inicio" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+                                    <input type="date" id="swal-fecha-inicio" class="swal2-input" value="${new Date().toISOString().split('T')[0]}">
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">
+                                <div class="swal-form-group">
+                                    <label class="swal-label">
                                         <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                                         Días a Tomar <span style="color: #ef4444;">*</span>
                                     </label>
-                                    <select id="swal-dias-selector" class="form-select" disabled>
+                                    <select id="swal-dias-selector" class="swal2-select" disabled>
                                         <option value="">Primero seleccione funcionario...</option>
                                     </select>
                                 </div>
@@ -468,16 +488,16 @@ $vacaciones = $stmt->fetchAll();
                                 </div>
                             </div>
 
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">
+                            <div class="swal-form-grid-2col">
+                                <div class="swal-form-group">
+                                    <label class="swal-label">
                                         <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
                                         Observaciones
                                     </label>
-                                    <textarea id="swal-observaciones" class="form-textarea" placeholder="Motivo o comentarios..."></textarea>
+                                    <textarea id="swal-observaciones" class="swal2-textarea" placeholder="Motivo o comentarios..."></textarea>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">
+                                <div class="swal-form-group">
+                                    <label class="swal-label">
                                         <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                                         Documento Aval <span style="color: #ef4444;">*</span>
                                     </label>

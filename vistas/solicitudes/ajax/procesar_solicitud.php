@@ -180,12 +180,29 @@ try {
         // Determinar tipo de evento según tipo de solicitud
         $tipo_evento = strtoupper($solicitud['tipo_solicitud'] === 'vacaciones' ? 'VACACION' : 'PERMISO');
 
+        $dias_habiles_solicitud = 0;
+        if ($tipo_evento === 'VACACION') {
+            $d1 = new DateTime($solicitud['fecha_inicio']);
+            $d2 = new DateTime($solicitud['fecha_fin']);
+            if ($d2 >= $d1) {
+                $curr = clone $d1;
+                while ($curr <= $d2) {
+                    $dia_semana_num = (int)$curr->format('N');
+                    if ($dia_semana_num >= 1 && $dia_semana_num <= 5) {
+                        $dias_habiles_solicitud++;
+                    }
+                    $curr->modify('+1 day');
+                }
+            }
+        }
+
         $detalles = json_encode([
             'origen'           => 'solicitud_empleado',
             'solicitud_id'     => $solicitud_id,
             'tipo_solicitud'   => $solicitud['tipo_solicitud'],
             'fecha_inicio'     => $solicitud['fecha_inicio'],
             'fecha_fin'        => $solicitud['fecha_fin'],
+            'dias_habiles'     => $dias_habiles_solicitud,
             'motivo'           => $solicitud['motivo'],
             'aprobado_por'     => $revisor_id,
             'observaciones'    => $observaciones

@@ -238,7 +238,7 @@ function closeMobileMore() {
 
     const observer = new MutationObserver(() => {
         const count = desktopBadge.textContent.trim();
-        if (count && desktopBadge.classList.contains('visible')) {
+        if (count && count !== '0' && desktopBadge.classList.contains('visible')) {
             mobileBadge.textContent = count;
             mobileBadge.style.display = 'block';
         } else {

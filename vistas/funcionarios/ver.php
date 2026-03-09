@@ -114,13 +114,30 @@ if ($funcionario['fecha_ingreso']) {
          FROM historial_administrativo
          WHERE funcionario_id = ?
            AND tipo_evento    = 'VACACION'
-           AND YEAR(fecha_evento) = ?"
+           AND YEAR(fecha_evento) = ?
+           AND (fecha_fin < CURDATE() OR fecha_fin IS NULL AND fecha_evento < CURDATE())"
     );
     $stmtVacUsadas->execute([$id, $anio_actual]);
     $vac_dias_disfrutados = (int)($stmtVacUsadas->fetchColumn() ?? 0);
 
-    // 4. Días disponibles
-    $vac_dias_disponibles = max(0, $vac_dias_totales - $vac_dias_disfrutados);
+    // 4. Días en curso (vacaciones iniciadas pero no terminadas)
+    $stmtVacEnCurso = $db->prepare(
+        "SELECT COALESCE(
+             SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.dias_habiles')) AS UNSIGNED)),
+             0
+         ) AS total_en_curso
+         FROM historial_administrativo
+         WHERE funcionario_id = ?
+           AND tipo_evento    = 'VACACION'
+           AND YEAR(fecha_evento) = ?
+           AND fecha_evento <= CURDATE()
+           AND (fecha_fin >= CURDATE() OR fecha_fin IS NULL)"
+    );
+    $stmtVacEnCurso->execute([$id, $anio_actual]);
+    $vac_dias_en_curso = (int)($stmtVacEnCurso->fetchColumn() ?? 0);
+
+    // 5. Días disponibles (descontando terminadas + en curso)
+    $vac_dias_disponibles = max(0, $vac_dias_totales - $vac_dias_disfrutados - $vac_dias_en_curso);
 }
 
 // 5. Historial COMPLETO de vacaciones disfrutadas
@@ -144,7 +161,6 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
     <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     
 
-    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
@@ -280,10 +296,14 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
     
     <div class="main-content">
-        <?php include __DIR__ . '/../layout/header.php'; ?>
+        <?php 
+        $pageTitle = $nivel_acceso >= 3 ? Icon::get('user') . ' Mi Expediente' : Icon::get('user') . ' Expediente Digital';
+        // The header.php handles the title. The back button will be put below.
+        include __DIR__ . '/../layout/header.php'; 
+        ?>
         
-        <div class="page-header">
-            <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div>
                 <?php if ($nivel_acceso < 3): ?>
                 <a href="index.php" class="btn-secondary">
                     <?= Icon::get('arrow-left') ?> Volver
@@ -293,7 +313,6 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
                     <?= Icon::get('arrow-left') ?> Inicio
                 </a>
                 <?php endif; ?>
-                <h1><?= $nivel_acceso >= 3 ? 'Mi Expediente' : 'Expediente Digital' ?></h1>
             </div>
             <div style="display: flex; gap: 10px;">
                 <a href="../reportes/constancia_trabajo.php?id=<?= $id ?>" target="_blank" class="btn-primary" style="background: #10b981; border:none;">
@@ -593,9 +612,12 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
 
                                     <!-- Card: Días Utilizados -->
                                     <div style="background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border:1px solid #FED7AA;border-radius:16px;padding:20px;text-align:center;">
-                                        <div style="font-size:11px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Días Utilizados <?= date('Y') ?></div>
+                                        <div style="font-size:11px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Días Consumidos <?= date('Y') ?></div>
                                         <div style="font-size:36px;font-weight:800;color:#C2410C;line-height:1;"><?= $vac_dias_disfrutados ?></div>
-                                        <div style="font-size:12px;color:#EA580C;margin-top:4px;">días consumidos</div>
+                                        <div style="font-size:12px;color:#EA580C;margin-top:4px;">vacaciones finalizadas</div>
+                                        <?php if ($vac_dias_en_curso > 0): ?>
+                                        <div style="font-size:11px;color:#F59E0B;margin-top:4px;font-weight:600;"><?= $vac_dias_en_curso ?> día<?= $vac_dias_en_curso != 1 ? 's' : '' ?> en curso</div>
+                                        <?php endif; ?>
                                     </div>
 
                                     <!-- Card: Días Disponibles (color dinámico) -->
@@ -609,15 +631,32 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
 
                                 <!-- Barra de progreso -->
                                 <?php if ($vac_dias_totales > 0): ?>
-                                    <?php $pct = min(100, round(($vac_dias_disfrutados / $vac_dias_totales) * 100)); ?>
+                                    <?php 
+                                        $dias_comprometidos = $vac_dias_disfrutados + $vac_dias_en_curso;
+                                        $pct_consumido = min(100, round(($vac_dias_disfrutados / $vac_dias_totales) * 100));
+                                        $pct_en_curso  = min(100 - $pct_consumido, round(($vac_dias_en_curso / $vac_dias_totales) * 100));
+                                    ?>
                                     <div style="margin-top:20px;">
                                         <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;">
-                                            <span>Días usados: <strong style="color:#0F4C81;"><?= $vac_dias_disfrutados ?> / <?= $vac_dias_totales ?></strong></span>
-                                            <span><?= $pct ?>% utilizado</span>
+                                            <span>
+                                                Días comprometidos: <strong style="color:#0F4C81;"><?= $dias_comprometidos ?> / <?= $vac_dias_totales ?></strong>
+                                                <?php if ($vac_dias_en_curso > 0): ?>
+                                                &nbsp;<span style="color:#F59E0B;font-size:11px;">(<?= $vac_dias_disfrutados ?> finalizados + <?= $vac_dias_en_curso ?> en curso)</span>
+                                                <?php endif; ?>
+                                            </span>
+                                            <span><?= $pct_consumido + $pct_en_curso ?>% comprometido</span>
                                         </div>
-                                        <div style="height:10px;background:#E2E8F0;border-radius:10px;overflow:hidden;">
-                                            <div style="height:100%;width:<?= $pct ?>%;background:<?= $pct >= 100 ? '#EF4444' : ($pct >= 70 ? '#F59E0B' : '#10B981') ?>;border-radius:10px;transition:width 1s ease;"></div>
+                                        <div style="height:10px;background:#E2E8F0;border-radius:10px;overflow:hidden;display:flex;">
+                                            <div style="height:100%;width:<?= $pct_consumido ?>%;background:#C2410C;border-radius:10px 0 0 10px;transition:width 1s ease;"></div>
+                                            <div style="height:100%;width:<?= $pct_en_curso ?>%;background:#F59E0B;transition:width 1s ease;"></div>
                                         </div>
+                                        <?php if ($vac_dias_en_curso > 0): ?>
+                                        <div style="display:flex;gap:16px;margin-top:6px;font-size:11px;">
+                                            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#C2410C;border-radius:2px;display:inline-block;"></span> Finalizados</span>
+                                            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#F59E0B;border-radius:2px;display:inline-block;"></span> En curso</span>
+                                            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#E2E8F0;border-radius:2px;display:inline-block;"></span> Disponibles</span>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
                             <?php endif; ?>

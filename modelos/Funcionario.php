@@ -137,7 +137,7 @@ class Funcionario {
 
         // — Teléfono (solo si se proporcionó) —
         if (!empty($datos['telefono'])) {
-            $sql = "SELECT id, nombres, apellidos FROM funcionarios WHERE telefono = ? AND telefono != ''";
+            $sql = "SELECT id, nombres, apellidos FROM funcionarios WHERE REPLACE(REPLACE(telefono, '-', ''), ' ', '') = ? AND telefono != ''";
             $params = [$datos['telefono']];
             if ($excluir_id) {
                 $sql .= " AND id != ?";

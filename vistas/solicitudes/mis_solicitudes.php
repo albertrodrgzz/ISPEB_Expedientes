@@ -209,37 +209,49 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         include __DIR__ . '/../layout/header.php'; 
         ?>
 
-        <div class="content-wrapper">
-            <div style="display:flex; justify-content:flex-end; margin-bottom: 24px;"><button class="btn-primary" onclick="abrirModalNuevaSolicitud()"><?= Icon::get('plus') ?> Nueva Solicitud</button></div>
+        <div class="module-container">
+            <!-- Header Título y Botón -->
+            <div class="module-header-title">
+                <div class="module-title-group">
+                    <?= Icon::get('inbox') ?>
+                    <h2 class="module-title-text">Mis Solicitudes</h2>
+                </div>
+                <button class="btn-primary" onclick="abrirModalNuevaSolicitud()" style="padding: 10px 20px; border-radius: 8px;">
+                    <?= Icon::get('plus') ?> Nueva Solicitud
+                </button>
+            </div>
 
             <!-- KPI Cards -->
             <div class="kpi-grid">
-                <div class="kpi-card color-blue">
+                <div class="kpi-card-solid bg-solid-blue">
                     <div class="kpi-icon"><?= Icon::get('send') ?></div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $stats['total'] ?></span>
-                        <span class="kpi-label">Total enviadas</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Total enviadas</div>
+                        <div class="kpi-value"><?= $stats['total'] ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-orange">
+                
+                <div class="kpi-card-solid bg-solid-orange">
                     <div class="kpi-icon"><?= Icon::get('clock') ?></div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $stats['pendientes'] ?></span>
-                        <span class="kpi-label">Pendientes</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Pendientes</div>
+                        <div class="kpi-value"><?= $stats['pendientes'] ?></div>
                     </div>
                 </div>
-                <div class="kpi-card color-green">
+                
+                <div class="kpi-card-solid bg-solid-green">
                     <div class="kpi-icon"><?= Icon::get('check-circle') ?></div>
-                    <div class="kpi-content">
-                        <span class="kpi-value"><?= $stats['aprobadas'] ?></span>
-                        <span class="kpi-label">Aprobadas</span>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Aprobadas</div>
+                        <div class="kpi-value"><?= $stats['aprobadas'] ?></div>
                     </div>
                 </div>
-                <div class="kpi-card" style="background:linear-gradient(135deg,rgba(239,68,68,.10),rgba(239,68,68,.05));border-color:rgba(239,68,68,.2);">
-                    <div class="kpi-icon" style="background:rgba(239,68,68,.15);color:#ef4444;"><?= Icon::get('x-circle') ?></div>
-                    <div class="kpi-content">
-                        <span class="kpi-value" style="color:#ef4444;"><?= $stats['rechazadas'] ?></span>
-                        <span class="kpi-label">Rechazadas</span>
+                
+                <div class="kpi-card-solid bg-solid-red">
+                    <div class="kpi-icon"><?= Icon::get('x-circle') ?></div>
+                    <div class="kpi-details">
+                        <div class="kpi-label">Rechazadas</div>
+                        <div class="kpi-value"><?= $stats['rechazadas'] ?></div>
                     </div>
                 </div>
             </div>
@@ -328,7 +340,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-        </div><!-- /.content-wrapper -->
+        </div><!-- /.module-container -->
     </div><!-- /.main-content -->
 
     <script>
@@ -343,9 +355,20 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     ===================================================================== */
     function diffDias(inicio, fin) {
         if (!inicio || !fin) return 0;
-        const d1 = new Date(inicio + 'T00:00:00');
-        const d2 = new Date(fin    + 'T00:00:00');
-        return Math.max(0, Math.round((d2 - d1) / 86400000) + 1);
+        // Prevenir corrimiento de día por zona horaria agregando hora local
+        const startDate = new Date(inicio + 'T12:00:00');
+        const endDate = new Date(fin + 'T12:00:00');
+        if (endDate < startDate) return 0;
+        let count = 0;
+        let current = new Date(startDate);
+        while (current <= endDate) {
+            const dayOfWeek = current.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                count++;
+            }
+            current.setDate(current.getDate() + 1);
+        }
+        return count;
     }
 
     function formatFecha(dateStr) {
@@ -438,50 +461,53 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         const { value: form } = await Swal.fire({
             title: '<div style="font-size:20px;font-weight:700;color:#1e293b;">&#x1F4CB; Nueva Solicitud</div>',
             html: `
-                <style>
-                .sf-group{text-align:left;margin-bottom:14px;}
-                .sf-label{display:block;font-weight:600;font-size:13px;color:#334155;margin-bottom:6px;}
-                .sf-label .req{color:#ef4444;margin-left:2px;}
-                .sf-control{width:100%;padding:10px 13px;border:2px solid #e2e8f0;border-radius:9px;
-                           font-size:13.5px;font-family:inherit;background:#fff;transition:border .2s;box-sizing:border-box;}
-                .sf-control:focus{border-color:#3b82f6;outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.12);}
-                .sf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-                .sf-textarea{resize:vertical;min-height:75px;}
-                .sf-info{background:#eff6ff;border-left:3px solid #3b82f6;padding:10px 13px;
-                         border-radius:8px;font-size:12px;color:#1e40af;margin-top:4px;}
-                #sf-duracion-wrap{display:none;margin-bottom:14px;}
-                </style>
-                <div style="max-width:520px;margin:0 auto;">
-                    <div class="sf-group">
-                        <label class="sf-label">Tipo de solicitud <span class="req">*</span></label>
-                        <select id="sf-tipo" class="sf-control">
+                <div class="swal-form-grid">
+                    <div class="swal-form-group" style="text-align:left;">
+                        <label class="swal-label swal-label-required">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Tipo de solicitud
+                        </label>
+                        <select id="sf-tipo" class="swal2-select" style="width:100%;">
                             <option value="">Seleccionar tipo...</option>
-                            <option value="vacaciones">&#x1F334; Vacaciones</option>
-                            <option value="permiso">&#x1F550; Permiso</option>
+                            <option value="vacaciones"> Vacaciones (Periodo Reg.)</option>
+                            <option value="permiso"> Permiso Especial</option>
                         </select>
                     </div>
+
                     <div id="sf-vac-banner"></div>
-                    <div class="sf-row">
-                        <div class="sf-group">
-                            <label class="sf-label">Fecha inicio <span class="req">*</span></label>
-                            <input type="date" id="sf-inicio" class="sf-control" min="${hoy}" value="${hoy}">
+
+                    <div class="swal-form-grid-2col" style="text-align:left;">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                Fecha inicio
+                            </label>
+                            <input type="date" id="sf-inicio" class="swal2-input" min="${hoy}" value="${hoy}">
                         </div>
-                        <div class="sf-group">
-                            <label class="sf-label">Fecha fin <span class="req">*</span></label>
-                            <input type="date" id="sf-fin" class="sf-control" min="${hoy}" value="${hoy}">
+                        <div class="swal-form-group">
+                            <label class="swal-label swal-label-required">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                Fecha fin
+                            </label>
+                            <input type="date" id="sf-fin" class="swal2-input" min="${hoy}" value="${hoy}">
                         </div>
                     </div>
-                    <div id="sf-duracion-wrap">
-                        <div id="sf-duracion-badge" style="background:#f1f5f9;border-radius:8px;
-                             padding:9px 14px;font-size:13px;color:#475569;font-weight:600;"></div>
+
+                    <div id="sf-duracion-wrap" style="display:none; text-align:left;">
+                        <div id="sf-duracion-badge" style="background:#f8fafc; border-left:3px solid #0F4C81; border-radius:8px; padding:12px 14px; font-size:13px; color:#475569; font-weight:600; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"></div>
                     </div>
-                    <div class="sf-group">
-                        <label class="sf-label">Motivo / descripcion <span class="req">*</span></label>
-                        <textarea id="sf-motivo" class="sf-control sf-textarea"
-                                  placeholder="Describe brevemente el motivo de tu solicitud..."></textarea>
+
+                    <div class="swal-form-group" style="text-align:left;">
+                        <label class="swal-label swal-label-required">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Motivo / descripción
+                        </label>
+                        <textarea id="sf-motivo" class="swal2-textarea" style="resize:vertical; min-height:80px; width:100%;" placeholder="Describe brevemente el motivo de tu solicitud..."></textarea>
                     </div>
-                    <div class="sf-info">
-                        &#x2139;&#xFE0F; Tu solicitud sera enviada al departamento de RRHH para revision y aprobacion.
+
+                    <div style="background:#eff6ff; border-left:3px solid #3b82f6; padding:12px; border-radius:8px; font-size:12px; color:#1e40af; text-align:left; margin-top:8px;">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Tu solicitud será enviada al departamento de RRHH para su revisión y aprobación.
                     </div>
                 </div>
             `,
