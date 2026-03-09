@@ -7,15 +7,14 @@
 require_once __DIR__ . '/../../config/icons.php';
 
 // Variables de sesión defensivas — nunca generan PHP notices
-$_hdr_nombre  = $_SESSION['nombres']       ?? ($_SESSION['nombre_completo'] ?? 'Usuario');
-$_hdr_cargo   = $_SESSION['cargo']         ?? ($_SESSION['departamento']    ?? 'Sistema');
-$_hdr_nivel   = (int)($_SESSION['nivel_acceso'] ?? 3);
-$_hdr_inicial = strtoupper(mb_substr(trim($_hdr_nombre), 0, 1, 'UTF-8') ?: 'U');
-$_hdr_av_clase = match($_hdr_nivel) {
-    1       => 'avatar-inicial--nivel-1',
-    2       => 'avatar-inicial--nivel-2',
-    default => 'avatar-inicial--nivel-3',
-};
+$_hdr_nombre   = $_SESSION['nombres'] ?? ($_SESSION['nombre_completo'] ?? 'Usuario');
+$_hdr_apellido = $_SESSION['apellidos'] ?? ''; 
+$_hdr_cargo    = $_SESSION['cargo'] ?? ($_SESSION['departamento'] ?? 'Sistema');
+
+// Extraer las iniciales correctamente (1ra letra del nombre + 1ra del apellido)
+$ini_n = mb_substr(trim($_hdr_nombre), 0, 1, 'UTF-8');
+$ini_a = mb_substr(trim($_hdr_apellido), 0, 1, 'UTF-8');
+$_hdr_iniciales = strtoupper($ini_n . $ini_a) ?: 'U';
 
 // Cache buster: timestamp del archivo (cambia solo cuando se modifica el CSS/JS)
 $_pub = __DIR__ . '/../../publico';
@@ -25,35 +24,26 @@ $_v_hdrfix     = @filemtime($_pub . '/css/header-fix.css')        ?: APP_BUILD ?
 $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js') ?: APP_BUILD ?? date('Ymd');
 ?>
 
-<!-- Fuente Inter — LOCAL (100% offline, sin CDN) -->
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/fonts/inter.css?v=<?= $_v_inter ?>">
 
-<!-- Favicon absoluto — funciona en CUALQUIER ruta de la app -->
 <link rel="icon"             type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 <link rel="icon"             type="image/png" sizes="16x16" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 <link rel="apple-touch-icon"                  sizes="180x180" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 <link rel="shortcut icon"    type="image/x-icon"              href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
 
-<!-- modern-components.css garantiza estilos de avatar en todas las vistas -->
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css?v=<?= $_v_modern ?>">
 
-<!-- CSS Fix para header flotante moderno -->
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/header-fix.css?v=<?= $_v_hdrfix ?>">
 
-<!-- ★ MOBILE-FIRST SYSTEM — cargado ÚLTIMO para máxima prioridad ★ -->
 <?php $_v_mf = @filemtime(__DIR__ . '/../../publico/css/mobile-first.css') ?: date('Ymd'); ?>
 <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/mobile-first.css?v=<?= $_v_mf ?>">
 
-<!-- Viewport meta mejorado — previene zoom en iOS -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<!-- SweetAlert2 Local (offline-ready) -->
 <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js?v=<?= $_v_swal ?>"></script>
 
-<!-- Header -->
 <header class="header">
     <div class="header-left">
-        <!-- Hamburguesa — solo visible en laptop (1024-1279px) vía CSS -->
         <button class="menu-toggle menu-toggle-header" id="menuToggleHeader" aria-label="Abrir menú">
             <?= Icon::get('menu') ?>
         </button>
@@ -65,10 +55,23 @@ $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js'
             <?= $headerAction ?>
         <?php endif; ?>
 
-        <!-- User Profile (Clickable) -->
         <a href="<?= APP_URL ?>/vistas/perfil/" class="user-profile" title="Mi perfil">
-            <div class="user-avatar avatar-inicial <?= $_hdr_av_clase ?>">
-                <?= htmlspecialchars($_hdr_inicial) ?>
+            <div class="user-avatar" style="
+                width: 40px; 
+                height: 40px; 
+                border-radius: 50%; 
+                background: var(--color-primary, #0F4C81); 
+                color: #ffffff; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                font-weight: 700;
+                font-size: 14px;
+                flex-shrink: 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                letter-spacing: 1px;
+            ">
+                <?= htmlspecialchars($_hdr_iniciales) ?>
             </div>
             <div class="user-info">
                 <div class="user-name"><?= htmlspecialchars($_hdr_nombre) ?></div>
@@ -76,13 +79,11 @@ $_v_swal       = @filemtime($_pub . '/vendor/sweetalert2/sweetalert2.all.min.js'
             </div>
         </a>
 
-        <!-- Logout Button — SIEMPRE visible -->
         <button onclick="confirmarCerrarSesion()" class="btn-logout" title="Cerrar sesión">
             <?= Icon::get('logout') ?>
         </button>
     </div>
 </header>
-
 
 <script>
 /* Variable global APP_URL para JS (badge, fetch, etc.) */
@@ -146,5 +147,4 @@ function confirmarCerrarSesion() {
 }
 </script>
 
-<!-- ★ BARRA DE NAVEGACIÓN INFERIOR (solo móvil < 1024px) ★ -->
 <?php include __DIR__ . '/bottom-nav.php'; ?>

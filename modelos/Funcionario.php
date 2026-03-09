@@ -179,8 +179,8 @@ class Funcionario {
         $stmt = $this->db->prepare("
             INSERT INTO funcionarios 
             (cedula, nombres, apellidos, fecha_nacimiento, genero, telefono, email, direccion, 
-             cargo_id, departamento_id, fecha_ingreso, foto, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             cargo_id, departamento_id, fecha_ingreso, foto, estado, nivel_educativo, titulo_obtenido)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $resultado = $stmt->execute([
@@ -196,7 +196,9 @@ class Funcionario {
             $datos['departamento_id'],
             $datos['fecha_ingreso'],
             $datos['foto'] ?? null,
-            $datos['estado'] ?? 'activo'
+            $datos['estado'] ?? 'activo',
+            $datos['nivel_educativo'] ?? null,
+            $datos['titulo_obtenido'] ?: null
         ]);
         
         if ($resultado) {
@@ -248,7 +250,9 @@ class Funcionario {
                 departamento_id = ?,
                 fecha_ingreso = ?,
                 foto = ?,
-                estado = ?
+                estado = ?,
+                nivel_educativo = ?,
+                titulo_obtenido = ?
             WHERE id = ?
         ");
         
@@ -266,6 +270,8 @@ class Funcionario {
             $datos['fecha_ingreso'],
             $datos['foto'] ?? null,
             $datos['estado'] ?? 'activo',
+            $datos['nivel_educativo'] ?? null,
+            $datos['titulo_obtenido'] ?: null,
             $id
         ]);
     }

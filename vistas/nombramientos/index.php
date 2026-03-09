@@ -268,7 +268,7 @@ $departamentos = $db->query("SELECT id, nombre FROM departamentos WHERE estado =
                     <div class="swal-form-group">
                         <label class="swal-label">
                             <?= Icon::get('file-text') ?>
-                            Documento PDF (Opcional)
+                            Documento PDF
                         </label>
                         <div class="file-input-modern">
                             <input type="file" 

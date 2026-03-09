@@ -430,30 +430,7 @@ $usuarios = $stmt->fetchAll();
     <div class="main-content">
         <?php include __DIR__ . '/../layout/header.php'; ?>
         
-        <div class="content-wrapper">
-            <!-- Estadísticas Principales -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg></div>
-                    <div class="stat-value"><?php echo $total_usuarios_activos; ?></div>
-                    <div class="stat-label">Usuarios Activos</div>
-                </div>
-                <div class="stat-card secondary">
-                    <div class="stat-icon"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
-                    <div class="stat-value"><?php echo $total_funcionarios; ?></div>
-                    <div class="stat-label">Funcionarios</div>
-                </div>
-                <div class="stat-card tertiary">
-                    <div class="stat-icon"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
-                    <div class="stat-value"><?php echo $total_documentos; ?></div>
-                    <div class="stat-label">Documentos</div>
-                </div>
-                <div class="stat-card quaternary">
-                    <div class="stat-icon"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></div>
-                    <div class="stat-value"><?php echo $db_size; ?> MB</div>
-                    <div class="stat-label">Tama&ntilde;o BD</div>
-                </div>
-            </div>
+        
             
             <!-- Tabs de Navegación -->
             <div class="admin-tabs">

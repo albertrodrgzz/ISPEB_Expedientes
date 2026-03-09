@@ -60,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'fecha_ingreso'    => $_POST['fecha_ingreso']    ?? '',
         'foto'             => $funcionario['foto'],
         'estado'           => $_POST['estado'] ?? 'activo',
+        'nivel_educativo'  => $_POST['nivel_educativo'] ?? null,
+        'titulo_obtenido'  => trim(limpiar($_POST['titulo_obtenido'] ?? ''))
     ];
 
     // ── Validaciones de formato ───────────────────────────────────────────────
@@ -301,6 +303,30 @@ function val(string $campo, array $funcionario): string {
                                 </div>
                             </div>
 
+                            <!-- Nivel Educativo -->
+                            <div class="form-group">
+                                <label for="nivel_educativo">Nivel Educativo</label>
+                                <select id="nivel_educativo" name="nivel_educativo" class="form-control">
+                                    <option value="">Seleccione...</option>
+                                    <option value="Primaria" <?php echo ($_POST['nivel_educativo'] ?? $funcionario['nivel_educativo']) == 'Primaria' ? 'selected' : ''; ?>>Primaria</option>
+                                    <option value="Bachiller" <?php echo ($_POST['nivel_educativo'] ?? $funcionario['nivel_educativo']) == 'Bachiller' ? 'selected' : ''; ?>>Bachiller</option>
+                                    <option value="TSU" <?php echo ($_POST['nivel_educativo'] ?? $funcionario['nivel_educativo']) == 'TSU' ? 'selected' : ''; ?>>Técnico Superior (TSU)</option>
+                                    <option value="Universitario" <?php echo ($_POST['nivel_educativo'] ?? $funcionario['nivel_educativo']) == 'Universitario' ? 'selected' : ''; ?>>Universitario (Lic./Ing.)</option>
+                                    <option value="Postgrado" <?php echo ($_POST['nivel_educativo'] ?? $funcionario['nivel_educativo']) == 'Postgrado' ? 'selected' : ''; ?>>Especialización / Postgrado</option>
+                                    <option value="Maestría" <?php echo ($_POST['nivel_educativo'] ?? $funcionario['nivel_educativo']) == 'Maestría' ? 'selected' : ''; ?>>Maestría</option>
+                                    <option value="Doctorado" <?php echo ($_POST['nivel_educativo'] ?? $funcionario['nivel_educativo']) == 'Doctorado' ? 'selected' : ''; ?>>Doctorado</option>
+                                </select>
+                            </div>
+
+                            <!-- Título Obtenido / Profesión -->
+                            <div class="form-group">
+                                <label for="titulo_obtenido">Título Obtenido / Profesión</label>
+                                <input type="text" id="titulo_obtenido" name="titulo_obtenido"
+                                    class="form-control"
+                                    placeholder="Ej: Ing. Informática, Lic. en Administración..."
+                                    value="<?php echo val('titulo_obtenido', $funcionario); ?>">
+                            </div>
+                            
                             <!-- Cargo -->
                             <div class="form-group">
                                 <label for="cargo_id">Cargo <span class="required">*</span></label>

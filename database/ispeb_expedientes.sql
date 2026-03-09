@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 08-03-2026 a las 00:06:05
+-- Tiempo de generación: 08-03-2026 a las 03:40:59
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -73,26 +73,35 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla_afectada`, `regist
 (23, 3, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:03:03'),
 (24, 3, 'GENERAR_CONSTANCIA', 'funcionarios', 3, NULL, '{\"funcionario\":\"MAYLING CAROLINA SIFONTES GASC\\u00d3N\",\"generado_por\":\"Mayling Carolina Sifontes Gasc\\u00f3n\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:03:14'),
 (25, 3, 'GENERAR_CONSTANCIA', 'funcionarios', 3, NULL, '{\"funcionario\":\"MAYLING CAROLINA SIFONTES GASC\\u00d3N\",\"generado_por\":\"Mayling Carolina Sifontes Gasc\\u00f3n\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:03:25'),
-(26, 3, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:03:59');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `cargas_familiares`
---
-
-DROP TABLE IF EXISTS `cargas_familiares`;
-CREATE TABLE `cargas_familiares` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `funcionario_id` int(10) UNSIGNED NOT NULL,
-  `nombre_completo` varchar(200) NOT NULL,
-  `fecha_nacimiento` date NOT NULL,
-  `parentesco` enum('Hijo/a','Cónyuge','Padre','Madre','Hermano/a','Otro') NOT NULL,
-  `cedula` varchar(20) DEFAULT NULL,
-  `observaciones` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+(26, 3, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:03:59'),
+(27, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:54:22'),
+(28, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:54:28'),
+(29, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:58:50'),
+(30, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:58:54'),
+(31, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-07 23:59:00'),
+(32, 1, 'ACTUALIZAR_FUNCIONARIO', 'funcionarios', 1, '{\"id\":1,\"cedula\":\"V-31087083\",\"nombres\":\"Albert Nazareth\",\"apellidos\":\"Rodriguez Sifontes\",\"fecha_nacimiento\":\"2005-11-08\",\"genero\":\"M\",\"telefono\":\"0424-9399005\",\"email\":\"albertro023@gmail.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"nivel_educativo\":null,\"titulo_obtenido\":null,\"fecha_ingreso_admin_publica\":null,\"cantidad_hijos\":0,\"cargo_id\":1,\"departamento_id\":1,\"fecha_ingreso\":\"2024-07-11\",\"foto\":\"default-avatar.png\",\"estado\":\"activo\",\"created_at\":\"2026-03-07 18:12:04\",\"updated_at\":\"2026-03-07 18:57:27\",\"edad\":20,\"antiguedad_anos\":1,\"nombre_cargo\":\"Jefe de Direcci\\u00f3n\",\"nivel_acceso\":1,\"departamento\":\"Direcci\\u00f3n de Telem\\u00e1tica\"}', '{\"cedula\":\"V-31087083\",\"nombres\":\"Albert Nazareth\",\"apellidos\":\"Rodriguez Sifontes\",\"fecha_nacimiento\":\"2005-11-08\",\"genero\":\"M\",\"telefono\":\"0424-9399005\",\"email\":\"albertro023@gmail.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"cargo_id\":\"1\",\"departamento_id\":\"1\",\"fecha_ingreso\":\"2024-07-11\",\"foto\":\"default-avatar.png\",\"estado\":\"activo\",\"nivel_educativo\":\"Universitario\",\"titulo_obtenido\":\"Ing. Inform\\u00e1tica\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 00:27:16'),
+(33, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 00:27:31'),
+(34, 2, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 00:27:37'),
+(35, 2, 'ACTUALIZAR_FUNCIONARIO', 'funcionarios', 2, '{\"id\":2,\"cedula\":\"V-8899490\",\"nombres\":\"Ruben Jos\\u00e9\",\"apellidos\":\"Rodriguez Albillar\",\"fecha_nacimiento\":\"1967-02-27\",\"genero\":\"M\",\"telefono\":\"0416-2895115\",\"email\":\"rubenjrodriguez27@gmail.com\",\"direccion\":\"Venezuela\",\"nivel_educativo\":null,\"titulo_obtenido\":null,\"fecha_ingreso_admin_publica\":null,\"cantidad_hijos\":0,\"cargo_id\":2,\"departamento_id\":5,\"fecha_ingreso\":\"2024-12-15\",\"foto\":\"default-avatar.png\",\"estado\":\"activo\",\"created_at\":\"2026-03-07 18:12:04\",\"updated_at\":\"2026-03-07 19:00:00\",\"edad\":59,\"antiguedad_anos\":1,\"nombre_cargo\":\"Jefe de Departamento\",\"nivel_acceso\":2,\"departamento\":\"Soporte T\\u00e9cnico\"}', '{\"cedula\":\"V-8899490\",\"nombres\":\"Ruben Jos\\u00e9\",\"apellidos\":\"Rodriguez Albillar\",\"fecha_nacimiento\":\"1967-02-27\",\"genero\":\"M\",\"telefono\":\"0416-2895115\",\"email\":\"rubenjrodriguez27@gmail.com\",\"direccion\":\"Venezuela\",\"cargo_id\":\"2\",\"departamento_id\":\"5\",\"fecha_ingreso\":\"2024-12-15\",\"foto\":\"default-avatar.png\",\"estado\":\"activo\",\"nivel_educativo\":\"TSU\",\"titulo_obtenido\":\"TSU en Relaciones Industriales\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 00:28:06'),
+(36, 2, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 00:28:18'),
+(37, 2, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 00:28:21'),
+(38, 2, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-08 00:28:59'),
+(39, 2, 'ACTUALIZAR_FUNCIONARIO', 'funcionarios', 3, '{\"id\":3,\"cedula\":\"V-12193581\",\"nombres\":\"Mayling Carolina\",\"apellidos\":\"Sifontes Gasc\\u00f3n\",\"fecha_nacimiento\":\"1976-10-28\",\"genero\":\"F\",\"telefono\":\"0412-0869764\",\"email\":\"maylingcsifontes81@gmai.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"nivel_educativo\":null,\"titulo_obtenido\":null,\"fecha_ingreso_admin_publica\":null,\"cantidad_hijos\":0,\"cargo_id\":4,\"departamento_id\":4,\"fecha_ingreso\":\"2025-05-05\",\"foto\":\"default-avatar.png\",\"estado\":\"activo\",\"created_at\":\"2026-03-07 18:12:04\",\"updated_at\":\"2026-03-07 19:01:49\",\"edad\":49,\"antiguedad_anos\":0,\"nombre_cargo\":\"Analista\",\"nivel_acceso\":3,\"departamento\":\"Atenci\\u00f3n al Usuario\"}', '{\"cedula\":\"V-12193581\",\"nombres\":\"Mayling Carolina\",\"apellidos\":\"Sifontes Gasc\\u00f3n\",\"fecha_nacimiento\":\"1976-10-28\",\"genero\":\"F\",\"telefono\":\"0412-0869764\",\"email\":\"maylingcsifontes81@gmai.com\",\"direccion\":\"Sector La lucha, Calle Campo Elias, Casa 7\",\"cargo_id\":\"4\",\"departamento_id\":\"4\",\"fecha_ingreso\":\"2025-05-05\",\"foto\":\"default-avatar.png\",\"estado\":\"activo\",\"nivel_educativo\":\"Universitario\",\"titulo_obtenido\":\"Lic. en Administraci\\u00f3n\"}', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-08 00:29:44'),
+(40, 2, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-08 00:29:58'),
+(41, 3, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-08 00:30:05'),
+(42, 3, 'GENERAR_CONSTANCIA', 'funcionarios', 3, NULL, '{\"funcionario\":\"MAYLING CAROLINA SIFONTES GASC\\u00d3N\",\"generado_por\":\"Mayling Carolina Sifontes Gasc\\u00f3n\"}', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-08 00:30:29'),
+(43, 3, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 00:30:53'),
+(44, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 00:31:36'),
+(45, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 01:32:28'),
+(46, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 01:39:59'),
+(47, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 02:19:45'),
+(48, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-08 02:24:33'),
+(49, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 02:25:22'),
+(50, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 1, NULL, '{\"funcionario\":\"ALBERT NAZARETH RODRIGUEZ SIFONTES\",\"generado_por\":\"Albert Nazareth Rodriguez Sifontes\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 02:25:49'),
+(51, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 02:26:23'),
+(52, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 02:26:40'),
+(53, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-03-08 02:32:56'),
+(54, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-08 02:36:02');
 
 -- --------------------------------------------------------
 
@@ -184,9 +193,9 @@ CREATE TABLE `funcionarios` (
 --
 
 INSERT INTO `funcionarios` (`id`, `cedula`, `nombres`, `apellidos`, `fecha_nacimiento`, `genero`, `telefono`, `email`, `direccion`, `nivel_educativo`, `titulo_obtenido`, `fecha_ingreso_admin_publica`, `cantidad_hijos`, `cargo_id`, `departamento_id`, `fecha_ingreso`, `foto`, `estado`, `created_at`, `updated_at`) VALUES
-(1, 'V-31087083', 'Albert Nazareth', 'Rodriguez Sifontes', '2005-11-08', 'M', '0424-9399005', 'albertro023@gmail.com', 'Sector La lucha, Calle Campo Elias, Casa 7', NULL, NULL, NULL, 0, 1, 1, '2024-07-11', 'default-avatar.png', 'activo', '2026-03-07 22:12:04', '2026-03-07 22:57:27'),
-(2, 'V-8899490', 'Ruben José', 'Rodriguez Albillar', '1967-02-27', 'M', '0416-2895115', 'rubenjrodriguez27@gmail.com', 'Venezuela', NULL, NULL, NULL, 0, 2, 5, '2024-12-15', 'default-avatar.png', 'activo', '2026-03-07 22:12:04', '2026-03-07 23:00:00'),
-(3, 'V-12193581', 'Mayling Carolina', 'Sifontes Gascón', '1976-10-28', 'F', '0412-0869764', 'maylingcsifontes81@gmai.com', 'Sector La lucha, Calle Campo Elias, Casa 7', NULL, NULL, NULL, 0, 4, 4, '2025-05-05', 'default-avatar.png', 'activo', '2026-03-07 22:12:04', '2026-03-07 23:01:49');
+(1, 'V-31087083', 'Albert Nazareth', 'Rodriguez Sifontes', '2005-11-08', 'M', '0424-9399005', 'albertro023@gmail.com', 'Sector La lucha, Calle Campo Elias, Casa 7', 'Universitario', 'Ing. Informática', NULL, 0, 1, 1, '2024-07-11', 'default-avatar.png', 'activo', '2026-03-07 22:12:04', '2026-03-08 00:27:16'),
+(2, 'V-8899490', 'Ruben José', 'Rodriguez Albillar', '1967-02-27', 'M', '0416-2895115', 'rubenjrodriguez27@gmail.com', 'Venezuela', 'TSU', 'TSU en Relaciones Industriales', NULL, 0, 2, 5, '2024-12-15', 'default-avatar.png', 'activo', '2026-03-07 22:12:04', '2026-03-08 00:28:06'),
+(3, 'V-12193581', 'Mayling Carolina', 'Sifontes Gascón', '1976-10-28', 'F', '0412-0869764', 'maylingcsifontes81@gmai.com', 'Sector La lucha, Calle Campo Elias, Casa 7', 'Universitario', 'Lic. en Administración', NULL, 0, 4, 4, '2025-05-05', 'default-avatar.png', 'activo', '2026-03-07 22:12:04', '2026-03-08 00:29:44');
 
 -- --------------------------------------------------------
 
@@ -208,28 +217,6 @@ CREATE TABLE `historial_administrativo` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `movimientos`
---
-
-DROP TABLE IF EXISTS `movimientos`;
-CREATE TABLE `movimientos` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `funcionario_id` int(10) UNSIGNED NOT NULL,
-  `cargo_anterior_id` int(10) UNSIGNED DEFAULT NULL,
-  `cargo_nuevo_id` int(10) UNSIGNED DEFAULT NULL,
-  `departamento_anterior_id` int(10) UNSIGNED DEFAULT NULL,
-  `departamento_nuevo_id` int(10) UNSIGNED DEFAULT NULL,
-  `tipo_movimiento` enum('ascenso','traslado','descenso','rotacion') NOT NULL,
-  `motivo` text DEFAULT NULL,
-  `fecha_movimiento` date NOT NULL,
-  `documento_soporte` varchar(255) DEFAULT NULL,
-  `registrado_por` int(10) UNSIGNED DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -259,22 +246,6 @@ INSERT INTO `preguntas_seguridad_catalogo` (`id`, `pregunta`, `activa`, `orden`,
 (6, '¿Cuál es tu comida favorita?', 1, 6, '2026-03-07 22:12:04'),
 (7, '¿En qué año conociste a tu pareja?', 1, 7, '2026-03-07 22:12:04'),
 (8, '¿Cuál es el nombre de tu libro favorito?', 1, 8, '2026-03-07 22:12:04');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `sesiones`
---
-
-DROP TABLE IF EXISTS `sesiones`;
-CREATE TABLE `sesiones` (
-  `id` varchar(128) NOT NULL,
-  `usuario_id` int(10) UNSIGNED NOT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `user_agent` text DEFAULT NULL,
-  `ultimo_acceso` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `datos_sesion` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -318,11 +289,11 @@ CREATE TABLE `usuarios` (
   `bloqueado_hasta` datetime DEFAULT NULL,
   `estado` enum('activo','inactivo','bloqueado') DEFAULT 'activo',
   `registro_completado` tinyint(1) DEFAULT 0 COMMENT 'Indica si el usuario completó su registro',
-  `pregunta_seguridad_1` varchar(255) DEFAULT NULL,
+  `pregunta_seguridad_1` int(10) UNSIGNED DEFAULT NULL,
   `respuesta_seguridad_1` varchar(255) DEFAULT NULL,
-  `pregunta_seguridad_2` varchar(255) DEFAULT NULL,
+  `pregunta_seguridad_2` int(10) UNSIGNED DEFAULT NULL,
   `respuesta_seguridad_2` varchar(255) DEFAULT NULL,
-  `pregunta_seguridad_3` varchar(255) DEFAULT NULL,
+  `pregunta_seguridad_3` int(10) UNSIGNED DEFAULT NULL,
   `respuesta_seguridad_3` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -333,9 +304,9 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `funcionario_id`, `username`, `password_hash`, `email_recuperacion`, `token_recuperacion`, `token_expiracion`, `ultimo_acceso`, `intentos_fallidos`, `bloqueado_hasta`, `estado`, `registro_completado`, `pregunta_seguridad_1`, `respuesta_seguridad_1`, `pregunta_seguridad_2`, `respuesta_seguridad_2`, `pregunta_seguridad_3`, `respuesta_seguridad_3`, `created_at`, `updated_at`) VALUES
-(1, 1, 'arodriguez', '$2b$12$eGPU7TgGnM1uroaJ1Xu3e.RTsZAw6aFk76ci/cCfMMpVf5GEHEJSW', 'arodriguez@ispeb.gob.ve', NULL, NULL, '2026-03-07 18:54:25', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-03-07 22:54:25'),
-(2, 2, 'rrodriguez', '$2b$12$NrZpfu9imjqofQ6dye2Tsuv93Ay3SCOsk1iPv9fhQyjmqkNAzM40q', 'rrodriguez@ispeb.gob.ve', NULL, NULL, '2026-03-07 18:58:35', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-03-07 22:58:35'),
-(3, 3, 'msifontes', '$2b$12$EjzeyDks5N/1nXSGY0T69ub.CYKCwr6YXsOIrGrbIiFGqrWI1M56W', 'msifontes@ispeb.gob.ve', NULL, NULL, '2026-03-07 19:03:03', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-03-07 23:03:03');
+(1, 1, 'arodriguez', '$2b$12$eGPU7TgGnM1uroaJ1Xu3e.RTsZAw6aFk76ci/cCfMMpVf5GEHEJSW', 'arodriguez@ispeb.gob.ve', NULL, NULL, '2026-03-07 22:36:02', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-03-08 02:36:02'),
+(2, 2, 'rrodriguez', '$2b$12$NrZpfu9imjqofQ6dye2Tsuv93Ay3SCOsk1iPv9fhQyjmqkNAzM40q', 'rrodriguez@ispeb.gob.ve', NULL, NULL, '2026-03-07 20:28:59', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-03-08 00:28:59'),
+(3, 3, 'msifontes', '$2b$12$EjzeyDks5N/1nXSGY0T69ub.CYKCwr6YXsOIrGrbIiFGqrWI1M56W', 'msifontes@ispeb.gob.ve', NULL, NULL, '2026-03-07 20:30:05', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-03-08 00:30:05');
 
 -- --------------------------------------------------------
 
@@ -424,14 +395,6 @@ ALTER TABLE `auditoria`
   ADD KEY `idx_fecha` (`created_at`);
 
 --
--- Indices de la tabla `cargas_familiares`
---
-ALTER TABLE `cargas_familiares`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_funcionario` (`funcionario_id`),
-  ADD KEY `idx_parentesco` (`parentesco`);
-
---
 -- Indices de la tabla `cargos`
 --
 ALTER TABLE `cargos`
@@ -471,32 +434,11 @@ ALTER TABLE `historial_administrativo`
   ADD KEY `registrado_por` (`registrado_por`);
 
 --
--- Indices de la tabla `movimientos`
---
-ALTER TABLE `movimientos`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_funcionario` (`funcionario_id`),
-  ADD KEY `idx_fecha` (`fecha_movimiento`),
-  ADD KEY `cargo_anterior_id` (`cargo_anterior_id`),
-  ADD KEY `cargo_nuevo_id` (`cargo_nuevo_id`),
-  ADD KEY `departamento_anterior_id` (`departamento_anterior_id`),
-  ADD KEY `departamento_nuevo_id` (`departamento_nuevo_id`),
-  ADD KEY `registrado_por` (`registrado_por`);
-
---
 -- Indices de la tabla `preguntas_seguridad_catalogo`
 --
 ALTER TABLE `preguntas_seguridad_catalogo`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `pregunta` (`pregunta`);
-
---
--- Indices de la tabla `sesiones`
---
-ALTER TABLE `sesiones`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_usuario` (`usuario_id`),
-  ADD KEY `idx_ultimo_acceso` (`ultimo_acceso`);
 
 --
 -- Indices de la tabla `solicitudes_empleados`
@@ -516,7 +458,10 @@ ALTER TABLE `usuarios`
   ADD UNIQUE KEY `username` (`username`),
   ADD KEY `idx_username` (`username`),
   ADD KEY `idx_estado` (`estado`),
-  ADD KEY `idx_registro_completado` (`registro_completado`);
+  ADD KEY `idx_registro_completado` (`registro_completado`),
+  ADD KEY `fk_usuario_preg1` (`pregunta_seguridad_1`),
+  ADD KEY `fk_usuario_preg2` (`pregunta_seguridad_2`),
+  ADD KEY `fk_usuario_preg3` (`pregunta_seguridad_3`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -526,13 +471,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
-
---
--- AUTO_INCREMENT de la tabla `cargas_familiares`
---
-ALTER TABLE `cargas_familiares`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT de la tabla `cargos`
@@ -556,12 +495,6 @@ ALTER TABLE `funcionarios`
 -- AUTO_INCREMENT de la tabla `historial_administrativo`
 --
 ALTER TABLE `historial_administrativo`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `movimientos`
---
-ALTER TABLE `movimientos`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -593,12 +526,6 @@ ALTER TABLE `auditoria`
   ADD CONSTRAINT `auditoria_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 
 --
--- Filtros para la tabla `cargas_familiares`
---
-ALTER TABLE `cargas_familiares`
-  ADD CONSTRAINT `cargas_familiares_ibfk_1` FOREIGN KEY (`funcionario_id`) REFERENCES `funcionarios` (`id`) ON DELETE CASCADE;
-
---
 -- Filtros para la tabla `funcionarios`
 --
 ALTER TABLE `funcionarios`
@@ -613,23 +540,6 @@ ALTER TABLE `historial_administrativo`
   ADD CONSTRAINT `historial_administrativo_ibfk_2` FOREIGN KEY (`registrado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 
 --
--- Filtros para la tabla `movimientos`
---
-ALTER TABLE `movimientos`
-  ADD CONSTRAINT `movimientos_ibfk_1` FOREIGN KEY (`funcionario_id`) REFERENCES `funcionarios` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `movimientos_ibfk_2` FOREIGN KEY (`cargo_anterior_id`) REFERENCES `cargos` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `movimientos_ibfk_3` FOREIGN KEY (`cargo_nuevo_id`) REFERENCES `cargos` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `movimientos_ibfk_4` FOREIGN KEY (`departamento_anterior_id`) REFERENCES `departamentos` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `movimientos_ibfk_5` FOREIGN KEY (`departamento_nuevo_id`) REFERENCES `departamentos` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `movimientos_ibfk_6` FOREIGN KEY (`registrado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
-
---
--- Filtros para la tabla `sesiones`
---
-ALTER TABLE `sesiones`
-  ADD CONSTRAINT `sesiones_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE;
-
---
 -- Filtros para la tabla `solicitudes_empleados`
 --
 ALTER TABLE `solicitudes_empleados`
@@ -640,6 +550,9 @@ ALTER TABLE `solicitudes_empleados`
 -- Filtros para la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
+  ADD CONSTRAINT `fk_usuario_preg1` FOREIGN KEY (`pregunta_seguridad_1`) REFERENCES `preguntas_seguridad_catalogo` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_usuario_preg2` FOREIGN KEY (`pregunta_seguridad_2`) REFERENCES `preguntas_seguridad_catalogo` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_usuario_preg3` FOREIGN KEY (`pregunta_seguridad_3`) REFERENCES `preguntas_seguridad_catalogo` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`funcionario_id`) REFERENCES `funcionarios` (`id`) ON DELETE CASCADE;
 COMMIT;
 

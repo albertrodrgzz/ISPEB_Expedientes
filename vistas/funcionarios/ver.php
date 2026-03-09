@@ -311,11 +311,23 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
             <aside class="card-modern" style="padding: 0; overflow: hidden; position: sticky; top: 20px;">
                 <div style="background: linear-gradient(135deg, #0F4C81, #0284C7); padding: 30px 20px; text-align: center; color: white;">
                     <div style="width: 90px; height: 90px; margin: 0 auto 15px; border-radius: 50%; background: white; padding: 3px;">
-                        <?php if ($funcionario['foto']): ?>
+                        <?php if (!empty($funcionario['foto']) && $funcionario['foto'] !== 'default-avatar.png'): ?>
                             <img src="<?= APP_URL ?>/subidas/fotos/<?= $funcionario['foto'] ?>" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                         <?php else: ?>
-                            <div style="width: 100%; height: 100%; background: #E2E8F0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #64748B; font-weight: bold; font-size: 32px;">
-                                <?= substr($funcionario['nombres'], 0, 1) ?>
+                            <div style="
+                                width: 100%; 
+                                height: 100%; 
+                                background: #0F4C81; 
+                                border-radius: 50%; 
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: center; 
+                                color: #ffffff; 
+                                font-weight: 700; 
+                                font-size: 36px;
+                                letter-spacing: 1px;
+                            ">
+                                <?= strtoupper(mb_substr(trim($funcionario['nombres']), 0, 1, 'UTF-8') . mb_substr(trim($funcionario['apellidos']), 0, 1, 'UTF-8')) ?>
                             </div>
                         <?php endif; ?>
                     </div>
