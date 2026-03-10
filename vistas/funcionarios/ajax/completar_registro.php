@@ -58,7 +58,7 @@ try {
         SELECT u.id, u.funcionario_id, u.username
         FROM usuarios u
         INNER JOIN funcionarios f ON u.funcionario_id = f.id
-        WHERE f.cedula = ? AND u.registro_completado = 0
+        WHERE REPLACE(REPLACE(REPLACE(REPLACE(LOWER(f.cedula), 'v-', ''), 'e-', ''), '-', ''), '.', '') = ? AND u.registro_completado = 0
     ");
     $stmt->execute([$cedula]);
     $usuario = $stmt->fetch();
