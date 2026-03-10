@@ -1,62 +1,56 @@
-# ╔═══════════════════════════════════════════════════════════════════╗
-# ║  .HTACCESS MAESTRO — SIGED v4.8                                    ║
-# ║  Corregido para Render (Docker + Apache) sin subfolder /APP3/      ║
-# ╚═══════════════════════════════════════════════════════════════════╝
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  .HTACCESS — SIGED v5.0 DUAL-ENTORNO                                ║
+# ║  Funciona en XAMPP (subcarpeta) Y Render (raíz) sin modificación    ║
+# ╠══════════════════════════════════════════════════════════════════════╣
+# ║  XAMPP:  el proyecto vive en htdocs/ISPEB_Expedientes/               ║
+# ║          RewriteBase se resuelve automáticamente por PHP (config.php)║
+# ║  Render: el proyecto vive en /var/www/html/ (raíz del contenedor)    ║
+# ║          RewriteBase / es correcto                                   ║
+# ╚══════════════════════════════════════════════════════════════════════╝
 
-# ── 1. DESHABILITAR LISTADO DE DIRECTORIOS ───────────────────────────────────
+# ── 1. DESHABILITAR LISTADO DE DIRECTORIOS ────────────────────────────────────
 Options -Indexes -MultiViews
 
-# ── 2. PROTEGER ESTE MISMO ARCHIVO ──────────────────────────────────────────
+# ── 2. PROTEGER ESTE MISMO ARCHIVO ───────────────────────────────────────────
 <Files ".htaccess">
     Order Allow,Deny
     Deny from all
 </Files>
 
-# ── 3. REGLAS DE REESCRITURA ─────────────────────────────────────────────────
+# ── 3. REGLAS DE REESCRITURA ──────────────────────────────────────────────────
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # ─── CRÍTICO: RewriteBase debe ser "/" en Render ─────────────────────────
-    # En Render, el Dockerfile copia los archivos a /var/www/html/ (raíz).
-    # Si usas RewriteBase /APP3/ en producción, Apache buscará /APP3/publico/
-    # que NO existe → los assets devuelven 404.
-    # Cambiar a "/" corrige el enrutamiento en el contenedor Docker.
+    # RewriteBase /
+    # NOTA: No se necesita cambiar esta directiva entre entornos.
+    # config.php calcula APP_URL con la subcarpeta correcta (/ISPEB_Expedientes
+    # en XAMPP, vacío en Render) usando DOCUMENT_ROOT + dirname(__DIR__).
+    # Todos los href, src y header("Location: ".APP_URL."/...") ya incluyen
+    # la subcarpeta en la URL, por lo que Apache recibe la ruta completa.
     RewriteBase /
 
-    # ─── EXCEPCIÓN #1: Paso libre a todos los assets en /publico/ ────────────
-    # MOTIVO: Sin esta regla, la RewriteRule de bloqueo de carpetas sensibles
-    # podría interceptar peticiones que, aunque empiezan con letras como
-    # "p-u-b-l-i-c-o", en algunos motores de regex coinciden con patrones
-    # inesperados. Esta línea garantiza que /publico/ NUNCA sea bloqueado.
-    RewriteRule ^publico(/.*)?$ - [L]
+    # ── Paso libre: assets públicos ──────────────────────────────────────────
+    RewriteRule ^publico(/.*)?$       - [L]
+    RewriteRule ^subidas(/.*)?$       - [L]
+    RewriteRule ^config/logout\.php$  - [L]
 
-    # ─── EXCEPCIÓN #2: Paso libre a /subidas/ ────────────────────────────────
-    # Los archivos subidos (PDFs, imágenes) deben ser accesibles directamente.
-    # Su propio .htaccess ya bloquea la ejecución de PHP en esa carpeta.
-    RewriteRule ^subidas(/.*)?$ - [L]
-
-    # ─── EXCEPCIÓN #3: config/logout.php debe ser accesible ──────────────────
-    RewriteRule ^config/logout\.php$ - [L]
-
-    # ─── BLOQUEAR acceso HTTP directo a carpetas de código fuente ────────────
-    # Después de las excepciones [L] de arriba, esta regla solo aplica a
-    # rutas que NO hayan sido excluidas previamente.
+    # ── Bloquear acceso HTTP directo a código fuente ─────────────────────────
     RewriteRule ^(config|database|modelos|lib)(/.*)?$ - [F,L]
 </IfModule>
 
-# ── 4. BLOQUEAR ARCHIVOS OCULTOS Y SENSIBLES ────────────────────────────────
-<FilesMatch "(^\.|\.git|\.env|\.sql|\.log|\.md|\.json|\.lock|\.pem|\.key|\.bak|\.swp)$">
+# ── 4. BLOQUEAR ARCHIVOS OCULTOS Y SENSIBLES ─────────────────────────────────
+<FilesMatch "(^\.|\.(git|env|sql|log|md|json|lock|pem|key|bak|swp))$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
 
-# ── 5. PROTEGER ARCHIVOS SENSIBLES POR EXTENSIÓN ────────────────────────────
+# ── 5. PROTEGER ARCHIVOS SENSIBLES POR EXTENSIÓN ─────────────────────────────
 <FilesMatch "\.(sql|log|bak|env|ini|sh|pem|key)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
 
-# ── 6. CABECERAS DE SEGURIDAD HTTP ──────────────────────────────────────────
+# ── 6. CABECERAS DE SEGURIDAD HTTP ───────────────────────────────────────────
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
@@ -64,5 +58,5 @@ Options -Indexes -MultiViews
     Header unset X-Powered-By
 </IfModule>
 
-# ── 7. FORZAR UTF-8 ──────────────────────────────────────────────────────────
+# ── 7. UTF-8 ──────────────────────────────────────────────────────────────────
 AddDefaultCharset UTF-8

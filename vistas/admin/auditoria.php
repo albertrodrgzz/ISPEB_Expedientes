@@ -13,7 +13,7 @@ verificarSesion();
 
 if (!verificarNivel(1)) {
     $_SESSION['error'] = 'Solo los administradores pueden acceder a la auditoría';
-    header('Location: ../dashboard/index.php');
+    header('Location: ' . APP_URL . '/vistas/dashboard/index.php');
     exit;
 }
 

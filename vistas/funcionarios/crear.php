@@ -11,7 +11,7 @@ require_once __DIR__ . '/../../modelos/Funcionario.php';
 
 verificarSesion();
 if (!verificarNivel(2)) {
-    header('Location: ../dashboard/index.php');
+    header('Location: ' . APP_URL . '/vistas/dashboard/index.php');
     exit;
 }
 

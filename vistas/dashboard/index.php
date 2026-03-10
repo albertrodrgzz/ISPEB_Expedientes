@@ -341,8 +341,8 @@ if ($nivel_acceso >= 3) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio - <?php echo APP_NAME; ?></title>
-    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo APP_URL; ?>/publico/imagenes/isotipo.png">
-    <link rel="shortcut icon" type="image/x-icon" href="<?php echo APP_URL; ?>/publico/imagenes/isotipo.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+    <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
     <script src="<?php echo APP_URL; ?>/publico/vendor/chart.js/chart.umd.min.js"></script>
 </head>

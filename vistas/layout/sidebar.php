@@ -302,61 +302,96 @@ function toggleSubmenu(element) {
 
 /**
  * Inicializar menú hamburguesa (móvil)
+ * Incluye detección de clic fuera del sidebar (funciona en todos los tamaños)
  */
 (function initSidebarMobile() {
     'use strict';
     
     const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
+    const sidebar    = document.getElementById('sidebar');
+    const overlay    = document.getElementById('sidebarOverlay');
     
-    if (!menuToggle || !sidebar || !overlay) {
-        console.warn('Sidebar: Elementos de menú móvil no encontrados');
+    if (!sidebar) {
+        console.warn('Sidebar: elemento #sidebar no encontrado');
         return;
     }
     
-    function toggleSidebar(show) {
-        if (show) {
-            sidebar.classList.add('active');
-            overlay.classList.add('active');
-            menuToggle.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        } else {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-            menuToggle.classList.remove('active');
-            document.body.style.overflow = '';
-        }
+    function closeSidebar() {
+        sidebar.classList.remove('active');
+        if (overlay)     { overlay.classList.remove('active'); }
+        if (menuToggle)  { menuToggle.classList.remove('active'); }
+        // Sincronizar el botón del header si existe
+        const toggleHeader = document.getElementById('menuToggleHeader');
+        if (toggleHeader) { toggleHeader.classList.remove('active'); }
+        document.body.style.overflow = '';
+    }
+
+    function openSidebar() {
+        sidebar.classList.add('active');
+        if (overlay)     { overlay.classList.add('active'); }
+        if (menuToggle)  { menuToggle.classList.add('active'); }
+        document.body.style.overflow = 'hidden';
+    }
+
+    function toggleSidebar() {
+        sidebar.classList.contains('active') ? closeSidebar() : openSidebar();
     }
     
-    menuToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const isOpen = sidebar.classList.contains('active');
-        toggleSidebar(!isOpen);
-    });
+    // Botón hamburguesa del sidebar (si existe)
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSidebar();
+        });
+    }
+
+    // Overlay: clic cierra el sidebar
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            closeSidebar();
+        });
+    }
+
+    // ── CLICK FUERA DEL SIDEBAR (funciona aunque no haya overlay visible) ──
+    // Esto soluciona que al hacer clic en el contenido en modo desktop/tablet
+    // el sidebar no se cierra porque el overlay tiene display:none en 1280px+
+    document.addEventListener('click', function(e) {
+        // Solo actuar si el sidebar está abierto
+        if (!sidebar.classList.contains('active')) return;
+        // Ignorar clics dentro del propio sidebar
+        if (sidebar.contains(e.target)) return;
+        // Ignorar clics en los botones toggle (ellos ya tienen su propio handler)
+        const toggleHeader = document.getElementById('menuToggleHeader');
+        if (menuToggle  && menuToggle.contains(e.target))   return;
+        if (toggleHeader && toggleHeader.contains(e.target)) return;
+        // Clic fuera → cerrar
+        closeSidebar();
+    }, true); // useCapture=true para interceptar antes que otros handlers
     
-    overlay.addEventListener('click', function() {
-        toggleSidebar(false);
-    });
-    
-    // Cerrar al hacer click en un enlace (solo en móvil)
+    // Cerrar al hacer click en un enlace (solo en móvil/tablet)
     const navLinks = sidebar.querySelectorAll('.nav-item[href]');
-    navLinks.forEach(link => {
+    navLinks.forEach(function(link) {
         link.addEventListener('click', function() {
-            if (window.innerWidth <= 1024) {
-                toggleSidebar(false);
+            if (window.innerWidth <= 1279) {
+                closeSidebar();
             }
         });
     });
     
-    // Cerrar sidebar cuando se redimensiona a desktop
+    // Cerrar sidebar cuando se redimensiona a desktop completo
     let resizeTimer;
     window.addEventListener('resize', function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function() {
-            if (window.innerWidth > 1024) {
-                toggleSidebar(false);
+            if (window.innerWidth >= 1280) {
+                // En desktop el sidebar es siempre visible — limpiar clases de overlay
+                sidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                const toggleHeader = document.getElementById('menuToggleHeader');
+                if (menuToggle)   menuToggle.classList.remove('active');
+                if (toggleHeader) toggleHeader.classList.remove('active');
+                document.body.style.overflow = '';
             }
         }, 250);
     });
@@ -366,9 +401,8 @@ function toggleSubmenu(element) {
         const accordion = activeSubitem.closest('.nav-item-accordion');
         if (accordion) {
             const parentLink = accordion.querySelector('.nav-item');
-            const submenu = accordion.querySelector('.nav-submenu');
-            const arrow = accordion.querySelector('.nav-arrow');
-            
+            const submenu    = accordion.querySelector('.nav-submenu');
+            const arrow      = accordion.querySelector('.nav-arrow');
             if (submenu && arrow && parentLink) {
                 submenu.style.display = 'block';
                 arrow.style.transform = 'rotate(180deg)';
@@ -377,25 +411,31 @@ function toggleSubmenu(element) {
         }
     });
     
-    console.log('[SIGED] Sidebar inicializado correctamente.');
+    console.log('[SIGED] Sidebar inicializado — click-outside activo.');
 })();
 
 /**
  * ===== BADGE DINÁMICO: Solicitudes Pendientes =====
- * Consulta la API cada 60 segundos y actualiza el badge de forma silenciosa.
+ * Nota: la actualización del badge la maneja bottom-nav.php (initMobileBadge).
+ * Este bloque sincroniza el badge desktop si bottom-nav no está disponible.
  */
 (function initBadgeSolicitudes() {
     const badge = document.getElementById('badge-solicitudes');
     if (!badge) return;   // no visible para nivel 3
 
-    const API_URL = '<?= APP_URL ?>/api/contar_solicitudes.php';
+    // Si bottom-nav ya tiene su propio fetch, no duplicar la petición
+    // Solo activar si mobile-badge-solicitudes no existe en el DOM
+    const mobileBadge = document.getElementById('mobile-badge-solicitudes');
+    if (mobileBadge) return; // bottom-nav.php manejará ambos badges
+
+    const API_URL = (typeof APP_URL !== 'undefined' ? APP_URL : '') + '/api/contar_solicitudes.php';
 
     function actualizarBadge() {
         fetch(API_URL, { credentials: 'same-origin' })
             .then(r => r.ok ? r.json() : null)
             .then(data => {
                 if (!data || typeof data.count === 'undefined') return;
-                const n = data.count;
+                const n = parseInt(data.count, 10);
                 if (n > 0) {
                     badge.textContent = n > 99 ? '99+' : n;
                     badge.classList.add('visible');
@@ -404,10 +444,9 @@ function toggleSubmenu(element) {
                     badge.classList.remove('visible');
                 }
             })
-            .catch(err => console.error('[SIGED] Error cargando notificaciones:', err));
+            .catch(err => console.warn('[SIGED] Badge sidebar: error', err));
     }
 
-    // Ejecutar al cargar y luego cada 60 s
     actualizarBadge();
     setInterval(actualizarBadge, 60_000);
 })();

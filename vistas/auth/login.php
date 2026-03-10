@@ -266,21 +266,36 @@
             position: relative; z-index: 2;
             margin-bottom: 16px;
             animation: breathe 5s ease-in-out infinite;
-            overflow: hidden;
         }
         .login-header .logo img {
-            width: 264px; height: auto;
+            height: auto;
             object-fit: contain;
             filter: brightness(0) invert(1) drop-shadow(0 4px 16px rgba(0,0,0,0.30));
             display: block;
         }
-        .login-header .logo::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
-            animation: shimmer 5s ease-in-out infinite 2s;
+        /* Logotipo (texto + escudo) — visible en tablet/desktop */
+        .logo-logotipo {
+            width: 264px;
+            display: block;
         }
+        /* Isotipo (solo escudo) — visible en móvil (<768px, layout de 1 columna) */
+        .logo-isotipo {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            display: none;
+            margin: 0 auto;
+        }
+        /* En móvil: ocultar logotipo, mostrar isotipo */
+        @media (max-width: 767px) {
+            .logo-logotipo { 
+                display: block !important;
+                width: 220px;
+                max-width: 100%;
+                margin: 0 auto;
+            }
+        }
+
         @keyframes breathe {
             0%,100% { transform: translateY(0)    scale(1); }
             50%      { transform: translateY(-9px) scale(1.022); }
@@ -576,9 +591,11 @@
             }
 
             .login-header .logo {
-                width: 70px;
-                height: 70px;
-                font-size: 32px;
+                width: 100%;
+                height: auto;
+                display: flex;
+                justify-content: center;
+                margin-bottom: 16px;
             }
             
             .login-header h1 {
@@ -618,9 +635,11 @@
             <!-- Extra twinkle -->
             <div class="particle-extra"></div>
 
-            <!-- Logo institucional -->
+            <!-- Logo institucional — logotipo en desktop/tablet, isotipo en móvil -->
             <div class="logo">
-                <img src="<?= APP_URL ?>/publico/imagenes/logotipo(B).png" alt="ISPEB Telemática">
+                <img src="<?= APP_URL ?>/publico/imagenes/logotipo.png"
+                     alt="ISPEB Telemática"
+                     class="logo-logotipo">
             </div>
 
             <!-- Línea decorativa -->

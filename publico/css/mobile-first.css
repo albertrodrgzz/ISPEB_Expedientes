@@ -148,11 +148,13 @@ body {
   z-index: var(--z-overlay) !important;
   opacity: 0 !important;
   visibility: hidden !important;
+  pointer-events: none !important;
   transition: opacity .28s var(--ease), visibility .28s var(--ease) !important;
 }
 .sidebar-overlay.active {
   opacity: 1 !important;
   visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 /* ─── Header: sticky, full-width, sólido ─── */

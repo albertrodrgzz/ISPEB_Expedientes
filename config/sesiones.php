@@ -9,7 +9,8 @@ if (session_status() === PHP_SESSION_NONE) {
     // Configuración de seguridad de sesiones
     ini_set('session.cookie_httponly', 1);  // Prevenir acceso JavaScript a cookies
     ini_set('session.use_only_cookies', 1); // Solo usar cookies, no URL
-    ini_set('session.cookie_secure', 0);    // Cambiar a 1 si usa HTTPS
+    // Secure: 1 en producción (HTTPS/Render), 0 en local (HTTP/XAMPP)
+    ini_set('session.cookie_secure', (defined('APP_ENV') && APP_ENV === 'production') ? 1 : 0);
     ini_set('session.cookie_samesite', 'Lax'); // Protección CSRF
     
     // Tiempo de vida de la sesión (30 minutos de inactividad)

@@ -20,14 +20,16 @@ $pageTitle = Icon::get('download') . ' Importar Base de Datos';
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Importar Base de Datos - <?= APP_NAME ?></title>
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
+    <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
     
-    <!-- Estilos globales -->
-    <link rel="stylesheet" href="<?php echo APP_URL; ?>/publico/css/estilos.css">
-    
-    <!-- SweetAlert2 -->
-    <script src="<?php echo APP_URL; ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+    <!-- CSS principal -->
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/estilos.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/responsive.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
+    <!-- mobile-first y siged-optimized se cargan desde header.php -->
 </head>
 <body>
     <div class="app-container">

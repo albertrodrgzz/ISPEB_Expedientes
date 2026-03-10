@@ -7,18 +7,16 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/seguridad.php';
 
-// Verificar sesión y permisos (solo nivel 1 y 2)
 verificarSesion();
 
 if (!verificarNivel(2)) {
     $_SESSION['error'] = 'No tiene permisos para acceder al módulo de vacaciones';
-    header('Location: ../dashboard/index.php');
+    header('Location: ' . APP_URL . '/vistas/dashboard/index.php');
     exit;
 }
 
 $db = getDB();
 
-// Obtener estadísticas para el dashboard de vacaciones
 $stmt = $db->query("SELECT COUNT(DISTINCT funcionario_id) as total FROM historial_administrativo WHERE tipo_evento = 'VACACION'");
 $total_empleados_con_vacaciones = $stmt->fetch()['total'];
 
@@ -28,13 +26,12 @@ $empleados_en_vacaciones = $stmt->fetch()['total'];
 $stmt = $db->query("SELECT COALESCE(SUM(JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.dias_totales'))), 0) as total FROM historial_administrativo WHERE tipo_evento = 'VACACION' AND YEAR(fecha_evento) = YEAR(CURDATE())");
 $dias_usados_anio = $stmt->fetch()['total'];
 
-$stmt = $db->query("SELECT COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'VACACION' AND fecha_evento > CURDATE()");
+$stmt = $db->query("SELECT COUNT(*) as total FROM historial_administrativo WHERE tipo_evento = 'VACACION' AND fecha_evento >= CURDATE() AND (fecha_fin IS NULL OR fecha_fin >= CURDATE())");
 $vacaciones_programadas = $stmt->fetch()['total'];
 
-// Obtener departamentos para filtros
 $departamentos = $db->query("SELECT * FROM departamentos ORDER BY nombre")->fetchAll();
 
-// Obtener registros de vacaciones con información del funcionario
+// Obtener registros de vacaciones actualizando el estado dinámico basado en hoy
 $stmt = $db->query("
     SELECT 
         ha.id,
@@ -52,9 +49,10 @@ $stmt = $db->query("
         ha.nombre_archivo_original,
         ha.created_at,
         CASE 
-            WHEN ha.fecha_evento > CURDATE() THEN 'Programada'
-            WHEN ha.fecha_fin < CURDATE() THEN 'Finalizada'
-            ELSE 'En curso'
+            WHEN CURDATE() < ha.fecha_evento THEN 'Programada'
+            WHEN CURDATE() >= ha.fecha_evento AND CURDATE() <= ha.fecha_fin THEN 'En curso'
+            WHEN CURDATE() = ha.fecha_evento THEN 'Iniciando hoy'
+            ELSE 'Finalizada'
         END as estado_vacacion
     FROM historial_administrativo ha
     INNER JOIN funcionarios f ON ha.funcionario_id = f.id
@@ -72,15 +70,10 @@ $vacaciones = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vacaciones - <?php echo APP_NAME; ?></title>
     <link rel="icon" type="image/png" sizes="32x32" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
-    <link rel="shortcut icon" type="image/x-icon" href="<?= APP_URL ?>/publico/imagenes/isotipo.png">
-    
     <link rel="stylesheet" href="../../publico/css/estilos.css">
     <link rel="stylesheet" href="../../publico/css/responsive.css">
-
     <link rel="stylesheet" href="../../publico/css/modern-components.css">
     <link rel="stylesheet" href="../../publico/css/swal-modern.css">
-    
-
 </head>
 <body>
     <?php include __DIR__ . '/../layout/sidebar.php'; ?>
@@ -92,7 +85,6 @@ $vacaciones = $stmt->fetchAll();
         ?>
         
         <div class="module-container">
-            <!-- Header Título y Botón -->
             <div class="module-header-title">
                 <div class="module-title-group">
                     <?= Icon::get('sun') ?>
@@ -103,12 +95,9 @@ $vacaciones = $stmt->fetchAll();
                 </button>
             </div>
 
-            <!-- KPI Cards -->
             <div class="kpi-grid">
                 <div class="kpi-card-solid bg-solid-blue">
-                    <div class="kpi-icon">
-                        <?= Icon::get('users') ?>
-                    </div>
+                    <div class="kpi-icon"><?= Icon::get('users') ?></div>
                     <div class="kpi-details">
                         <div class="kpi-label">Empleados Histórico</div>
                         <div class="kpi-value"><?= $total_empleados_con_vacaciones ?></div>
@@ -116,9 +105,7 @@ $vacaciones = $stmt->fetchAll();
                 </div>
                 
                 <div class="kpi-card-solid bg-solid-green">
-                    <div class="kpi-icon">
-                        <?= Icon::get('sun') ?>
-                    </div>
+                    <div class="kpi-icon"><?= Icon::get('sun') ?></div>
                     <div class="kpi-details">
                         <div class="kpi-label">De Vacaciones Hoy</div>
                         <div class="kpi-value"><?= $empleados_en_vacaciones ?></div>
@@ -126,9 +113,7 @@ $vacaciones = $stmt->fetchAll();
                 </div>
                 
                 <div class="kpi-card-solid bg-solid-orange">
-                    <div class="kpi-icon">
-                        <?= Icon::get('clock') ?>
-                    </div>
+                    <div class="kpi-icon"><?= Icon::get('clock') ?></div>
                     <div class="kpi-details">
                         <div class="kpi-label">Días Usados (<?= date('Y') ?>)</div>
                         <div class="kpi-value"><?= $dias_usados_anio ?></div>
@@ -136,9 +121,7 @@ $vacaciones = $stmt->fetchAll();
                 </div>
                 
                 <div class="kpi-card-solid bg-solid-purple">
-                    <div class="kpi-icon">
-                        <?= Icon::get('calendar') ?>
-                    </div>
+                    <div class="kpi-icon"><?= Icon::get('calendar') ?></div>
                     <div class="kpi-details">
                         <div class="kpi-label">Programadas</div>
                         <div class="kpi-value"><?= $vacaciones_programadas ?></div>
@@ -146,7 +129,6 @@ $vacaciones = $stmt->fetchAll();
                 </div>
             </div>
 
-            <!-- Filtros Flat -->
             <div class="flat-filter-bar" style="margin-top: 32px;">
                 <div class="filter-item" style="flex: 2;">
                     <label class="filter-label">BUSCAR</label>
@@ -187,126 +169,113 @@ $vacaciones = $stmt->fetchAll();
                 </div>
                 
                 <div class="filter-item" style="flex: 0 0 auto;">
-                    <button type="button" onclick="limpiarFiltros()" class="btn-flat-outline">
-                        Limpiar
-                    </button>
+                    <button type="button" onclick="limpiarFiltros()" class="btn-flat-outline">Limpiar</button>
                 </div>
             </div>
 
-            <!-- Tabla -->
             <div class="table-wrapper">
                 <table class="table-modern" id="vacacionesTable">
                     <thead>
+                        <tr>
+                            <th>Funcionario</th>
+                            <th>Cédula</th>
+                            <th>Departamento</th>
+                            <th>Período</th>
+                            <th>Días</th>
+                            <th>Estado</th>
+                            <th style="text-align: right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($vacaciones)): ?>
                             <tr>
-                                <th>Funcionario</th>
-                                <th>Cédula</th>
-                                <th>Departamento</th>
-                                <th>Período</th>
-                                <th>Días</th>
-                                <th>Estado</th>
-                                <th style="text-align: right;">Acciones</th>
+                                <td colspan="7">
+                                    <div class="empty-st">
+                                        <div class="empty-st-ico"><?= Icon::get('sun') ?></div>
+                                        <p class="empty-state-title">Sin registros de vacaciones</p>
+                                        <p class="empty-state-desc">Las vacaciones registradas aparecerán aquí.</p>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($vacaciones)): ?>
-                                <tr>
-                                    <td colspan="7">
-                                        <div class="empty-st">
-                                            <div class="empty-st-ico">
-                                                <?= Icon::get('sun') ?>
+                        <?php else: ?>
+                            <?php foreach ($vacaciones as $vac):
+                                $nombre_completo = $vac['nombres'] . ' ' . $vac['apellidos'];
+                                $iniciales = strtoupper(mb_substr($vac['nombres'],0,1) . mb_substr($vac['apellidos'],0,1));
+                                $colors = ['#0F4C81','#0288D1','#8B5CF6','#10B981','#F59E0B','#14B8A6'];
+                                $color = $colors[abs(crc32($vac['cedula'])) % count($colors)];
+                                $badgeStyle = match($vac['estado_vacacion']) {
+                                    'En curso'       => 'background:#D1FAE5;color:#065F46;',
+                                    'Iniciando hoy'  => 'background:#DBEAFE;color:#1E40AF;',
+                                    'Programada'     => 'background:#FEF3C7;color:#92400E;',
+                                    default      => 'background:#F1F5F9;color:#475569;'
+                                };
+                            ?>
+                                <tr class="vacacion-row"
+                                    data-empleado="<?php echo strtolower($nombre_completo . ' ' . $vac['cedula']); ?>"
+                                    data-departamento="<?php echo $vac['departamento']; ?>"
+                                    data-estado="<?php echo $vac['estado_vacacion']; ?>"
+                                    data-anio="<?php echo date('Y', strtotime($vac['fecha_inicio'])); ?>">
+                                    <td>
+                                        <div class="fn-cell">
+                                            <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)">
+                                                <?= $iniciales ?>
                                             </div>
-                                            <p class="empty-state-title">Sin registros de vacaciones</p>
-                                            <p class="empty-state-desc">Las vacaciones registradas aparecerán aquí.</p>
+                                            <div class="fn-info">
+                                                <strong><?php echo htmlspecialchars($nombre_completo); ?></strong>
+                                                <small><span class="fn-cedula"><?php echo htmlspecialchars($vac['cedula']); ?></span></small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="font-size:13px;color:#64748B;"><?php echo htmlspecialchars($vac['departamento']); ?></td>
+                                    <td>
+                                        <span style="font-size:13px;white-space:nowrap;">
+                                            <?php echo date('d/m/Y', strtotime($vac['fecha_inicio'])); ?>
+                                            <span style="color:#CBD5E1;margin:0 3px;">→</span>
+                                            <?php echo date('d/m/Y', strtotime($vac['fecha_fin'])); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="background:#F1F5F9;padding:3px 9px;border-radius:6px;font-weight:700;font-size:12px;color:#475569;white-space:nowrap;">
+                                            <?php echo $vac['dias_totales']; ?>d
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="<?= $badgeStyle ?>padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap;">
+                                            <?php echo $vac['estado_vacacion']; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="tbl-actions">
+                                            <a href="../funcionarios/ver.php?id=<?php echo $vac['funcionario_id']; ?>"
+                                               class="btn-ic ic-view" title="Ver Expediente">
+                                                <?= Icon::get('eye') ?>
+                                            </a>
+                                            <?php if ($vac['ruta_archivo']): ?>
+                                                <a href="../../<?php echo $vac['ruta_archivo']; ?>" target="_blank"
+                                                   class="btn-ic ic-pdf" title="Descargar PDF">
+                                                    <?= Icon::get('file-text') ?>
+                                                </a>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($vacaciones as $vac):
-                                    $nombre_completo = $vac['nombres'] . ' ' . $vac['apellidos'];
-                                    $iniciales = strtoupper(mb_substr($vac['nombres'],0,1) . mb_substr($vac['apellidos'],0,1));
-                                    $colors = ['#0F4C81','#0288D1','#8B5CF6','#10B981','#F59E0B','#14B8A6'];
-                                    $color = $colors[abs(crc32($vac['cedula'])) % count($colors)];
-                                    $badgeStyle = match($vac['estado_vacacion']) {
-                                        'En curso'   => 'background:#D1FAE5;color:#065F46;',
-                                        'Programada' => 'background:#FEF3C7;color:#92400E;',
-                                        default      => 'background:#F1F5F9;color:#475569;'
-                                    };
-                                ?>
-                                    <tr class="vacacion-row"
-                                        data-empleado="<?php echo strtolower($nombre_completo . ' ' . $vac['cedula']); ?>"
-                                        data-departamento="<?php echo $vac['departamento']; ?>"
-                                        data-estado="<?php echo $vac['estado_vacacion']; ?>"
-                                        data-anio="<?php echo date('Y', strtotime($vac['fecha_inicio'])); ?>">
-                                        <td>
-                                            <div class="fn-cell">
-                                                <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)">
-                                                    <?= $iniciales ?>
-                                                </div>
-                                                <div class="fn-info">
-                                                    <strong><?php echo htmlspecialchars($nombre_completo); ?></strong>
-                                                    <small><span class="fn-cedula"><?php echo htmlspecialchars($vac['cedula']); ?></span></small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style="font-size:13px;color:#64748B;"><?php echo htmlspecialchars($vac['departamento']); ?></td>
-                                        <td>
-                                            <span style="font-size:13px;white-space:nowrap;">
-                                                <?php echo date('d/m/Y', strtotime($vac['fecha_inicio'])); ?>
-                                                <span style="color:#CBD5E1;margin:0 3px;">→</span>
-                                                <?php echo date('d/m/Y', strtotime($vac['fecha_fin'])); ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span style="background:#F1F5F9;padding:3px 9px;border-radius:6px;font-weight:700;font-size:12px;color:#475569;white-space:nowrap;">
-                                                <?php echo $vac['dias_totales']; ?>d
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span style="<?= $badgeStyle ?>padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap;">
-                                                <?php echo $vac['estado_vacacion']; ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="tbl-actions">
-                                                <a href="../funcionarios/ver.php?id=<?php echo $vac['funcionario_id']; ?>"
-                                                   class="btn-ic ic-view"
-                                                   title="Ver Expediente">
-                                                    <?= Icon::get('eye') ?>
-                                                </a>
-                                                <?php if ($vac['ruta_archivo']): ?>
-                                                    <a href="../../<?php echo $vac['ruta_archivo']; ?>"
-                                                       target="_blank"
-                                                       class="btn-ic ic-pdf"
-                                                       title="Descargar PDF">
-                                                        <?= Icon::get('file-text') ?>
-                                                    </a>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
-            </div> <!-- End Table Wrapper -->
-        </div> <!-- End Module Container -->
-    </div> <!-- End Main Content -->
+            </div>
+        </div>
+    </div>
     
     <script src="../../publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
-    
     <script>
-        // Real-time search filter for vacaciones
         document.getElementById('searchVacaciones')?.addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#vacacionesTable tbody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            document.querySelectorAll('#vacacionesTable tbody tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none';
             });
         });
         
-        // Limpiar filtros
         function limpiarFiltros() {
             document.getElementById('searchVacaciones').value = '';
             document.getElementById('filter-departamento').value = '';
@@ -315,20 +284,17 @@ $vacaciones = $stmt->fetchAll();
             aplicarFiltros();
         }
         
-        // Aplicar filtros combinados
         function aplicarFiltros() {
-            const searchTerm = document.getElementById('searchVacaciones').value.toLowerCase();
-            const departamento = document.getElementById('filter-departamento').value;
-            const estado = document.getElementById('filter-estado').value;
+            const search = document.getElementById('searchVacaciones').value.toLowerCase();
+            const dept = document.getElementById('filter-departamento').value;
+            const est = document.getElementById('filter-estado').value;
             const anio = document.getElementById('filter-anio').value;
-            const rows = document.querySelectorAll('.vacacion-row');
             
-            rows.forEach(row => {
-                const matchSearch = row.dataset.empleado.includes(searchTerm);
-                const matchDept = !departamento || row.dataset.departamento === departamento;
-                const matchEstado = !estado || row.dataset.estado === estado;
+            document.querySelectorAll('.vacacion-row').forEach(row => {
+                const matchSearch = row.dataset.empleado.includes(search);
+                const matchDept = !dept || row.dataset.departamento === dept;
+                const matchEstado = !est || row.dataset.estado === est;
                 const matchAnio = !anio || row.dataset.anio === anio;
-                
                 row.style.display = (matchSearch && matchDept && matchEstado && matchAnio) ? '' : 'none';
             });
         }
@@ -337,71 +303,14 @@ $vacaciones = $stmt->fetchAll();
         document.getElementById('filter-estado')?.addEventListener('change', aplicarFiltros);
         document.getElementById('filter-anio')?.addEventListener('change', aplicarFiltros);
         
-        // ===========================================
-        // MODAL REGISTRO DE VACACIONES
-        // ===========================================
-        
-        // Calcular días hábiles (lunes a viernes)
-        function calcularDiasHabiles(fechaInicio, fechaFin) {
-            if (!fechaInicio || !fechaFin) return 0;
-            
-            const inicio = new Date(fechaInicio + 'T00:00:00');
-            const fin = new Date(fechaFin + 'T00:00:00');
-            
-            if (fin < inicio) return 0;
-            
-            let count = 0;
-            let current = new Date(inicio);
-            
-            while (current <= fin) {
-                const dayOfWeek = current.getDay();
-                // 0 = domingo, 6 = sábado
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                    count++;
-                }
-                current.setDate(current.getDate() + 1);
-            }
-            
-            return count;
-        }
-        
+        let datosVacaciones = null;
+
         async function abrirModalVacaciones() {
             try {
-                // Cargar funcionarios activos
-                const funcionariosRes = await fetch('../funcionarios/ajax/listar.php');
+                const res = await fetch('../funcionarios/ajax/listar.php');
+                const result = await res.json();
+                const funcionarios = result.data.filter(f => f.estado === 'activo');
                 
-                if (!funcionariosRes.ok) {
-                    throw new Error(`HTTP ${funcionariosRes.status}: Error al cargar funcionarios`);
-                }
-                
-                // Intentar parsear JSON con mejor manejo de errores
-                let funcionariosData;
-                try {
-                    const responseText = await funcionariosRes.text();
-                    console.log('Respuesta del servidor:', responseText);
-                    funcionariosData = JSON.parse(responseText);
-                } catch (parseError) {
-                    console.error('Error al parsear JSON:', parseError);
-                    console.error('Respuesta completa:', await funcionariosRes.clone().text());
-                    throw new Error('El servidor devolvió una respuesta inválida (no es JSON válido)');
-                }
-
-                if (!funcionariosData.success) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'No se pudieron cargar los funcionarios',
-                        confirmButtonColor: '#ef4444'
-                    });
-                    return;
-                }
-
-                const funcionarios = funcionariosData.data.filter(f => f.estado === 'activo');
-
-                // Variable para almacenar datos LOTTT del funcionario seleccionado
-                let datosVacaciones = null;
-
-                // Modal con diseño HORIZONTAL y profesional (igual que nombramientos)
                 const { value: formValues } = await Swal.fire({
                     title: '<div style="display: flex; align-items: center; gap: 12px; justify-content: center; font-size: 22px; font-weight: 700; color: #1e293b;"><svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span>Nueva Vacación</span></div>',
                     html: `
@@ -425,24 +334,17 @@ $vacaciones = $stmt->fetchAll();
                         </style>
                         <div style="max-width: 750px; margin: 0 auto;">
                             <div class="swal-form-group" style="margin-bottom: 18px;">
-                                <label class="swal-label">
-                                    <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                    Funcionario <span style="color: #ef4444;">*</span>
-                                </label>
+                                <label class="swal-label">Funcionario <span style="color: #ef4444;">*</span></label>
                                 <select id="swal-funcionario" class="swal2-select">
                                     <option value="">Seleccionar...</option>
-                                    ${funcionarios.map(f => `
-                                        <option value="${f.id}">
-                                            ${f.nombres} ${f.apellidos} - ${f.cedula}
-                                        </option>
-                                    `).join('')}
+                                    ${funcionarios.map(f => `<option value="${f.id}">${f.nombres} ${f.apellidos} - ${f.cedula}</option>`).join('')}
                                 </select>
                             </div>
 
                             <div id="error-message" class="error-message"></div>
 
                             <div id="lottt-card" class="lottt-card">
-                                <div class="lottt-title"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Derecho a Vacaciones (LOTTT)</div>
+                                <div class="lottt-title">Derecho a Vacaciones (LOTTT)</div>
                                 <div class="lottt-stats">
                                     <div class="lottt-stat">
                                         <div class="lottt-stat-label">Años Servicio</div>
@@ -461,17 +363,11 @@ $vacaciones = $stmt->fetchAll();
 
                             <div class="swal-form-grid-2col">
                                 <div class="swal-form-group">
-                                    <label class="swal-label">
-                                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        Fecha Inicio <span style="color: #ef4444;">*</span>
-                                    </label>
+                                    <label class="swal-label">Fecha Inicio <span style="color: #ef4444;">*</span></label>
                                     <input type="date" id="swal-fecha-inicio" class="swal2-input" value="${new Date().toISOString().split('T')[0]}">
                                 </div>
                                 <div class="swal-form-group">
-                                    <label class="swal-label">
-                                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                                        Días a Tomar <span style="color: #ef4444;">*</span>
-                                    </label>
+                                    <label class="swal-label">Días a Tomar <span style="color: #ef4444;">*</span></label>
                                     <select id="swal-dias-selector" class="swal2-select" disabled>
                                         <option value="">Primero seleccione funcionario...</option>
                                     </select>
@@ -480,42 +376,22 @@ $vacaciones = $stmt->fetchAll();
 
                             <div id="return-date-card" class="return-date-card">
                                 <div class="return-date-content">
-                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    <div>
-                                        Fecha de retorno al trabajo: 
-                                        <strong id="fecha-retorno-display">-</strong>
-                                    </div>
+                                    <div>Fecha de retorno al trabajo: <strong id="fecha-retorno-display">-</strong></div>
                                 </div>
                             </div>
 
                             <div class="swal-form-grid-2col">
                                 <div class="swal-form-group">
-                                    <label class="swal-label">
-                                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
-                                        Observaciones
-                                    </label>
+                                    <label class="swal-label">Observaciones</label>
                                     <textarea id="swal-observaciones" class="swal2-textarea" placeholder="Motivo o comentarios..."></textarea>
                                 </div>
                                 <div class="swal-form-group">
-                                    <label class="swal-label">
-                                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                        Documento Aval <span style="color: #ef4444;">*</span>
-                                    </label>
+                                    <label class="swal-label">Documento Aval <span style="color: #ef4444;">*</span></label>
                                     <div class="file-input-wrapper">
                                         <label class="file-input-button" id="file-label" for="swal-pdf">
-                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                                             <span id="file-label-text">Seleccionar archivo</span>
                                         </label>
                                         <input type="file" id="swal-pdf" accept="application/pdf,image/png,image/jpeg,image/jpg">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="info-box">
-                                <div class="info-box-content">
-                                    <svg width="16" height="16" fill="#f59e0b" viewBox="0 0 24 24" style="flex-shrink: 0;"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <div>
-                                        <strong>LOTTT:</strong> 15 días tras 1 año + 1 día/año adicional hasta máx 30 • <strong>Formatos:</strong> PDF, JPG, PNG • <strong>Máx:</strong> 5 MB
                                     </div>
                                 </div>
                             </div>
@@ -523,246 +399,94 @@ $vacaciones = $stmt->fetchAll();
                     `,
                     width: '850px',
                     showCancelButton: true,
-                    confirmButtonText: '<div style="display: flex; align-items: center; gap: 7px;"><svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>Registrar Vacación</span></div>',
-                    cancelButtonText: '<div style="display: flex; align-items: center; gap: 7px;"><svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><span>Cancelar</span></div>',
+                    confirmButtonText: 'Registrar Vacación',
+                    cancelButtonText: 'Cancelar',
                     confirmButtonColor: '#06d6a0',
                     cancelButtonColor: '#64748b',
-                    customClass: {
-                        popup: 'swal-modern-popup',
-                        confirmButton: 'swal-btn',
-                        cancelButton: 'swal-btn'
-                    },
                     didOpen: () => {
-                        const style = document.createElement('style');
-                        style.textContent = `
-                            .swal-modern-popup { border-radius: 20px; padding: 30px !important; }
-                            .swal-btn { border-radius: 10px !important; padding: 11px 24px !important; font-weight: 600 !important; font-size: 14.5px !important; transition: all 0.2s !important; }
-                            .swal-btn:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important; }
-                        `;
-                        document.head.appendChild(style);
-
-                        // Elementos del DOM
                         const funcionarioSelect = document.getElementById('swal-funcionario');
                         const errorMessage = document.getElementById('error-message');
                         const lotttCard = document.getElementById('lottt-card');
-                        const añosServicio = document.getElementById('años-servicio');
-                        const diasTotales = document.getElementById('dias-totales');
-                        const diasDisponibles = document.getElementById('dias-disponibles');
-                        const fechaInicio = document.getElementById('swal-fecha-inicio');
                         const diasSelector = document.getElementById('swal-dias-selector');
+                        const fechaInicio = document.getElementById('swal-fecha-inicio');
                         const returnDateCard = document.getElementById('return-date-card');
-                        const fechaRetornoDisplay = document.getElementById('fecha-retorno-display');
                         const fileInput = document.getElementById('swal-pdf');
-                        const fileLabel = document.getElementById('file-label');
                         const fileLabelText = document.getElementById('file-label-text');
 
-                        // Función: Cargar datos de vacaciones del funcionario
-                        async function cargarDatosVacaciones(funcionarioId) {
-                            if (!funcionarioId) {
+                        funcionarioSelect.addEventListener('change', async (e) => {
+                            if (!e.target.value) return;
+                            const res = await fetch(`ajax/calcular_dias_vacaciones.php?funcionario_id=${e.target.value}`);
+                            const data = await res.json();
+                            datosVacaciones = data;
+                            
+                            if (!data.cumple_requisito) {
                                 lotttCard.style.display = 'none';
-                                errorMessage.style.display = 'none';
-                                returnDateCard.style.display = 'none';
-                                diasSelector.disabled = true;
-                                diasSelector.innerHTML = '<option value="">Primero seleccione funcionario...</option>';
-                                return;
-                            }
-
-                            try {
-                                console.log(`Cargando datos LOTTT para funcionario ID: ${funcionarioId}`);
-                                const url = `ajax/calcular_dias_vacaciones.php?funcionario_id=${funcionarioId}`;
-                                console.log(`URL: ${url}`);
-                                
-                                const res = await fetch(url);
-                                console.log('Response status:', res.status);
-                                console.log('Response ok:', res.ok);
-                                
-                                const responseText = await res.text();
-                                console.log('Response text:', responseText);
-                                
-                                const data = JSON.parse(responseText);
-
-                                if (!data.success) {
-                                    throw new Error(data.error || 'Error al calcular vacaciones');
-                                }
-
-                                datosVacaciones = data;
-
-                                if (!data.cumple_requisito) {
-                                    // No cumple 1 año
-                                    lotttCard.style.display = 'none';
-                                    errorMessage.textContent = `⚠️ ${data.mensaje}. Fecha cumple 1 año: ${data.data.fecha_cumple_año}`;
-                                    errorMessage.style.display = 'block';
-                                    diasSelector.disabled = true;
-                                    diasSelector.innerHTML = '<option value="">No disponible</option>';
-                                    fechaInicio.disabled = true;
-                                } else {
-                                    // Mostrar datos
-                                    errorMessage.style.display = 'none';
-                                    lotttCard.style.display = 'block';
-                                    añosServicio.textContent = data.data.años_servicio;
-                                    diasTotales.textContent = data.data.dias_totales;
-                                    diasDisponibles.textContent = data.data.dias_disponibles;
-                                    
-                                    fechaInicio.disabled = false;
-
-                                    if (data.data.dias_disponibles === 0) {
-                                        errorMessage.textContent = '⚠️ Este funcionario ya usó todos sus días de vacaciones disponibles este año.';
-                                        errorMessage.style.display = 'block';
-                                        diasSelector.disabled = true;
-                                        diasSelector.innerHTML = '<option value="">Sin días disponibles</option>';
-                                    } else {
-                                        // ✅ Generar opciones del selector
-                                        diasSelector.disabled = false;
-                                        let options = '<option value="">Seleccione días...</option>';
-                                        for (let i = 1; i <= data.data.dias_disponibles; i++) {
-                                            options += `<option value="${i}">${i} día${i > 1 ? 's' : ''}</option>`;
-                                        }
-                                        diasSelector.innerHTML = options;
-                                    }
-                                }
-                            } catch (error) {
-                                console.error(error);
-                                errorMessage.textContent = '❌ Error al cargar datos: ' + error.message;
+                                errorMessage.textContent = '⚠️ El funcionario no cumple 1 año de servicio.';
                                 errorMessage.style.display = 'block';
-                                lotttCard.style.display = 'none';
-                            }
-                        }
-
-                        // Función: Calcular fecha de retorno
-                        async function calcularFechaRetorno() {
-                            const diasValue = parseInt(diasSelector.value);
-                            const fechaValue = fechaInicio.value;
-
-                            if (!diasValue || !fechaValue || diasValue <= 0) {
-                                returnDateCard.style.display = 'none';
-                                return;
-                            }
-
-                            try {
-                                const url = `ajax/calcular_fecha_retorno.php?fecha_inicio=${fechaValue}&dias_habiles=${diasValue}`;
-                                console.log('Calculando fecha retorno - URL:', url);
+                                diasSelector.disabled = true;
+                            } else {
+                                errorMessage.style.display = 'none';
+                                lotttCard.style.display = 'block';
+                                document.getElementById('años-servicio').textContent = data.data.años_servicio;
+                                document.getElementById('dias-totales').textContent = data.data.dias_totales;
+                                document.getElementById('dias-disponibles').textContent = data.data.dias_disponibles;
                                 
-                                const res = await fetch(url);
-                                console.log('Fecha retorno - Response status:', res.status);
-                                console.log('Fecha retorno - Response ok:', res.ok);
-                                
-                                const responseText = await res.text();
-                                console.log('Fecha retorno - Response text:', responseText);
-                                
-                                const data = JSON.parse(responseText);
-
-                                if (data.success) {
-                                    fechaRetornoDisplay.textContent = data.data.fecha_retorno_formateada;
-                                    returnDateCard.style.display = 'block';
+                                diasSelector.disabled = false;
+                                let options = '<option value="">Seleccione días...</option>';
+                                for (let i = 1; i <= data.data.dias_disponibles; i++) {
+                                    options += `<option value="${i}">${i} día${i > 1 ? 's' : ''}</option>`;
                                 }
-                            } catch (error) {
-                                console.error('Error calculando fecha de retorno:', error);
-                                returnDateCard.style.display = 'none';
+                                diasSelector.innerHTML = options;
                             }
-                        }
+                        });
 
-                        // File input handler
+                        const calcularRetorno = async () => {
+                            if (!diasSelector.value || !fechaInicio.value) return;
+                            const res = await fetch(`ajax/calcular_fecha_retorno.php?fecha_inicio=${fechaInicio.value}&dias_habiles=${diasSelector.value}`);
+                            const data = await res.json();
+                            if(data.success) {
+                                document.getElementById('fecha-retorno-display').textContent = data.data.fecha_retorno_formateada;
+                                returnDateCard.style.display = 'block';
+                            }
+                        };
+
+                        diasSelector.addEventListener('change', calcularRetorno);
+                        fechaInicio.addEventListener('change', calcularRetorno);
+
                         fileInput.addEventListener('change', (e) => {
                             if (e.target.files.length > 0) {
-                                const fileName = e.target.files[0].name;
-                                fileLabelText.textContent = fileName.length > 25 ? fileName.substring(0, 22) + '...' : fileName;
-                                fileLabel.classList.add('has-file');
-                            } else {
-                                fileLabelText.textContent = 'Seleccionar archivo';
-                                fileLabel.classList.remove('has-file');
+                                fileLabelText.textContent = e.target.files[0].name;
+                                document.getElementById('file-label').classList.add('has-file');
                             }
                         });
-
-                        // Event Listeners
-                        funcionarioSelect.addEventListener('change', (e) => cargarDatosVacaciones(e.target.value));
-                        diasSelector.addEventListener('change', calcularFechaRetorno);
-                        fechaInicio.addEventListener('change', calcularFechaRetorno);
                     },
                     preConfirm: () => {
-                        const funcionario_id = document.getElementById('swal-funcionario').value;
-                        const fecha_inicio = document.getElementById('swal-fecha-inicio').value;
-                        const dias_solicitar = parseInt(document.getElementById('swal-dias-selector').value);
-                        const observaciones = document.getElementById('swal-observaciones').value;
-                        const archivo_pdf = document.getElementById('swal-pdf').files[0];
-                        
-                        if (!funcionario_id) { Swal.showValidationMessage('Seleccione un funcionario'); return false; }
-                        if (!fecha_inicio) { Swal.showValidationMessage('Ingrese la fecha de inicio'); return false; }
-                        if (!dias_solicitar || dias_solicitar <= 0) { Swal.showValidationMessage('Seleccione los días a tomar'); return false; }
-                        if (!archivo_pdf) { Swal.showValidationMessage('Debe adjuntar el documento de aval'); return false; }
-                        
-                        if (datosVacaciones && !datosVacaciones.cumple_requisito) {
-                            Swal.showValidationMessage('El funcionario no cumple con el requisito de 1 año de servicio');
-                            return false;
-                        }
-                        
-                        if (datosVacaciones && dias_solicitar > datosVacaciones.data.dias_disponibles) {
-                            Swal.showValidationMessage(`Solo hay ${datosVacaciones.data.dias_disponibles} días disponibles`);
-                            return false;
-                        }
-                        
-                        if (archivo_pdf && archivo_pdf.size > 5 * 1024 * 1024) {
-                            Swal.showValidationMessage('Archivo muy grande (máx 5MB)');
-                            return false;
-                        }
-                        
-                        return { funcionario_id, fecha_inicio, dias_solicitar, observaciones, archivo_pdf };
+                        return {
+                            funcionario_id: document.getElementById('swal-funcionario').value,
+                            fecha_inicio: document.getElementById('swal-fecha-inicio').value,
+                            dias_solicitar: document.getElementById('swal-dias-selector').value,
+                            observaciones: document.getElementById('swal-observaciones').value,
+                            archivo_pdf: document.getElementById('swal-pdf').files[0]
+                        };
                     }
                 });
-                
-                if (!formValues) return;
-                
-                // Procesar registro
-                Swal.fire({ title: 'Procesando...', html: 'Registrando vacación...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                
-                try {
+
+                if (formValues) {
                     const formData = new FormData();
-                    formData.append('csrf_token', '<?php echo generarTokenCSRF(); ?>');
                     formData.append('accion', 'registrar_vacacion');
-                    formData.append('funcionario_id', formValues.funcionario_id);
-                    formData.append('fecha_evento', formValues.fecha_inicio);
-                    formData.append('dias_habiles', formValues.dias_solicitar);
-                    formData.append('observaciones', formValues.observaciones);
-                    formData.append('archivo_pdf', formValues.archivo_pdf);
-                    
-                    console.log('Enviando registro de vacación...');
-                    console.log('Funcionario ID:', formValues.funcionario_id);
-                    console.log('Fecha inicio:', formValues.fecha_inicio);
-                    console.log('Días:', formValues.dias_solicitar);
-                    
+                    for (const key in formValues) formData.append(key, formValues[key]);
+
                     const response = await fetch('../funcionarios/ajax/gestionar_historial.php', { method: 'POST', body: formData });
-                    console.log('Registro - Response status:', response.status);
-                    console.log('Registro - Response ok:', response.ok);
-                    
-                    const responseText = await response.text();
-                    console.log('Registro - Response text:', responseText);
-                    
-                    const result = JSON.parse(responseText);
+                    const result = await response.json();
                     
                     if (result.success) {
-                        await Swal.fire({
-                            icon: 'success',
-                            title: 'Vacación Registrada',
-                            html: `
-                                <p>Las vacaciones se registraron exitosamente.</p>
-                                <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin-top: 14px; text-align: left;">
-                                    <p style="margin: 0; font-size: 13px;"><strong>✓ Días hábiles:</strong> ${formValues.dias_solicitar}</p>
-                                    <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Fecha inicio:</strong> ${formValues.fecha_inicio}</p>
-                                    <p style="margin: 6px 0 0 0; font-size: 13px;"><strong>✓ Fecha retorno:</strong> ${result.data?.fecha_retorno || 'Calculada'}</p>
-                                </div>
-                            `,
-                            confirmButtonColor: '#10b981'
-                        });
-                        window.location.reload();
+                        Swal.fire({ icon: 'success', title: 'Vacación Registrada' }).then(() => window.location.reload());
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error al registrar vacación', confirmButtonColor: '#ef4444' });
+                        Swal.fire({ icon: 'error', title: 'Error', text: result.error });
                     }
-                } catch (error) {
-                    console.error(error);
-                    Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
                 }
             } catch (error) {
-                console.error(error);
-                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error al abrir el modal', confirmButtonColor: '#ef4444' });
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión' });
             }
         }
     </script>
