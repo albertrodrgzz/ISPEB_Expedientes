@@ -393,66 +393,59 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /* =====================================================================
-       BANNER DE SALDO VACACIONAL
+       BANNER DE SALDO VACACIONAL — Sistema de períodos LOTTT
     ===================================================================== */
-    function renderBannerVac(info, diasSolicitados) {
-        const disponibles = info.dias_disponibles;
-        const excede      = diasSolicitados > disponibles;
-        const color       = excede ? '#ef4444' : (disponibles <= 5 ? '#f59e0b' : '#10b981');
-        const iconTop = excede
-            ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
-            : (disponibles > 0
-                ? '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-13l-.87.5M4.21 17.5l-.87.5M20.66 17.5l-.87-.5M4.21 6.5l-.87-.5M21 12h1M2 12h1"/><circle cx="12" cy="12" r="3"/></svg>'
-                : '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>');
-
-        let html = '<div style="background:' + (excede ? 'rgba(239,68,68,.08)' : 'rgba(16,185,129,.08)') + ';'
-                 + 'border:1.5px solid ' + color + '30;border-left:4px solid ' + color + ';'
-                 + 'border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left;">';
-
-        // If no right to vacations yet, show warning
+    function renderBannerVac(info) {
+        // Si no tiene derecho a vacaciones
         if (!info.tiene_derecho) {
             return '<div style="background:rgba(245,158,11,.08);border:1.5px solid #f59e0b30;border-left:4px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:16px;">'
                  + '<div style="font-weight:700;font-size:13px;color:#d97706;margin-bottom:6px;">&#9888; Sin derecho a vacaciones aún</div>'
-                 + '<div style="font-size:12px;color:#64748b;">Según la LOTTT, el funcionario debe cumplir <strong>1 año de servicio</strong> para tener derecho a vacaciones.<br>'
-                 + 'Fecha de ingreso: <strong>' + info.fecha_ingreso + '</strong> &mdash; Antigüedad actual: <strong>' + info.anios_servicio + ' año(s) y ' + info.meses_parciales + ' mes(es)</strong>.</div>'
+                 + '<div style="font-size:12px;color:#64748b;">Según la LOTTT debes cumplir <strong>1 año de servicio</strong> para tener derecho a vacaciones.<br>'
+                 + 'Antigüedad actual: <strong>' + info.anios_servicio + ' año(s) y ' + info.meses_parciales + ' mes(es)</strong>.</div>'
                  + '</div>';
         }
 
+        const totalPeriodos = (info.periodos || []).length;
+        const disponibles   = info.periodos_disponibles ?? 0;
+        const color         = disponibles === 0 ? '#ef4444' : (disponibles === 1 ? '#f59e0b' : '#10b981');
+
+        let html = '<div style="background:' + (disponibles === 0 ? 'rgba(239,68,68,.08)' : 'rgba(16,185,129,.08)') + ';'
+                 + 'border:1.5px solid ' + color + '30;border-left:4px solid ' + color + ';'
+                 + 'border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left;">';
+
         html += '<div style="font-weight:700;font-size:13px;color:' + color + ';margin-bottom:10px;">'
-              + iconTop + ' Saldo Vacacional &ndash; Periodo ' + info.periodo_actual.inicio + ' al ' + info.periodo_actual.fin
-              + '</div>';
+              + '&#127774; Saldo Vacacional — Períodos LOTTT</div>';
 
         html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">';
         html += '<div style="text-align:center;background:rgba(255,255,255,.7);border-radius:8px;padding:8px 4px;">'
-              + '<div style="font-size:20px;font-weight:800;color:#1e293b;">' + info.dias_derecho + '</div>'
-              + '<div style="font-size:10.5px;color:#64748b;line-height:1.3">D&iacute;as<br>correspondientes</div></div>';
+              + '<div style="font-size:20px;font-weight:800;color:#1e293b;">' + totalPeriodos + '</div>'
+              + '<div style="font-size:10.5px;color:#64748b;line-height:1.3">Per&iacute;odos<br>totales</div></div>';
         html += '<div style="text-align:center;background:rgba(255,255,255,.7);border-radius:8px;padding:8px 4px;">'
-              + '<div style="font-size:20px;font-weight:800;color:#ef4444;">' + info.dias_tomados + '</div>'
-              + '<div style="font-size:10.5px;color:#64748b;line-height:1.3">D&iacute;as<br>tomados</div></div>';
+              + '<div style="font-size:20px;font-weight:800;color:#ef4444;">' + (totalPeriodos - disponibles) + '</div>'
+              + '<div style="font-size:10.5px;color:#64748b;line-height:1.3">Per&iacute;odos<br>tomados</div></div>';
         html += '<div style="text-align:center;background:rgba(255,255,255,.7);border-radius:8px;padding:8px 4px;">'
               + '<div style="font-size:20px;font-weight:800;color:' + color + ';">' + disponibles + '</div>'
-              + '<div style="font-size:10.5px;color:#64748b;line-height:1.3">D&iacute;as<br>disponibles</div></div>';
+              + '<div style="font-size:10.5px;color:#64748b;line-height:1.3">Per&iacute;odos<br>disponibles</div></div>';
         html += '</div>';
 
-        html += '<div style="font-size:11.5px;color:#64748b;">'
-             + '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> '
-               + info.anios_servicio + ' a&ntilde;o(s) de servicio desde el ' + info.fecha_ingreso
-              + ' &nbsp;|&nbsp; Base: ' + info.dias_base + ' dias + ' + info.dias_adicionales + ' adic. (LOTTT)';
-        if (info.dias_en_tramite > 0) {
-            html += ' &nbsp;|&nbsp; <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ' + info.dias_en_tramite + ' dia(s) en tramite';
-        }
-        html += '</div>';
+        html += '<div style="font-size:11.5px;color:#64748b;">&#128197; '
+              + info.anios_servicio + ' a&ntilde;o(s) de servicio &nbsp;|&nbsp; Fecha ingreso: <strong>' + info.fecha_ingreso + '</strong></div>';
 
-        if (diasSolicitados > 0) {
-            html += '<div style="margin-top:10px;padding:8px 12px;border-radius:8px;'
-                  + 'background:' + (excede ? 'rgba(239,68,68,.12)' : 'rgba(16,185,129,.12)') + ';'
-                  + 'font-size:12.5px;font-weight:600;color:' + color + ';">';
-            if (excede) {
-                html += '<svg width="12" height="12" fill="none" stroke="#ef4444" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Estas solicitando ' + diasSolicitados + ' dia(s) pero solo tienes ' + disponibles + ' disponibles.';
-            } else {
-                html += '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg> Solicitas ' + diasSolicitados + ' dia(s) &middot; Quedaran ' + (disponibles - diasSolicitados) + ' disponibles';
-            }
+        // Píldoras de estado por período
+        if (info.periodos && info.periodos.length > 0) {
+            html += '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">';
+            info.periodos.forEach(function(p) {
+                const bg  = p.tomado ? '#fee2e2' : '#d1fae5';
+                const clr = p.tomado ? '#991b1b' : '#065f46';
+                const lbl = (p.tomado ? '✗' : '✓') + ' Año ' + p.año + ' (' + p.dias + 'd)';
+                html += '<span style="background:' + bg + ';color:' + clr + ';padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;">' + lbl + '</span>';
+            });
             html += '</div>';
+        }
+
+        if (disponibles === 0) {
+            html += '<div style="margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(239,68,68,.12);font-size:12.5px;font-weight:600;color:#ef4444;">'
+                  + '&#10060; No tienes períodos vacacionales disponibles. Puedes solicitar un permiso especial.</div>';
         }
 
         html += '</div>';
@@ -485,25 +478,60 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <div id="sf-vac-banner"></div>
 
-                    <div class="swal-form-grid-2col" style="text-align:left;">
-                        <div class="swal-form-group">
-                            <label class="swal-label swal-label-required">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                Fecha inicio
-                            </label>
-                            <input type="date" id="sf-inicio" class="swal2-input" min="${hoy}" value="${hoy}">
+                    <!-- SECCIÓN VACACIONES: selección de períodos -->
+                    <style>
+                        .periodo-item-sol { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; margin-bottom:8px; border:2px solid #e2e8f0; background:#f8fafc; cursor:pointer; transition:all 0.2s; text-align:left; }
+                        .periodo-item-sol:hover { border-color:#06d6a0; background:#f0fdf4; }
+                        .periodo-item-sol.selected { border-color:#06d6a0; background:linear-gradient(135deg,#ecfdf5,#d1fae5); }
+                        .periodo-item-sol.tomado { opacity:.5; cursor:not-allowed; background:#f1f5f9; border-color:#e2e8f0; pointer-events:none; }
+                        .pi-checkbox { width:18px; height:18px; border-radius:5px; border:2px solid #cbd5e1; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+                        .periodo-item-sol.selected .pi-checkbox { background:#06d6a0; border-color:#06d6a0; }
+                        .periodo-item-sol.selected .pi-checkbox::after { content:'✓'; color:white; font-size:11px; font-weight:700; }
+                        .pi-info { flex:1; }
+                        .pi-label { font-size:13px; font-weight:700; color:#1e293b; }
+                        .pi-dias { font-size:11px; color:#64748b; margin-top:2px; }
+                        .pi-badge { padding:3px 9px; border-radius:20px; font-size:10px; font-weight:700; white-space:nowrap; }
+                        .badge-disp { background:#dcfce7; color:#166534; }
+                        .badge-tom  { background:#f1f5f9; color:#94a3b8; }
+                        .resumen-sel-sol { background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1px solid #bfdbfe; border-radius:10px; padding:11px 14px; margin-bottom:12px; display:none; }
+                        .resumen-sel-sol .rt { font-size:13px; color:#1e40af; font-weight:600; }
+                    </style>
+                    <div id="sf-periodos-section" style="display:none; text-align:left;">
+                        <div style="font-size:12px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">Selecciona el o los períodos a disfrutar</div>
+                        <div id="sf-periodos-list"></div>
+                        <div id="sf-resumen-sel" class="resumen-sel-sol">
+                            <div class="rt" id="sf-resumen-text"></div>
                         </div>
-                        <div class="swal-form-group">
-                            <label class="swal-label swal-label-required">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                Fecha fin
-                            </label>
-                            <input type="date" id="sf-fin" class="swal2-input" min="${hoy}" value="${hoy}">
+                        <div class="swal-form-group" id="sf-fecha-inicio-vac-group" style="display:none;">
+                            <label class="swal-label swal-label-required">Fecha de inicio</label>
+                            <input type="date" id="sf-fecha-inicio-vac" class="swal2-input" value="${hoy}">
+                        </div>
+                        <div id="sf-retorno-vac" style="display:none; background:linear-gradient(135deg,#eff6ff,#dbeafe); border-left:3px solid #3b82f6; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:600; color:#1e40af; margin-bottom:10px;">
+                            Fecha de retorno estimada: <strong id="sf-retorno-vac-fecha">-</strong>
                         </div>
                     </div>
 
-                    <div id="sf-duracion-wrap" style="display:none; text-align:left;">
-                        <div id="sf-duracion-badge" style="background:#f8fafc; border-left:3px solid #0F4C81; border-radius:8px; padding:12px 14px; font-size:13px; color:#475569; font-weight:600; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"></div>
+                    <!-- SECCIÓN PERMISO: fechas libres -->
+                    <div id="sf-permiso-section" style="display:none;">
+                        <div class="swal-form-grid-2col" style="text-align:left;">
+                            <div class="swal-form-group">
+                                <label class="swal-label swal-label-required">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    Fecha inicio
+                                </label>
+                                <input type="date" id="sf-inicio" class="swal2-input" min="${hoy}" value="${hoy}">
+                            </div>
+                            <div class="swal-form-group">
+                                <label class="swal-label swal-label-required">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    Fecha fin
+                                </label>
+                                <input type="date" id="sf-fin" class="swal2-input" min="${hoy}" value="${hoy}">
+                            </div>
+                        </div>
+                        <div id="sf-duracion-wrap" style="display:none; text-align:left;">
+                            <div id="sf-duracion-badge" style="background:#f8fafc; border-left:3px solid #0F4C81; border-radius:8px; padding:12px 14px; font-size:13px; color:#475569; font-weight:600;"></div>
+                        </div>
                     </div>
 
                     <div class="swal-form-group" style="text-align:left;">
@@ -516,7 +544,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <div style="background:#eff6ff; border-left:3px solid #3b82f6; padding:12px; border-radius:8px; font-size:12px; color:#1e40af; text-align:left; margin-top:8px;">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Tu solicitud será enviada al departamento de RRHH para su revisión y aprobación.
+                        Tu solicitud será enviada para su revisión y aprobación.
                     </div>
                 </div>
             `,
@@ -528,79 +556,182 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             cancelButtonColor:  '#64748b',
             customClass: { popup: 'swal-modern-popup' },
             didOpen: () => {
-                const tipoSel  = document.getElementById('sf-tipo');
-                const inicioIn = document.getElementById('sf-inicio');
-                const finIn    = document.getElementById('sf-fin');
-                const banner   = document.getElementById('sf-vac-banner');
-                const durWrap  = document.getElementById('sf-duracion-wrap');
-                const durBadge = document.getElementById('sf-duracion-badge');
-                let vacInfo = null;
+                const tipoSel       = document.getElementById('sf-tipo');
+                const banner        = document.getElementById('sf-vac-banner');
+                const periodosSeccion = document.getElementById('sf-periodos-section');
+                const periodosList  = document.getElementById('sf-periodos-list');
+                const resumenEl     = document.getElementById('sf-resumen-sel');
+                const resumenText   = document.getElementById('sf-resumen-text');
+                const fechaVacGrp   = document.getElementById('sf-fecha-inicio-vac-group');
+                const fechaVacIn    = document.getElementById('sf-fecha-inicio-vac');
+                const retornoBox    = document.getElementById('sf-retorno-vac');
+                const retornoFecha  = document.getElementById('sf-retorno-vac-fecha');
+                const permisoSeccion = document.getElementById('sf-permiso-section');
+                const inicioIn      = document.getElementById('sf-inicio');
+                const finIn         = document.getElementById('sf-fin');
+                const durWrap       = document.getElementById('sf-duracion-wrap');
+                const durBadge      = document.getElementById('sf-duracion-badge');
+                let vacInfo         = null;
+                let seleccionados   = new Set();
+                let periodosData    = [];
 
-                async function actualizarUI() {
-                    const tipo = tipoSel.value;
+                // ── Toggle periodo ────────────────────────────────────────────
+                periodosList.addEventListener('click', (e) => {
+                    const item = e.target.closest('.periodo-item-sol');
+                    if (!item || item.classList.contains('tomado')) return;
+
+                    const anio = parseInt(item.dataset.anio);
+                    if (seleccionados.has(anio)) {
+                        seleccionados.delete(anio);
+                        item.classList.remove('selected');
+                    } else {
+                        seleccionados.add(anio);
+                        item.classList.add('selected');
+                    }
+                    actualizarResumenSol();
+                });
+
+                function actualizarResumenSol() {
+                    if (seleccionados.size === 0) {
+                        resumenEl.style.display = 'none';
+                        fechaVacGrp.style.display = 'none';
+                        retornoBox.style.display = 'none';
+                        return;
+                    }
+                    const sorted = [...seleccionados].sort((a,b) => a-b);
+                    const totalDias = sorted.reduce((acc, a) => {
+                        const p = periodosData.find(x => x.año === a);
+                        return acc + (p ? p.dias : 0);
+                    }, 0);
+                    resumenText.innerHTML = `✅ ${sorted.length} período${sorted.length>1?'s':''} seleccionado${sorted.length>1?'s':''} (Año${sorted.length>1?'s':''} ${sorted.join(', ')}) — <strong>${totalDias} días hábiles</strong>`;
+                    resumenEl.style.display = 'block';
+                    fechaVacGrp.style.display = 'block';
+                    calcularRetornoSol(totalDias);
+                }
+
+                async function calcularRetornoSol(totalDias) {
+                    if (!fechaVacIn.value || totalDias === 0) { retornoBox.style.display='none'; return; }
+                    const res  = await fetch(APP_URL + '/vistas/vacaciones/ajax/calcular_fecha_retorno.php?fecha_inicio=' + fechaVacIn.value + '&dias_habiles=' + totalDias);
+                    const data = await res.json();
+                    if (data.success) {
+                        retornoFecha.textContent = data.data.fecha_retorno_formateada;
+                        retornoBox.style.display = 'block';
+                    }
+                }
+
+                fechaVacIn.addEventListener('change', () => {
+                    if (seleccionados.size > 0) {
+                        const sorted = [...seleccionados].sort((a,b) => a-b);
+                        const totalDias = sorted.reduce((acc, a) => {
+                            const p = periodosData.find(x => x.año === a);
+                            return acc + (p ? p.dias : 0);
+                        }, 0);
+                        calcularRetornoSol(totalDias);
+                    }
+                });
+
+                // ── Cambio de tipo ────────────────────────────────────────────
+                tipoSel.addEventListener('change', async (e) => {
+                    const tipo = e.target.value;
+                    banner.innerHTML = '';
+                    periodosSeccion.style.display = 'none';
+                    permisoSeccion.style.display  = 'none';
+                    seleccionados.clear();
+
+                    if (tipo === 'vacaciones') {
+                        banner.innerHTML = '<div style="text-align:center;padding:10px;color:#64748b;font-size:13px;">&#x23F3; Cargando períodos...</div>';
+                        if (!vacInfo) vacInfo = await vacPromise;
+
+                        if (vacInfo) {
+                            banner.innerHTML = renderBannerVac(vacInfo);
+
+                            if (vacInfo.tiene_derecho && (vacInfo.periodos_disponibles ?? 0) > 0) {
+                                periodosData = vacInfo.periodos || [];
+                                periodosList.innerHTML = periodosData.map(p => {
+                                    if (p.tomado) {
+                                        const fi = p.fecha_inicio ? new Date(p.fecha_inicio+'T00:00:00').toLocaleDateString('es-VE') : '';
+                                        const ff = p.fecha_fin   ? new Date(p.fecha_fin  +'T00:00:00').toLocaleDateString('es-VE') : '';
+                                        return `<div class="periodo-item-sol tomado">
+                                            <div class="pi-checkbox"></div>
+                                            <div class="pi-info">
+                                                <div class="pi-label">Período Año ${p.año}</div>
+                                                <div class="pi-dias">${p.dias} días hábiles &bull; Tomado: ${fi} → ${ff}</div>
+                                            </div>
+                                            <span class="pi-badge badge-tom">Tomado</span>
+                                        </div>`;
+                                    }
+                                    return `<div class="periodo-item-sol" data-anio="${p.año}" data-dias="${p.dias}">
+                                        <div class="pi-checkbox"></div>
+                                        <div class="pi-info">
+                                            <div class="pi-label">Período Año ${p.año}</div>
+                                            <div class="pi-dias">${p.dias} días hábiles</div>
+                                        </div>
+                                        <span class="pi-badge badge-disp">Disponible</span>
+                                    </div>`;
+                                }).join('');
+                                periodosSeccion.style.display = 'block';
+                            }
+                        } else {
+                            banner.innerHTML = '<div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:8px;font-size:12.5px;color:#92400e;">&#x26A0;&#xFE0F; No se pudo cargar el saldo vacacional.</div>';
+                        }
+
+                    } else if (tipo === 'permiso') {
+                        permisoSeccion.style.display = 'block';
+                    }
+                });
+
+                // ── Permiso: duración ─────────────────────────────────────────
+                function actualizarDuracion() {
                     const ini  = inicioIn.value;
                     const fin  = finIn.value;
                     const dias = diffDias(ini, fin);
-
                     if (ini) finIn.min = ini;
                     if (fin && fin < ini) finIn.value = ini;
-
                     if (ini && fin && dias >= 0) {
                         durWrap.style.display = 'block';
-                        durBadge.innerHTML = '&#x1F4C5; Duracion: <strong>' + dias + ' dia(s)</strong> (' + formatFecha(ini) + ' &rarr; ' + formatFecha(fin) + ')';
+                        durBadge.innerHTML = '&#x1F4C5; Duración: <strong>' + dias + ' día(s)</strong> (' + formatFecha(ini) + ' &rarr; ' + formatFecha(fin) + ')';
                     } else {
                         durWrap.style.display = 'none';
                     }
-
-                    if (tipo === 'vacaciones') {
-                        banner.innerHTML = '<div style="text-align:center;padding:12px;color:#64748b;font-size:13px;">&#x23F3; Calculando saldo vacacional...</div>';
-                        if (!vacInfo) vacInfo = await vacPromise;
-                        if (vacInfo) {
-                            banner.innerHTML = renderBannerVac(vacInfo, dias);
-                        } else {
-                            banner.innerHTML = '<div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:8px;font-size:12.5px;color:#92400e;margin-bottom:14px;">&#x26A0;&#xFE0F; No se pudo cargar el saldo vacacional. Puedes continuar igual.</div>';
-                        }
-                    } else {
-                        banner.innerHTML = '';
-                    }
                 }
-
-                tipoSel.addEventListener('change', actualizarUI);
-                inicioIn.addEventListener('change', actualizarUI);
-                finIn.addEventListener('change', actualizarUI);
+                inicioIn.addEventListener('change', actualizarDuracion);
+                finIn.addEventListener('change', actualizarDuracion);
             },
             preConfirm: async () => {
                 const tipo   = document.getElementById('sf-tipo').value;
-                const inicio = document.getElementById('sf-inicio').value;
-                const fin    = document.getElementById('sf-fin').value;
                 const motivo = document.getElementById('sf-motivo').value.trim();
-                const dias   = diffDias(inicio, fin);
 
                 if (!tipo)   { Swal.showValidationMessage('Selecciona el tipo de solicitud'); return false; }
-                if (!inicio) { Swal.showValidationMessage('Ingresa la fecha de inicio');      return false; }
-                if (!fin)    { Swal.showValidationMessage('Ingresa la fecha de fin');         return false; }
-                if (fin < inicio) { Swal.showValidationMessage('La fecha fin no puede ser anterior al inicio'); return false; }
                 if (!motivo) { Swal.showValidationMessage('Describe el motivo de la solicitud'); return false; }
                 if (motivo.length < 10) { Swal.showValidationMessage('El motivo debe tener al menos 10 caracteres'); return false; }
 
-                if (tipo === 'vacaciones' && _vacInfo) {
-                    if (dias > _vacInfo.dias_disponibles) {
-                        Swal.showValidationMessage(
-                            'Solo tienes ' + _vacInfo.dias_disponibles + ' dia(s) disponibles pero estas solicitando ' + dias + '. Ajusta las fechas.'
-                        );
-                        return false;
-                    }
+                if (tipo === 'vacaciones') {
+                    // Leer períodos seleccionados desde el DOM
+                    const selItems = document.querySelectorAll('.periodo-item-sol.selected');
+                    const selAnios = [...selItems].map(el => parseInt(el.dataset.anio));
+                    if (selAnios.length === 0) { Swal.showValidationMessage('Selecciona al menos un período vacacional'); return false; }
+                    const fechaVac = document.getElementById('sf-fecha-inicio-vac').value;
+                    if (!fechaVac) { Swal.showValidationMessage('Ingresa la fecha de inicio de las vacaciones'); return false; }
+                    return { tipo, motivo, periodos_años: selAnios, fecha_inicio: fechaVac, fecha_fin: fechaVac };
                 }
 
-                return { tipo, inicio, fin, motivo, dias };
+                // Permiso: validar fechas
+                const inicio = document.getElementById('sf-inicio').value;
+                const fin    = document.getElementById('sf-fin').value;
+                const dias   = diffDias(inicio, fin);
+                if (!inicio) { Swal.showValidationMessage('Ingresa la fecha de inicio'); return false; }
+                if (!fin)    { Swal.showValidationMessage('Ingresa la fecha de fin');    return false; }
+                if (fin < inicio) { Swal.showValidationMessage('La fecha fin no puede ser anterior al inicio'); return false; }
+                return { tipo, motivo, fecha_inicio: inicio, fecha_fin: fin, dias };
             }
         });
 
         if (!form) return;
 
+        // ── Envío de datos al backend (AJAX) ──
         Swal.fire({
             title: 'Enviando...',
-            html: 'Procesando tu solicitud de <strong>' + form.dias + ' dia(s)</strong>...',
+            html: 'Procesando tu solicitud...',
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
         });
@@ -609,19 +740,28 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             const fd = new FormData();
             fd.append('csrf_token',     CSRF_TOKEN);
             fd.append('tipo_solicitud', form.tipo);
-            fd.append('fecha_inicio',   form.inicio);
-            fd.append('fecha_fin',      form.fin);
             fd.append('motivo',         form.motivo);
+            
+            // Determinar fechas
+            const fi = form.tipo === 'vacaciones' ? form.fecha_inicio : form.inicio;
+            const ff = form.tipo === 'vacaciones' ? form.fecha_fin    : form.fin;
+            fd.append('fecha_inicio', fi);
+            fd.append('fecha_fin',    ff);
+
+            if (form.tipo === 'vacaciones') {
+                fd.append('periodos_años', JSON.stringify(form.periodos_años));
+            }
 
             const res  = await fetch(APP_URL + '/vistas/solicitudes/ajax/enviar_solicitud.php', { method: 'POST', body: fd });
             const data = await res.json();
 
             if (data.success) {
                 _vacInfo = null;
+                const msjDias = form.tipo === 'vacaciones' ? '(por períodos)' : ('por <strong>' + form.dias + ' día(s)</strong>');
                 await Swal.fire({
                     icon: 'success',
-                    title: '&#x1F389; Solicitud enviada!',
-                    html: 'Tu solicitud de <strong>' + form.tipo + '</strong> por <strong>' + form.dias + ' dia(s)</strong> fue enviada a RRHH.',
+                    title: '&#x1F389; ¡Solicitud enviada!',
+                    html: 'Tu solicitud de <strong>' + form.tipo + '</strong> ' + msjDias + ' fue enviada para revisión.',
                     confirmButtonColor: '#10b981'
                 });
                 location.reload();
@@ -629,7 +769,7 @@ $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'No se pudo enviar la solicitud', confirmButtonColor: '#ef4444' });
             }
         } catch (e) {
-            Swal.fire({ icon: 'error', title: 'Error de conexion', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
+            Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar al servidor', confirmButtonColor: '#ef4444' });
         }
     }
     </script>

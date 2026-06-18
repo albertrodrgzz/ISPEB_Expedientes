@@ -317,7 +317,6 @@ function fieldClass(string $campo, array $errores): string {
                                     <option value="">Seleccione...</option>
                                     <option value="M" <?php echo ($_POST['genero'] ?? '') == 'M' ? 'selected' : ''; ?>>Masculino</option>
                                     <option value="F" <?php echo ($_POST['genero'] ?? '') == 'F' ? 'selected' : ''; ?>>Femenino</option>
-                                    <option value="Otro" <?php echo ($_POST['genero'] ?? '') == 'Otro' ? 'selected' : ''; ?>>Otro</option>
                                 </select>
                                 <div class="field-feedback" id="fb-genero"></div>
                             </div>

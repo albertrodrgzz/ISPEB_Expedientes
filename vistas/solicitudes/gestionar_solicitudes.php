@@ -32,8 +32,11 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 $stmt = $pdo->query("
     SELECT se.*,
            CONCAT(f.nombres,' ',f.apellidos) AS funcionario_nombre,
+           f.nombres,
+           f.apellidos,
            f.cedula,
-           d.nombre                          AS departamento
+           f.fecha_ingreso,
+           d.nombre AS departamento
     FROM   solicitudes_empleados se
     INNER JOIN funcionarios f ON se.funcionario_id = f.id
     LEFT  JOIN departamentos d ON f.departamento_id = d.id
@@ -41,6 +44,47 @@ $stmt = $pdo->query("
     ORDER  BY se.created_at ASC
 ");
 $pendientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/**
+ * Calcula días LOTTT para el año N de servicio
+ * Año 1 → 15d, Año 2 → 18d, Año N≥2 → min(18+(N-2), 30)
+ */
+function diasPeriodoLOTTT(int $n): int {
+    if ($n === 1) return 15;
+    return min(18 + ($n - 2), 30);
+}
+
+/**
+ * Extrae períodos y calcula días totales de una solicitud de vacaciones
+ * El motivo viene en formato: [Períodos: Año 1, Año 2] motivo libre...
+ * Retorna array ['periodos'=>'Año 1, Año 2', 'dias'=>33, 'label'=>'Año 1 (15d), Año 2 (18d)']
+ */
+function calcularDiasVacaciones(string $motivo, string $fecha_ingreso): array {
+    $result = ['periodos' => '', 'dias' => 0, 'label' => '', 'motivo_limpio' => $motivo];
+    // Parsear períodos del motivo: [Períodos: Año 1, Año 2]
+    if (preg_match('/^\[Períodos:\s*([^\]]+)\]\s*(.*)/su', $motivo, $m)) {
+        $periodos_str     = trim($m[1]); // e.g. "Año 1, Año 2"
+        $motivo_limpio    = trim($m[2]);
+        $result['periodos']      = $periodos_str;
+        $result['motivo_limpio'] = $motivo_limpio;
+        // Extraer números de año
+        preg_match_all('/\d+/', $periodos_str, $nums);
+        $parts = [];
+        $total = 0;
+        foreach ($nums[0] as $n) {
+            $n    = (int)$n;
+            $dias = diasPeriodoLOTTT($n);
+            $total += $dias;
+            $parts[] = "Año $n ($dias días LOTTT)";
+        }
+        $result['dias']  = $total;
+        $result['label'] = implode(', ', $parts);
+    } else {
+        // Para permisos u otros: diferencia de fecha no aplica aquí
+        $result['motivo_limpio'] = $motivo;
+    }
+    return $result;
+}
 
 
 // ── Historial ──
@@ -89,87 +133,233 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/modern-components.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/publico/css/swal-modern.css">
     <style>
-        /* ── Modal de Aprobación (Estilo SWAL Moderno Avanzado) ── */
+        /* ══════════════════════════════════════════════════════════
+           MODALES — Base
+        ══════════════════════════════════════════════════════════ */
         .modal-overlay {
             display: none;
             position: fixed; inset: 0; z-index: 9999;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(8px);
+            background: rgba(15,23,42,0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             align-items: center; justify-content: center;
+            padding: 16px;
         }
         .modal-overlay.open { display: flex; }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-24px) scale(0.97); opacity: 0; }
+            to   { transform: translateY(0) scale(1);         opacity: 1; }
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           MODAL DETALLE SOLICITUD
+        ══════════════════════════════════════════════════════════ */
+        .detail-modal-box {
+            background: #fff;
+            border-radius: 22px;
+            width: min(680px, 96vw);
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 32px 80px rgba(0,0,0,.22), 0 6px 20px rgba(0,0,0,.10);
+            animation: modalSlideIn .3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Header coloreado */
+        .dmo-header {
+            padding: 28px 32px 24px;
+            border-radius: 22px 22px 0 0;
+            background: linear-gradient(135deg, #0F4C81 0%, #0288D1 100%);
+            color: #fff;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .dmo-header-vac  { background: linear-gradient(135deg, #0284C7 0%, #06B6D4 100%); }
+        .dmo-header-perm { background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%); }
+        .dmo-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,.2); border-radius: 99px;
+            padding: 4px 12px; font-size: 12px; font-weight: 700;
+            letter-spacing: .5px; text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .dmo-title {
+            font-size: 22px; font-weight: 800; letter-spacing: -.4px;
+            margin: 0 0 4px;
+        }
+        .dmo-meta { font-size: 13px; opacity: .82; }
+        .dmo-close {
+            position: absolute; top: 18px; right: 20px;
+            background: rgba(255,255,255,.15); border: none;
+            width: 32px; height: 32px; border-radius: 50%;
+            cursor: pointer; font-size: 18px; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .2s;
+        }
+        .dmo-close:hover { background: rgba(255,255,255,.3); }
+
+        /* Body */
+        .dmo-body { padding: 28px 32px; flex: 1; }
+
+        /* Info grid */
+        .dmo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .dmo-field {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+        .dmo-field-label {
+            font-size: 11px; font-weight: 700; color: #94A3B8;
+            letter-spacing: .6px; text-transform: uppercase; margin-bottom: 5px;
+        }
+        .dmo-field-value {
+            font-size: 14px; font-weight: 600; color: #1E293B;
+        }
+        .dmo-field-full { grid-column: 1 / -1; }
+
+        /* Motivo box */
+        .dmo-motivo {
+            background: #FFFBEB;
+            border: 1.5px solid #FDE68A;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .dmo-motivo-label {
+            font-size: 11px; font-weight: 700; color: #92400E;
+            letter-spacing: .6px; text-transform: uppercase; margin-bottom: 8px;
+        }
+        .dmo-motivo-text { font-size: 14px; color: #451A03; line-height: 1.6; }
+
+        /* Divider */
+        .dmo-divider {
+            border: none; border-top: 1.5px solid #E2E8F0;
+            margin: 0 0 24px;
+        }
+
+        /* Sección aprobar dentro del modal */
+        .dmo-approve-section { margin-bottom: 20px; }
+        .dmo-section-title {
+            font-size: 13px; font-weight: 700; color: #1E293B;
+            margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
+        }
+
+        /* File drop */
+        .file-drop-zone {
+            border: 2px dashed #CBD5E1; border-radius: 12px;
+            padding: 20px; text-align: center;
+            cursor: pointer; transition: all .2s;
+            background: #F8FAFC;
+        }
+        .file-drop-zone:hover, .file-drop-zone.has-file {
+            border-color: #0F4C81; background: #EFF6FF;
+        }
+        .file-drop-zone input[type=file] { display: none; }
+        .file-drop-zone-icon {
+            display:inline-flex; align-items:center; justify-content:center;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #DBEAFE; color: #2563EB; margin-bottom: 8px;
+        }
+        .file-drop-text  { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 3px; }
+        .file-drop-hint  { font-size: 11.5px; color: #94A3B8; }
+
+        /* Textarea observaciones */
+        .mf-control {
+            width: 100%; padding: 11px 14px;
+            border: 2px solid #E2E8F0; border-radius: 10px;
+            font-size: 13.5px; font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+            box-sizing: border-box; background: #fff;
+            resize: vertical;
+        }
+        .mf-control:focus {
+            border-color: #0F4C81; outline: none;
+            box-shadow: 0 0 0 3px rgba(15,76,129,.10);
+        }
+
+        /* Footer acciones */
+        .dmo-footer {
+            padding: 20px 32px 28px;
+            display: flex; gap: 12px; justify-content: flex-end;
+            border-top: 1.5px solid #F1F5F9;
+            flex-shrink: 0;
+        }
+        .btn-cancel {
+            background: #F1F5F9; color: #475569; border: none;
+            padding: 12px 24px; border-radius: 10px;
+            font-weight: 600; font-size: 14px;
+            transition: background .2s; cursor: pointer;
+        }
+        .btn-cancel:hover { background: #E2E8F0; }
+        .btn-reject-modal {
+            background: #FEF2F2; color: #DC2626; border: 1.5px solid #FECACA;
+            padding: 12px 22px; border-radius: 10px;
+            font-weight: 700; font-size: 14px; cursor: pointer;
+            transition: all .2s; display: flex; align-items: center; gap: 7px;
+        }
+        .btn-reject-modal:hover {
+            background: #DC2626; color: #fff; border-color: #DC2626;
+        }
+        .btn-approve-modal {
+            background: linear-gradient(135deg, #0F4C81 0%, #0288D1 100%);
+            color: #fff; border: none;
+            padding: 12px 24px; border-radius: 10px;
+            font-weight: 700; font-size: 14px; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(15,76,129,.28);
+            transition: all .3s; display: flex; align-items: center; gap: 7px;
+        }
+        .btn-approve-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(15,76,129,.38);
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           MODAL APROBACIÓN (confirmar con archivo) — secundario
+        ══════════════════════════════════════════════════════════ */
         .modal-box {
             background: #fff;
             border-radius: 20px;
             padding: 32px;
-            width: min(540px, 95vw);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+            width: min(520px, 95vw);
+            box-shadow: 0 20px 60px rgba(0,0,0,.18), 0 4px 16px rgba(0,0,0,.10);
             animation: modalSlideIn .3s cubic-bezier(0.165, 0.84, 0.44, 1);
-            font-family: 'Inter', sans-serif;
-            border: none;
-        }
-        @keyframes modalSlideIn {
-            from { transform: translateY(-30px) scale(0.95); opacity: 0; }
-            to   { transform: translateY(0) scale(1);        opacity: 1; }
+            font-family: inherit;
         }
         .modal-title {
-            font-size: 24px; font-weight: 700; color: #1e293b;
-            margin-bottom: 8px; letter-spacing: -0.5px;
+            font-size: 22px; font-weight: 700; color: #1e293b;
+            margin-bottom: 6px; letter-spacing: -.4px;
         }
-        .modal-subtitle { font-size: 14px; color: #64748b; margin-bottom: 24px; display: flex; align-items: center; gap: 6px; }
-        .mf-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
-        .mf-label {
-            font-size: 13px; font-weight: 600; color: #1e293b;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .mf-req { color: #dc2626; margin-left:2px; }
-        .mf-control {
-            width: 100%; padding: 12px 16px;
-            border: 2px solid #E5E7EB; border-radius: 10px;
-            font-size: 14px; font-family: inherit;
-            transition: all .2s ease; box-sizing: border-box; background: white;
-        }
-        .mf-control:focus { 
-            border-color: #0F4C81; outline: none; 
-            box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.1); 
-        }
-        .mf-textarea { resize: vertical; min-height: 100px; }
-        
-        .file-drop-zone {
-            border: 2px dashed #E5E7EB; border-radius: 12px;
-            padding: 24px; text-align: center;
-            cursor: pointer; transition: all .2s;
-            background: #F9FAFB;
-        }
-        .file-drop-zone:hover, .file-drop-zone.has-file {
-            border-color: #0F4C81; background: #F0F9FF;
-        }
-        .file-drop-zone input[type=file] { display: none; }
-        .file-drop-zone-icon { 
-            margin-bottom: 8px; display:inline-flex; align-items:center; justify-content:center;
-            width: 48px; height: 48px; border-radius: 50%; background: #E0F2FE; color: #0EA5E9;
-        }
-        .file-drop-text { font-size: 14px; color: #1e293b; font-weight: 600; margin-bottom: 4px; }
-        .file-drop-hint { font-size: 12px; color: #64748b; }
-        
-        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
-        .btn-cancel {
-            background: #F3F4F6; color: #1e293b; border: none;
-            padding: 12px 28px; border-radius: 10px; font-weight: 600; font-size: 14px;
-            transition: all 0.2s; cursor: pointer;
-        }
-        .btn-cancel:hover { background: #E5E7EB; }
+        .modal-subtitle { font-size: 13.5px; color: #64748b; margin-bottom: 22px; }
+        .mf-group { margin-bottom: 18px; display: flex; flex-direction: column; gap: 7px; }
+        .mf-label { font-size: 13px; font-weight: 600; color: #1e293b; }
+        .mf-textarea { min-height: 95px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 26px; }
         .btn-confirm-approve {
             background: linear-gradient(135deg, #0F4C81 0%, #00a8cc 100%);
-            color: white; border: none; padding: 12px 28px; border-radius: 10px;
-            font-weight: 600; font-size: 14px; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(15, 76, 129, 0.25);
-            transition: all 0.3s ease; display:flex; align-items:center; gap:8px;
+            color: #fff; border: none; padding: 12px 26px; border-radius: 10px;
+            font-weight: 700; font-size: 14px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(15,76,129,.25);
+            transition: all .3s; display:flex; align-items:center; gap:8px;
         }
         .btn-confirm-approve:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(15, 76, 129, 0.35);
+            box-shadow: 0 6px 20px rgba(15,76,129,.38);
         }
+
+        /* ── Filas clickeables ──────────────────────────────────── */
+        #tablaPendientes tbody tr {
+            cursor: pointer;
+            transition: background .15s;
+        }
+        #tablaPendientes tbody tr:hover { background: #F0F9FF !important; }
 
         /* ── Tabs ──────────────────────────────────────────────── */
         .tab-content { display:none; }
@@ -273,8 +463,49 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         $iniciales = strtoupper(mb_substr($sol['funcionario_nombre'],0,1));
                                         $colors = ['#0F4C81','#0288D1','#8B5CF6','#10B981','#F59E0B','#14B8A6'];
                                         $color = $colors[abs(crc32($sol['cedula']??'')) % count($colors)];
+
+                                        // Calcular días según tipo
+                                        if ($sol['tipo_solicitud'] === 'vacaciones') {
+                                            $vacInfo = calcularDiasVacaciones($sol['motivo'], $sol['fecha_ingreso'] ?? '');
+                                            $dias         = $vacInfo['dias'];
+                                            $dias_label   = $vacInfo['label'];
+                                            $periodos_sol = $vacInfo['periodos'];
+                                            $motivo_limpio = $vacInfo['motivo_limpio'];
+                                            // Calcular fecha fin estimada: fecha_inicio + días LOTTT
+                                            $fecha_display_inicio = $sol['fecha_inicio'];
+                                            $fecha_display_fin    = $dias > 0
+                                                ? date('Y-m-d', strtotime($sol['fecha_inicio'] . ' + ' . $dias . ' days'))
+                                                : $sol['fecha_inicio'];
+                                        } else {
+                                            $dias = (int)((strtotime($sol['fecha_fin']) - strtotime($sol['fecha_inicio'])) / 86400) + 1;
+                                            $dias_label    = $dias . ' ' . ($dias === 1 ? 'día' : 'días');
+                                            $periodos_sol  = '';
+                                            $motivo_limpio = $sol['motivo'];
+                                            $fecha_display_inicio = $sol['fecha_inicio'];
+                                            $fecha_display_fin    = $sol['fecha_fin'];
+                                        }
+
+                                        // Encode data para el modal
+                                        $dataJson = htmlspecialchars(json_encode([
+                                            'id'           => $sol['id'],
+                                            'nombre'       => $sol['funcionario_nombre'],
+                                            'cedula'       => $sol['cedula'],
+                                            'depto'        => $sol['departamento'] ?? '—',
+                                            'tipo'         => $sol['tipo_solicitud'],
+                                            'inicio'       => $fecha_display_inicio,
+                                            'fin'          => $fecha_display_fin,
+                                            'dias'         => $dias,
+                                            'dias_label'   => $dias_label,
+                                            'periodos'     => $periodos_sol,
+                                            'motivo'       => $motivo_limpio,
+                                            'enviada'      => $sol['created_at'],
+                                            'color'        => $color,
+                                            'iniciales'    => $iniciales,
+                                        ]), ENT_QUOTES);
                                     ?>
-                                    <tr>
+                                    <tr onclick="abrirDetalle('<?= $sol['id'] ?>')"
+                                        data-sol='<?= $dataJson ?>'
+                                        id="row-sol-<?= $sol['id'] ?>">
                                         <td>
                                             <div class="fn-cell">
                                                 <div class="fn-avatar" style="background:linear-gradient(135deg,<?= $color ?>,<?= $color ?>cc)"><?= $iniciales ?></div>
@@ -302,7 +533,7 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <td style="font-size:12px;color:#64748b;white-space:nowrap;">
                                             <?= date('d/m/Y H:i', strtotime($sol['created_at'])) ?>
                                         </td>
-                                        <td>
+                                        <td onclick="event.stopPropagation()">
                                             <div class="tbl-actions">
                                                 <button class="btn-ic ic-approve" title="Aprobar"
                                                         onclick="abrirModalAprobar(<?= $sol['id'] ?>, '<?= htmlspecialchars($sol['funcionario_nombre']) ?>', '<?= $sol['tipo_solicitud'] ?>')">
@@ -435,37 +666,109 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div><!-- /.main-content -->
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         MODAL DE APROBACIÓN (HTML nativo para soportar file upload)
+         MODAL DETALLE SOLICITUD — Se abre al hacer clic en la fila
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modalDetalle">
+        <div class="detail-modal-box">
+            <!-- Header dinámico -->
+            <div class="dmo-header" id="dmoHeader">
+                <button class="dmo-close" onclick="cerrarDetalle()" title="Cerrar">✕</button>
+                <div class="dmo-badge" id="dmoBadge"></div>
+                <div class="dmo-title" id="dmoTitle"></div>
+                <div class="dmo-meta"  id="dmoMeta"></div>
+            </div>
+
+            <!-- Body con información completa -->
+            <div class="dmo-body">
+
+                <!-- Grid de datos -->
+                <div class="dmo-grid" id="dmoGrid">
+                    <div class="dmo-field">
+                        <div class="dmo-field-label">Cédula</div>
+                        <div class="dmo-field-value" id="dmo-cedula">—</div>
+                    </div>
+                    <div class="dmo-field">
+                        <div class="dmo-field-label">Departamento</div>
+                        <div class="dmo-field-value" id="dmo-depto">—</div>
+                    </div>
+                    <div class="dmo-field" id="dmo-field-inicio">
+                        <div class="dmo-field-label" id="dmo-label-inicio">Fecha Inicio</div>
+                        <div class="dmo-field-value" id="dmo-inicio">—</div>
+                    </div>
+                    <div class="dmo-field" id="dmo-field-fin">
+                        <div class="dmo-field-label" id="dmo-label-fin">Fecha Fin</div>
+                        <div class="dmo-field-value" id="dmo-fin">—</div>
+                    </div>
+                    <div class="dmo-field">
+                        <div class="dmo-field-label">Días (LOTTT)</div>
+                        <div class="dmo-field-value" id="dmo-dias">—</div>
+                    </div>
+                    <div class="dmo-field">
+                        <div class="dmo-field-label">Fecha de envío</div>
+                        <div class="dmo-field-value" id="dmo-enviada">—</div>
+                    </div>
+                </div>
+
+                <!-- Períodos (solo vacaciones) -->
+                <div id="dmo-periodos-row" style="display:none;margin-bottom:16px;">
+                    <div class="dmo-field" style="background:#EFF6FF;border-color:#BFDBFE;">
+                        <div class="dmo-field-label" style="color:#1E40AF;">📅 Períodos solicitados</div>
+                        <div class="dmo-field-value" id="dmo-periodos" style="color:#1E40AF;">—</div>
+                    </div>
+                </div>
+
+                <!-- Motivo / Justificación -->
+                <div class="dmo-motivo">
+                    <div class="dmo-motivo-label">📋 Motivo / Justificación</div>
+                    <div class="dmo-motivo-text" id="dmo-motivo">—</div>
+                </div>
+            </div>
+
+            <!-- Footer con acciones -->
+            <div class="dmo-footer">
+                <button type="button" class="btn-cancel" onclick="cerrarDetalle()">Cerrar</button>
+                <button type="button" class="btn-reject-modal" id="btnRechazarDetalle" onclick="rechazarDesdeDetalle()">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                    Rechazar
+                </button>
+                <button type="button" class="btn-approve-modal" id="btnAprobarDetalle" onclick="aprobarDesdeDetalle()">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    Aprobar Solicitud
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         MODAL DE APROBACIÓN SECUNDARIO (cuando se abre desde botón de tabla)
     ══════════════════════════════════════════════════════════════════════════ -->
     <div class="modal-overlay" id="modalAprobar">
         <div class="modal-box">
-            <div class="modal-title">
-                Aprobar Solicitud
-            </div>
+            <div class="modal-title">Aprobar Solicitud</div>
             <p class="modal-subtitle" id="modalSubtitle"></p>
 
             <form id="formAprobar" enctype="multipart/form-data">
-                <input type="hidden" id="aprobarSolicitudId"  name="solicitud_id">
-                <input type="hidden" name="accion"            value="aprobar">
-                <input type="hidden" name="csrf_token"        value="<?= $csrf_token ?>">
+                <input type="hidden" id="aprobarSolicitudId" name="solicitud_id">
+                <input type="hidden" name="accion"           value="aprobar">
+                <input type="hidden" name="csrf_token"       value="<?= $csrf_token ?>">
 
-                <!-- Documento (opcional) -->
                 <div class="mf-group">
                     <label class="mf-label">
-                        Memo / Aval Firmado y Sellado <span style="font-size:11px;color:#94a3b8;font-weight:400;">(opcional)</span>
+                        Memo / Aval Firmado y Sellado
+                        <span style="color:#ef4444;margin-left:3px;">*</span>
+                        <span style="font-size:11px;color:#64748b;font-weight:400;margin-left:4px;">(obligatorio)</span>
                     </label>
-                    <div class="file-drop-zone" id="dropZone" onclick="document.getElementById('memoFile').click()">
-                        <input type="file" id="memoFile" name="archivo_aprobacion"
+                    <div class="file-drop-zone" id="dropZone2" onclick="document.getElementById('memoFile2').click()">
+                        <input type="file" id="memoFile2" name="archivo_aprobacion"
                                accept="application/pdf,image/jpeg,image/jpg,image/png">
                         <div class="file-drop-zone-icon">
-                            <svg width="32" height="32" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                            <svg width="28" height="28" fill="none" stroke="#2563EB" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                         </div>
-                        <div class="file-drop-text" id="dropZoneText">Haz click para adjuntar el documento</div>
+                        <div class="file-drop-text" id="dropZoneText2">Haz click para adjuntar el documento</div>
                         <div class="file-drop-hint">PDF, JPG o PNG · Máx 5 MB</div>
                     </div>
                 </div>
 
-                <!-- Observaciones -->
                 <div class="mf-group">
                     <label class="mf-label">Observaciones (opcional)</label>
                     <textarea id="aprobarObservaciones" name="observaciones"
@@ -486,20 +789,29 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <script src="<?= APP_URL ?>/publico/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <script>
-    // APP_URL ya está declarado por header.php con guard. Evitar redeclaración con 'const'.
     if (typeof CSRF_TOKEN === 'undefined') {
         var CSRF_TOKEN = '<?= $csrf_token ?>';
     }
     const AJAX_URL = APP_URL + '/vistas/solicitudes/ajax/procesar_solicitud.php';
 
-
+    // ═══════════════════════════════════════════════════════════
+    //  Utilidades
+    // ═══════════════════════════════════════════════════════════
     function formatFechaGestion(dateStr) {
         if (!dateStr) return '';
         const [y, m, d] = dateStr.split('-');
         return `${d}/${m}/${y}`;
     }
+    function formatFechaHora(dateStr) {
+        if (!dateStr) return '—';
+        const dt = new Date(dateStr.replace(' ', 'T'));
+        return dt.toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit',year:'numeric'})
+             + ' ' + dt.toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
+    }
 
-    // ── Tabs ───────────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════
+    //  Tabs
+    // ═══════════════════════════════════════════════════════════
     function cambiarTab(tab, btn) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('visible'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -507,7 +819,112 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
         btn.classList.add('active');
     }
 
-    // ── Modal Aprobación ───────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════
+    //  MODAL DETALLE — Estado global de la solicitud activa
+    // ═══════════════════════════════════════════════════════════
+    let _solActiva = null;
+
+    function abrirDetalle(solId) {
+        // Buscar la fila por ID de solicitud
+        const row = document.getElementById('row-sol-' + solId);
+        if (!row) return;
+        const sol = JSON.parse(row.dataset.sol);
+        _solActiva = sol;
+
+        // ── Header ──
+        const header = document.getElementById('dmoHeader');
+        const esVac  = sol.tipo === 'vacaciones';
+        header.className = 'dmo-header ' + (esVac ? 'dmo-header-vac' : 'dmo-header-perm');
+
+        document.getElementById('dmoBadge').innerHTML =
+            esVac ? '☀️ &nbsp;Vacaciones' : '🕐 &nbsp;Permiso';
+
+        document.getElementById('dmoTitle').textContent = sol.nombre;
+        document.getElementById('dmoMeta').textContent  = `C.I. ${sol.cedula}  ·  ${sol.depto}`;
+
+        // ── Grid de datos ──
+        document.getElementById('dmo-cedula').textContent  = sol.cedula || '—';
+        document.getElementById('dmo-depto').textContent   = sol.depto  || '—';
+        document.getElementById('dmo-enviada').textContent = formatFechaHora(sol.enviada);
+
+        if (esVac) {
+            // Vacaciones: fecha fin estimada calculada con días LOTTT
+            document.getElementById('dmo-label-inicio').textContent = 'Fecha Inicio';
+            document.getElementById('dmo-inicio').textContent       = formatFechaGestion(sol.inicio);
+            document.getElementById('dmo-label-fin').textContent    = 'Fecha Fin (estimada)';
+            document.getElementById('dmo-fin').textContent          = formatFechaGestion(sol.fin);
+            document.getElementById('dmo-fin').style.color          = '#1E293B';
+            document.getElementById('dmo-fin').style.fontStyle      = 'normal';
+            // Días LOTTT
+            document.getElementById('dmo-dias').textContent         = sol.dias_label || (sol.dias + ' días');
+            // Períodos
+            if (sol.periodos) {
+                document.getElementById('dmo-periodos').textContent = sol.periodos
+                    + (sol.dias_label ? ' — ' + sol.dias_label : '');
+                document.getElementById('dmo-periodos-row').style.display = '';
+            } else {
+                document.getElementById('dmo-periodos-row').style.display = 'none';
+            }
+        } else {
+            // Permiso: fechas reales
+            document.getElementById('dmo-label-inicio').textContent = 'Fecha Inicio';
+            document.getElementById('dmo-inicio').textContent       = formatFechaGestion(sol.inicio);
+            document.getElementById('dmo-label-fin').textContent    = 'Fecha Fin';
+            document.getElementById('dmo-fin').textContent          = formatFechaGestion(sol.fin);
+            document.getElementById('dmo-fin').style.color          = '';
+            document.getElementById('dmo-fin').style.fontStyle      = '';
+            document.getElementById('dmo-dias').textContent         = sol.dias_label || (sol.dias + ' días');
+            document.getElementById('dmo-periodos-row').style.display = 'none';
+        }
+
+        // ── Motivo limpio (sin el prefijo [Períodos: ...]) ──
+        document.getElementById('dmo-motivo').textContent = sol.motivo || '— Sin motivo especificado —';
+
+        document.getElementById('modalDetalle').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarDetalle() {
+        document.getElementById('modalDetalle').classList.remove('open');
+        document.body.style.overflow = '';
+        _solActiva = null;
+    }
+
+    // Cerrar con clic en overlay
+    document.getElementById('modalDetalle').addEventListener('click', e => {
+        if (e.target === e.currentTarget) cerrarDetalle();
+    });
+    // Cerrar con Escape
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            if (document.getElementById('modalDetalle').classList.contains('open')) cerrarDetalle();
+            if (document.getElementById('modalAprobar').classList.contains('open')) cerrarModalAprobar();
+        }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    //  APROBAR desde el modal detalle → abre modal secundario
+    // ═══════════════════════════════════════════════════════════
+    function aprobarDesdeDetalle() {
+        if (!_solActiva) return;
+        const sol = _solActiva; // guardar antes de que cerrarDetalle() lo anule
+        cerrarDetalle();
+        abrirModalAprobar(sol.id, sol.nombre, sol.tipo);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  RECHAZAR desde el modal detalle
+    // ═══════════════════════════════════════════════════════════
+    function rechazarDesdeDetalle() {
+        if (!_solActiva) return;
+        const sol = _solActiva;
+        cerrarDetalle();
+        rechazarSolicitud(sol.id, sol.nombre, sol.tipo, sol.inicio, sol.fin);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  MODAL APROBACIÓN SECUNDARIO (acciones directas en tabla)
+    // ═══════════════════════════════════════════════════════════
     function abrirModalAprobar(id, nombre, tipo) {
         document.getElementById('aprobarSolicitudId').value = id;
         document.getElementById('modalSubtitle').textContent =
@@ -517,86 +934,78 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
     function cerrarModalAprobar() {
         document.getElementById('modalAprobar').classList.remove('open');
         document.getElementById('formAprobar').reset();
-        document.getElementById('dropZoneText').textContent = 'Haz click para adjuntar el documento';
-        document.getElementById('dropZone').classList.remove('has-file');
+        document.getElementById('dropZoneText2').textContent = 'Haz click para adjuntar el documento';
+        document.getElementById('dropZone2').classList.remove('has-file');
     }
-
-    // Cerrar modal con overlay click
     document.getElementById('modalAprobar').addEventListener('click', e => {
         if (e.target === e.currentTarget) cerrarModalAprobar();
     });
-
-    // File drop zone feedback
-    document.getElementById('memoFile').addEventListener('change', e => {
+    document.getElementById('memoFile2').addEventListener('change', e => {
         const f = e.target.files[0];
         if (!f) return;
-        const name = f.name.length > 35 ? f.name.substring(0, 32) + '...' : f.name;
-        document.getElementById('dropZoneText').textContent = '&#x2705; ' + name;
-        document.getElementById('dropZone').classList.add('has-file');
+        const name = f.name.length > 35 ? f.name.substring(0,32)+'...' : f.name;
+        document.getElementById('dropZoneText2').textContent = '✅ ' + name;
+        document.getElementById('dropZone2').classList.add('has-file');
     });
-
-    // Submit del formulario de aprobación
     document.getElementById('formAprobar').addEventListener('submit', async e => {
         e.preventDefault();
-
-        const file = document.getElementById('memoFile').files[0];
+        const file = document.getElementById('memoFile2').files[0];
+        // El archivo es OBLIGATORIO al aprobar
         if (!file) {
-            Swal.fire({ icon: 'warning', title: 'Documento requerido',
-                        text: 'Debes adjuntar el memo de aprobación firmado y sellado.',
-                        confirmButtonColor: '#f59e0b' });
+            Swal.fire({
+                icon: 'warning',
+                title: 'Documento requerido',
+                text: 'Debes adjuntar el memo / oficio de aprobaci\u00f3n firmado y sellado.',
+                confirmButtonColor: '#f59e0b'
+            });
             return;
         }
-        if (file.size > 5 * 1024 * 1024) {
-            Swal.fire({ icon: 'error', title: 'Archivo demasiado grande',
-                        text: 'El archivo no puede superar los 5 MB.',
-                        confirmButtonColor: '#ef4444' });
+        if (file.size > 5*1024*1024) {
+            Swal.fire({icon:'error',title:'Archivo muy grande',text:'M\u00e1x 5 MB.',confirmButtonColor:'#ef4444'});
             return;
         }
-
         cerrarModalAprobar();
-        Swal.fire({ title: 'Procesando...', html: 'Subiendo documento y aprobando solicitud...',
-                    allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
+        Swal.fire({title:'Procesando...',html:'Aprobando solicitud...',
+                   allowOutsideClick:false, didOpen:()=>Swal.showLoading()});
         try {
             const fd = new FormData(document.getElementById('formAprobar'));
-            const res  = await fetch(AJAX_URL, { method: 'POST', body: fd });
+            if (file) fd.set('archivo_aprobacion', file);
+            const res  = await fetch(AJAX_URL, {method:'POST', body:fd});
             const data = await res.json();
-
             if (data.success) {
-                await Swal.fire({ icon: 'success', title: '¡Solicitud Aprobada!',
-                                  html: `<p>La solicitud fue aprobada exitosamente.</p>
-                                         <p style="font-size:13px;color:#64748b;margin-top:8px;">
-                                           El evento fue registrado en el historial administrativo.</p>`,
-                                  confirmButtonColor: '#10b981' });
+                await Swal.fire({icon:'success',title:'¡Solicitud Aprobada!',
+                    html:`<p>La solicitud fue aprobada exitosamente.</p>
+                          <p style="font-size:13px;color:#64748b;margin-top:8px;">El evento quedó registrado en el historial.</p>`,
+                    confirmButtonColor:'#10b981'});
                 location.reload();
             } else {
-                Swal.fire({ icon: 'error', title: 'Error al aprobar',
-                            text: data.error || 'Ocurrió un error inesperado.',
-                            confirmButtonColor: '#ef4444' });
+                Swal.fire({icon:'error',title:'Error al aprobar',
+                           text:data.error||'Error inesperado.',confirmButtonColor:'#ef4444'});
             }
-        } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Error de conexión',
-                        text: 'No se pudo conectar al servidor.',
-                        confirmButtonColor: '#ef4444' });
+        } catch {
+            Swal.fire({icon:'error',title:'Error de conexión',confirmButtonColor:'#ef4444'});
         }
     });
 
-    // ── Rechazo (SweetAlert2) ──────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════
+    //  RECHAZAR — SweetAlert2 (función reutilizable)
+    // ═══════════════════════════════════════════════════════════
     async function rechazarSolicitud(id, nombre, tipo, fechaInicio, fechaFin) {
         const periodo = fechaInicio && fechaFin
             ? `${formatFechaGestion(fechaInicio)} → ${formatFechaGestion(fechaFin)}`
             : '';
 
         const { value: datos } = await Swal.fire({
-            title: '<div style="font-size:18px;font-weight:700;color:#1e293b;">&#x274C; Rechazar Solicitud</div>',
+            title: '<div style="font-size:18px;font-weight:700;color:#1e293b;">❌ Rechazar Solicitud</div>',
             html: `
                 <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;
                      padding:12px 16px;margin-bottom:16px;text-align:left;">
-                    <div style="font-size:12px;color:#991b1b;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Solicitud a rechazar</div>
+                    <div style="font-size:11px;color:#991b1b;font-weight:700;margin-bottom:6px;
+                         text-transform:uppercase;letter-spacing:.5px;">Solicitud a rechazar</div>
                     <div style="font-weight:600;color:#1e293b;">${nombre}</div>
                     <div style="font-size:12.5px;color:#64748b;margin-top:3px;">
-                        ${tipo === 'vacaciones' ? '&#x1F334; Vacaciones' : '&#x1F552; Permiso'}
-                        ${periodo ? ' &middot; &#x1F4C5; ' + periodo : ''}
+                        ${tipo==='vacaciones'?'☀️ Vacaciones':'🕐 Permiso'}
+                        ${periodo?' · 📅 '+periodo:''}
                     </div>
                 </div>
                 <div style="text-align:left;margin-bottom:14px;">
@@ -607,12 +1016,12 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         style="width:100%;padding:10px 13px;border:2px solid #e2e8f0;border-radius:9px;
                                font-size:13.5px;font-family:inherit;background:#fff;box-sizing:border-box;">
                         <option value="">Seleccionar causa...</option>
-                        <option value="Saldo de vacaciones insuficiente para el per&#xED;odo solicitado">&#x26D4; Saldo insuficiente de vacaciones</option>
-                        <option value="Fechas solicitadas en conflicto con necesidades del servicio">&#x1F4C5; Fechas en conflicto con necesidades del servicio</option>
-                        <option value="Documentaci&#xF3;n o motivo de permiso incompleto o no fundamentado">&#x1F4C4; Documentaci&#xF3;n o motivo insuficiente</option>
-                        <option value="Ya existe una solicitud activa o aprobada para ese per&#xED;odo">&#x1F501; Solicitud duplicada o per&#xED;odo ya cubierto</option>
-                        <option value="La solicitud no cumple con el tiempo m&#xED;nimo de anticipaci&#xF3;n requerido">&#x231B; Anticipaci&#xF3;n insuficiente</option>
-                        <option value="Otro motivo (especifique abajo)">&#x270F;&#xFE0F; Otro motivo</option>
+                        <option value="Saldo de vacaciones insuficiente para el período solicitado">⛔ Saldo insuficiente de vacaciones</option>
+                        <option value="Fechas solicitadas en conflicto con necesidades del servicio">📅 Fechas en conflicto con el servicio</option>
+                        <option value="Documentación o motivo de permiso incompleto o no fundamentado">📄 Documentación o motivo insuficiente</option>
+                        <option value="Ya existe una solicitud activa o aprobada para ese período">🔁 Solicitud duplicada o período ya cubierto</option>
+                        <option value="La solicitud no cumple con el tiempo mínimo de anticipación requerido">⌛ Anticipación insuficiente</option>
+                        <option value="Otro motivo (especifique abajo)">✏️ Otro motivo</option>
                     </select>
                 </div>
                 <div style="text-align:left;">
@@ -622,19 +1031,18 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <textarea id="swal-motivo-rechazo"
                         style="width:100%;padding:10px 13px;border:2px solid #e2e8f0;border-radius:9px;
                                font-family:inherit;font-size:13.5px;resize:vertical;min-height:90px;box-sizing:border-box;"
-                        placeholder="Explica con detalle el motivo del rechazo para que el empleado lo entienda..."></textarea>
+                        placeholder="Explica con detalle el motivo del rechazo..."></textarea>
                     <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Mínimo 20 caracteres</div>
                 </div>`,
             width: '520px',
             showCancelButton: true,
-            confirmButtonText: '&#x274C; Confirmar Rechazo',
-            cancelButtonText:  'Cancelar',
+            confirmButtonText: '❌ Confirmar Rechazo',
+            cancelButtonText: 'Cancelar',
             confirmButtonColor: '#ef4444',
-            cancelButtonColor:  '#64748b',
+            cancelButtonColor: '#64748b',
             customClass: { popup: 'swal-modern-popup' },
             didOpen: () => {
-                // Al seleccionar una causa predefinida, rellenar el área de explicación
-                const causa = document.getElementById('swal-causa-rechazo');
+                const causa  = document.getElementById('swal-causa-rechazo');
                 const motivo = document.getElementById('swal-motivo-rechazo');
                 causa.addEventListener('change', () => {
                     if (causa.value && causa.value !== 'Otro motivo (especifique abajo)') {
@@ -655,40 +1063,39 @@ $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 return { causa, motivo, textoCompleto: `[${causa}] ${motivo}` };
             }
         });
-
         if (!datos) return;
 
-        Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
+        Swal.fire({title:'Procesando...', allowOutsideClick:false, didOpen:()=>Swal.showLoading()});
         try {
             const fd = new FormData();
             fd.append('csrf_token',    CSRF_TOKEN);
             fd.append('accion',        'rechazar');
             fd.append('solicitud_id',  id);
             fd.append('observaciones', datos.textoCompleto);
-
-            const res  = await fetch(AJAX_URL, { method: 'POST', body: fd });
+            const res  = await fetch(AJAX_URL, {method:'POST', body:fd});
             const data = await res.json();
-
             if (data.success) {
-                await Swal.fire({ icon: 'success', title: 'Solicitud Rechazada',
-                                  text: 'El empleado será notificado del rechazo.',
-                                  confirmButtonColor: '#64748b' });
+                await Swal.fire({icon:'success', title:'Solicitud Rechazada',
+                                 text:'El empleado será notificado del rechazo.',
+                                 confirmButtonColor:'#64748b'});
                 location.reload();
             } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.error, confirmButtonColor: '#ef4444' });
+                Swal.fire({icon:'error', title:'Error', text:data.error, confirmButtonColor:'#ef4444'});
             }
         } catch {
-            Swal.fire({ icon: 'error', title: 'Error de conexión', confirmButtonColor: '#ef4444' });
+            Swal.fire({icon:'error', title:'Error de conexión', confirmButtonColor:'#ef4444'});
         }
     }
 
-    // ── Búsqueda en tabla ──────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════
+    //  Búsqueda en tabla pendientes
+    // ═══════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', () => {
         const tabla = document.getElementById('tablaPendientes');
         if (!tabla) return;
         const buscador = document.createElement('input');
-        buscador.type = 'text'; buscador.placeholder = 'Buscar funcionario...';
+        buscador.type = 'text';
+        buscador.placeholder = 'Buscar funcionario...';
         buscador.className = 'form-control';
         buscador.style.cssText = 'max-width:280px;margin-bottom:12px;';
         tabla.parentElement.insertBefore(buscador, tabla);

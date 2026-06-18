@@ -82,74 +82,65 @@ $stmtNombramientos->execute([$id]);
 $nombramientos = $stmtNombramientos->fetchAll(PDO::FETCH_ASSOC);
 
 // ============================================================
-// CALCULADORA DE VACACIONES (LOTTT) - CÁLCULO DINÁMICO
-// Regla: 15 días el 1er año, +1 día por cada año adicional, tope 30
+// CALCULADORA DE VACACIONES — SISTEMA DE PERÍODOS LOTTT
+// Año 1 → 15d | Año 2 → 18d | Año N≥2 → min(18+(N-2),30)
 // ============================================================
-$vac_anios_servicio  = 0;
-$vac_dias_totales    = 0;
-
-$dias_comprometidos = 0; // Total de días apartados/aprobados (usado para descontar del total)
-$dias_consumidos_reales = 0; // Días que efectivamente ya pasaron hasta el día de HOY
-
-$vac_dias_disponibles = 0;
+$vac_anios_servicio = 0;
+$vac_periodos       = [];   // Lista completa de períodos con estado
+$vac_tomados        = 0;    // Cantidad de períodos tomados
+$vac_disponibles    = 0;    // Cantidad de períodos disponibles
 $historial_vacaciones = [];
 
-if ($funcionario['fecha_ingreso']) {
-    $fechaIngreso        = new DateTime($funcionario['fecha_ingreso']);
-    $hoy                 = new DateTime();
-    $hoy_str             = date('Y-m-d');
-    $vac_anios_servicio  = (int)$hoy->diff($fechaIngreso)->y;
+// Helper para calcular días del período N
+$diasPeriodoFn = function(int $n): int {
+    if ($n === 1) return 15;
+    return min(18 + ($n - 2), 30);
+};
+
+if (!empty($funcionario['fecha_ingreso'])) {
+    $hoy = new DateTime();
+    $fechaIngreso = new DateTime($funcionario['fecha_ingreso']);
+    $vac_anios_servicio = (int)$hoy->diff($fechaIngreso)->y;
 
     if ($vac_anios_servicio >= 1) {
-        $vac_dias_totales = min(15 + ($vac_anios_servicio - 1), 30);
-    } else {
-        $vac_dias_totales = 0; // Sin derecho hasta cumplir 1 año
-    }
+        // Obtener períodos ya tomados (identificados por periodo_año en detalles)
+        $stmtPT = $db->prepare("
+            SELECT
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.periodo_año')) AS UNSIGNED) AS periodo_año,
+                fecha_evento AS fecha_inicio,
+                fecha_fin
+            FROM historial_administrativo
+            WHERE funcionario_id = ?
+              AND tipo_evento = 'VACACION'
+              AND JSON_EXTRACT(detalles, '$.periodo_año') IS NOT NULL
+        ");
+        $stmtPT->execute([$id]);
+        $ptRows = $stmtPT->fetchAll(PDO::FETCH_ASSOC);
+        $periodosTomadosMap = [];
+        foreach ($ptRows as $pt) {
+            $periodosTomadosMap[(int)$pt['periodo_año']] = [
+                'fecha_inicio' => $pt['fecha_inicio'],
+                'fecha_fin'    => $pt['fecha_fin'],
+            ];
+        }
 
-    $anio_actual = (int)date('Y');
-    
-    // Obtener todas las vacaciones de este año para este funcionario
-    $stmtVac = $db->prepare(
-        "SELECT fecha_evento as fecha_inicio, fecha_fin,
-                JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.dias_habiles')) as dias_solicitados
-         FROM historial_administrativo
-         WHERE funcionario_id = ? 
-           AND tipo_evento = 'VACACION' 
-           AND YEAR(fecha_evento) = ?"
-    );
-    $stmtVac->execute([$id, $anio_actual]);
-    $vacaciones_anio = $stmtVac->fetchAll(PDO::FETCH_ASSOC);
-    
-    foreach ($vacaciones_anio as $vac) {
-        $dias_solicitados = (int)$vac['dias_solicitados'];
-        $dias_comprometidos += $dias_solicitados;
-        
-        $inicio_vac = clone new DateTime($vac['fecha_inicio']);
-        $fin_vac = clone new DateTime($vac['fecha_fin']);
-        $hoy_obj = new DateTime($hoy_str);
-        
-        $actual = clone $inicio_vac;
-        $dias_contados = 0;
-        
-        // Iterar días para saber cuántos se han consumido realmente hasta HOY
-        while ($actual <= $fin_vac && $dias_contados < $dias_solicitados) {
-            $dia_semana = (int)$actual->format('N');
-            if ($dia_semana <= 5) { // Lunes a Viernes
-                // Si el día hábil es hoy o en el pasado, está consumido
-                if ($actual <= $hoy_obj) {
-                    $dias_consumidos_reales++;
-                }
-                $dias_contados++;
+        for ($n = 1; $n <= $vac_anios_servicio; $n++) {
+            $dias   = $diasPeriodoFn($n);
+            $tomado = isset($periodosTomadosMap[$n]);
+            $periodo = ['año' => $n, 'dias' => $dias, 'tomado' => $tomado];
+            if ($tomado) {
+                $periodo['fecha_inicio'] = $periodosTomadosMap[$n]['fecha_inicio'];
+                $periodo['fecha_fin']    = $periodosTomadosMap[$n]['fecha_fin'];
+                $vac_tomados++;
+            } else {
+                $vac_disponibles++;
             }
-            $actual->modify('+1 day');
+            $vac_periodos[] = $periodo;
         }
     }
-
-    // Días disponibles visualmente = Totales - Consumidos Reales
-    $vac_dias_disponibles = max(0, $vac_dias_totales - $dias_consumidos_reales);
 }
 
-// 5. Historial COMPLETO de vacaciones disfrutadas
+// Historial COMPLETO de vacaciones
 $stmtVacHistorial = $db->prepare(
     "SELECT id, fecha_evento, fecha_fin, detalles,
             ruta_archivo_pdf, nombre_archivo_original
@@ -572,13 +563,13 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
                 <div id="tab-vacaciones" class="tab-content">
 
                     <!-- =========================================
-                         BLOQUE 1: CARDS DE RESUMEN LOTTT
+                         BLOQUE 1: RESUMEN DE PERÍODOS LOTTT
                          ========================================= -->
                     <div class="card-modern" style="margin-bottom:20px;">
                         <div class="card-body">
                             <div class="section-header">
                                 <?= Icon::get('sun', 'color:#F59E0B') ?>
-                                <h2>Mi Balance Vacacional <?= date('Y') ?></h2>
+                                <h2>Balance Vacacional</h2>
                             </div>
 
                             <?php if ($vac_anios_servicio < 1): ?>
@@ -592,88 +583,78 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                             <?php else: ?>
                                 <?php
-                                    // Color semafórico para días disponibles
-                                    if ($vac_dias_disponibles <= 0) {
-                                        $color_disp = '#EF4444'; $bg_disp = '#FEF2F2'; $border_disp = '#FECACA';
-                                        $label_disp = 'Sin días disponibles';
-                                    } elseif ($vac_dias_disponibles <= 5) {
-                                        $color_disp = '#F59E0B'; $bg_disp = '#FFFBEB'; $border_disp = '#FDE68A';
-                                        $label_disp = 'Pocos días';
+                                    // Color para períodos disponibles
+                                    if ($vac_disponibles === 0) {
+                                        $c_disp = '#EF4444'; $bg_disp = '#FEF2F2'; $bd_disp = '#FECACA'; $lbl_disp = 'Sin períodos disponibles';
+                                    } elseif ($vac_disponibles === 1) {
+                                        $c_disp = '#F59E0B'; $bg_disp = '#FFFBEB'; $bd_disp = '#FDE68A'; $lbl_disp = '1 período disponible';
                                     } else {
-                                        $color_disp = '#10B981'; $bg_disp = '#ECFDF5'; $border_disp = '#A7F3D0';
-                                        $label_disp = 'Disponibles';
+                                        $c_disp = '#10B981'; $bg_disp = '#ECFDF5'; $bd_disp = '#A7F3D0'; $lbl_disp = 'Disponibles';
                                     }
                                 ?>
-                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
 
-                                    <!-- Card: Años de Servicio -->
-                                    <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1px solid #BFDBFE;border-radius:20px;padding:20px;text-align:center;box-shadow:0 8px 24px rgba(29, 78, 216, 0.08);transition:all 0.3s ease;">
+                                <!-- 4 Cards de resumen -->
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
+
+                                    <!-- Años de Servicio -->
+                                    <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1px solid #BFDBFE;border-radius:20px;padding:20px;text-align:center;box-shadow:0 8px 24px rgba(29,78,216,.08);">
                                         <div style="font-size:11px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Años de Servicio</div>
                                         <div style="font-size:36px;font-weight:800;color:#1D4ED8;line-height:1;"><?= $vac_anios_servicio ?></div>
                                         <div style="font-size:12px;color:#3B82F6;margin-top:4px;">año<?= $vac_anios_servicio !== 1 ? 's' : '' ?></div>
                                     </div>
 
-                                    <!-- Card: Días Correspondientes -->
-                                    <div style="background:linear-gradient(135deg,#F5F3FF,#EDE9FE);border:1px solid #DDD6FE;border-radius:20px;padding:20px;text-align:center;box-shadow:0 8px 24px rgba(109, 40, 217, 0.08);transition:all 0.3s ease;">
-                                        <div style="font-size:11px;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Días Correspondientes</div>
-                                        <div style="font-size:36px;font-weight:800;color:#6D28D9;line-height:1;"><?= $vac_dias_totales ?></div>
-                                        <div style="font-size:12px;color:#7C3AED;margin-top:4px;">días hábiles</div>
+                                    <!-- Períodos Totales -->
+                                    <div style="background:linear-gradient(135deg,#F5F3FF,#EDE9FE);border:1px solid #DDD6FE;border-radius:20px;padding:20px;text-align:center;box-shadow:0 8px 24px rgba(109,40,217,.08);">
+                                        <div style="font-size:11px;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Períodos Totales</div>
+                                        <div style="font-size:36px;font-weight:800;color:#6D28D9;line-height:1;"><?= count($vac_periodos) ?></div>
+                                        <div style="font-size:12px;color:#7C3AED;margin-top:4px;">generado<?= count($vac_periodos) !== 1 ? 's' : '' ?></div>
                                     </div>
 
-                                    <!-- Card: Días Utilizados -->
-                                    <div style="background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border:1px solid #FED7AA;border-radius:20px;padding:20px;text-align:center;box-shadow:0 8px 24px rgba(194, 65, 12, 0.08);transition:all 0.3s ease;">
-                                        <div style="font-size:11px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Días Consumidos <?= date('Y') ?></div>
-                                        <div style="font-size:36px;font-weight:800;color:#C2410C;line-height:1;"><?= $dias_consumidos_reales ?></div>
-                                        <div style="font-size:12px;color:#EA580C;margin-top:4px;">hasta la fecha actual</div>
-                                        <?php $dias_pendientes = $dias_comprometidos - $dias_consumidos_reales; ?>
-                                        <?php if ($dias_pendientes > 0): ?>
-                                        <div style="font-size:11px;color:#D97706;margin-top:6px;font-weight:600;background:#FFFBEB;border-radius:8px;padding:3px 8px;display:inline-block;">
-                                            ⏳ <?= $dias_pendientes ?> día<?= $dias_pendientes != 1 ? 's' : '' ?> pendientes (futuro)
-                                        </div>
-                                        <?php endif; ?>
+                                    <!-- Períodos Tomados -->
+                                    <div style="background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border:1px solid #FED7AA;border-radius:20px;padding:20px;text-align:center;box-shadow:0 8px 24px rgba(194,65,12,.08);">
+                                        <div style="font-size:11px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Períodos Tomados</div>
+                                        <div style="font-size:36px;font-weight:800;color:#C2410C;line-height:1;"><?= $vac_tomados ?></div>
+                                        <div style="font-size:12px;color:#EA580C;margin-top:4px;">disfrutado<?= $vac_tomados !== 1 ? 's' : '' ?></div>
                                     </div>
 
-                                    <!-- Card: Días Disponibles (color dinámico) -->
-                                    <div style="background:linear-gradient(135deg,<?= $bg_disp ?>,<?= $bg_disp ?>);border:1px solid <?= $border_disp ?>;border-radius:20px;padding:20px;text-align:center;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.06);transition:all 0.3s ease;">
-                                        <div style="font-size:11px;font-weight:700;color:<?= $color_disp ?>;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Días Disponibles</div>
-                                        <div style="font-size:36px;font-weight:800;color:<?= $color_disp ?>;line-height:1;"><?= $vac_dias_disponibles ?></div>
-                                        <div style="font-size:12px;color:<?= $color_disp ?>;margin-top:4px;opacity:.8;"><?= $label_disp ?></div>
+                                    <!-- Períodos Disponibles -->
+                                    <div style="background:linear-gradient(135deg,<?= $bg_disp ?>,<?= $bg_disp ?>);border:1px solid <?= $bd_disp ?>;border-radius:20px;padding:20px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.06);">
+                                        <div style="font-size:11px;font-weight:700;color:<?= $c_disp ?>;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Períodos Disponibles</div>
+                                        <div style="font-size:36px;font-weight:800;color:<?= $c_disp ?>;line-height:1;"><?= $vac_disponibles ?></div>
+                                        <div style="font-size:12px;color:<?= $c_disp ?>;margin-top:4px;opacity:.85;"><?= $lbl_disp ?></div>
                                     </div>
 
                                 </div>
 
-                                <!-- Barra de progreso -->
-                                <?php if ($vac_dias_totales > 0): ?>
-                                    <?php 
-                                        $dias_pendientes = $dias_comprometidos - $dias_consumidos_reales;
-                                        $pct_consumido = min(100, round(($dias_consumidos_reales / $vac_dias_totales) * 100));
-                                        $pct_pendiente = min(100 - $pct_consumido, round(($dias_pendientes / $vac_dias_totales) * 100));
-                                    ?>
-                                    <div style="margin-top:20px;">
-                                        <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;">
-                                            <span>
-                                                Días comprometidos: <strong style="color:#0F4C81;"><?= $dias_comprometidos ?> / <?= $vac_dias_totales ?></strong>
-                                                <?php if ($dias_pendientes > 0): ?>
-                                                &nbsp;<span style="color:#F59E0B;font-size:11px;">(<?= $dias_consumidos_reales ?> consumidos + <?= $dias_pendientes ?> pendientes a futuro)</span>
-                                                <?php endif; ?>
-                                            </span>
-                                            <span><?= $pct_consumido + $pct_pendiente ?>% comprometido</span>
-                                        </div>
-                                        <div style="height:10px;background:#E2E8F0;border-radius:10px;overflow:hidden;display:flex;">
-                                            <div style="height:100%;width:<?= $pct_consumido ?>%;background:#C2410C;border-radius:<?= $pct_pendiente > 0 ? 'y10px 0 0 10px' : '10px' ?>;transition:width 1s ease;"></div>
-                                            <div style="height:100%;width:<?= $pct_pendiente ?>%;background:#F59E0B;transition:width 1s ease;"></div>
-                                        </div>
-                                        <?php if ($dias_comprometidos > 0): ?>
-                                        <div style="display:flex;gap:16px;margin-top:6px;font-size:11px;">
-                                            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#C2410C;border-radius:2px;display:inline-block;"></span> Consumidos a la fecha</span>
-                                            <?php if ($dias_pendientes > 0): ?>
-                                            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#F59E0B;border-radius:2px;display:inline-block;"></span> Pendientes por disfrutar</span>
-                                            <?php endif; ?>
-                                            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#E2E8F0;border-radius:2px;display:inline-block;"></span> Disponibles</span>
-                                        </div>
+                                <!-- Lista visual de períodos -->
+                                <div>
+                                    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px;">Detalle de períodos vacacionales</div>
+                                    <?php foreach ($vac_periodos as $p): ?>
+                                        <?php if ($p['tomado']): ?>
+                                            <?php
+                                                $fi_fmt = !empty($p['fecha_inicio']) ? (new DateTime($p['fecha_inicio']))->format('d/m/Y') : '—';
+                                                $ff_fmt = !empty($p['fecha_fin'])    ? (new DateTime($p['fecha_fin']))->format('d/m/Y')    : '—';
+                                            ?>
+                                            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;background:#F1F5F9;border:1px solid #E2E8F0;margin-bottom:8px;">
+                                                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#C2410C,#EA580C);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:800;flex-shrink:0;"><?= $p['año'] ?></div>
+                                                <div style="flex:1;">
+                                                    <div style="font-size:13px;font-weight:700;color:#334155;">Período Año <?= $p['año'] ?> — <?= $p['dias'] ?> días hábiles</div>
+                                                    <div style="font-size:11px;color:#64748b;margin-top:2px;">Disfrutado: <?= $fi_fmt ?> → <?= $ff_fmt ?></div>
+                                                </div>
+                                                <span style="background:#FEE2E2;color:#991b1b;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;">Tomado</span>
+                                            </div>
+                                        <?php else: ?>
+                                            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border:1px solid #A7F3D0;margin-bottom:8px;">
+                                                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:800;flex-shrink:0;"><?= $p['año'] ?></div>
+                                                <div style="flex:1;">
+                                                    <div style="font-size:13px;font-weight:700;color:#065F46;">Período Año <?= $p['año'] ?> — <?= $p['dias'] ?> días hábiles</div>
+                                                    <div style="font-size:11px;color:#047857;margin-top:2px;">Disponible para disfrutar</div>
+                                                </div>
+                                                <span style="background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;">Disponible</span>
+                                            </div>
                                         <?php endif; ?>
-                                    </div>
-                                <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -891,7 +872,7 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
             });
         }
 
-        // Vacaciones: carga vía AJAX (mantiene lógica existente)
+        // Vacaciones: carga vía AJAX — muestra período y días hábiles
         function cargarVacaciones() {
             const c = document.getElementById('vacaciones-historial-container');
             if (!c || c.dataset.loaded) return;
@@ -901,13 +882,16 @@ $historial_vacaciones = $stmtVacHistorial->fetchAll(PDO::FETCH_ASSOC);
                 .then(data => {
                     c.dataset.loaded = '1';
                     if (data.success && data.total > 0) {
-                        let html = '<table class="table-modern"><thead><tr><th>Período</th><th>Días</th><th>PDF</th></tr></thead><tbody>';
+                        let html = '<table class="table-modern"><thead><tr><th>Período</th><th>Años LOTTT</th><th>Días Hábiles</th><th>PDF</th></tr></thead><tbody>';
                         data.data.forEach(v => {
                             const d = v.detalles || {};
+                            const periodoAnio = d.periodo_año ? `Año ${d.periodo_año}` : '—';
+                            const diasHab = d.dias_habiles ?? '—';
                             html += `<tr>
-                                <td>${v.fecha_evento_formateada}</td>
-                                <td>${d.dias_disfrutados ?? '-'} días</td>
-                                <td>${v.tiene_archivo ? `<a href="../../${v.ruta_archivo_pdf}" target="_blank" class="btn-icon" style="color:#0284C7;">📄</a>` : '-'}</td>
+                                <td style="white-space:nowrap;font-size:13px;">${v.fecha_evento_formateada}</td>
+                                <td><span style="background:#EDE9FE;color:#6D28D9;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;">${periodoAnio}</span></td>
+                                <td style="font-weight:700;color:#0F4C81;font-size:13px;">${diasHab}d</td>
+                                <td>${v.tiene_archivo ? `<a href="../../${v.ruta_archivo_pdf}" target="_blank" class="btn-icon" style="color:#0284C7;">📄</a>` : '<span style="color:#cbd5e1">—</span>'}</td>
                             </tr>`;
                         });
                         html += '</tbody></table>';

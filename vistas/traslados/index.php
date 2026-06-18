@@ -381,7 +381,7 @@ $anios_disponibles = $stmt_anios->fetchAll(PDO::FETCH_COLUMN);
                         <div class="swal-form-group">
                             <label class="swal-label">
                                 <?= Icon::get('upload') ?>
-                                Orden de Traslado (PDF — opcional)
+                                Orden de Traslado (PDF)
                             </label>
                             <div class="file-input-modern">
                                 <input type="file" id="swal-archivo" accept="application/pdf" class="file-input-hidden" onchange="updateFileNameTraslado(this)">

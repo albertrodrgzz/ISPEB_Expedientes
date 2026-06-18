@@ -321,139 +321,192 @@ function registrarNombramiento($pdo) {
 }
 
 /**
- * Registra un período de vacaciones
+ * Registra uno o varios períodos de vacaciones en una sola transacción
  * ✅ COHERENCIA: Actualiza estado a 'vacaciones'
+ *
+ * Recibe por POST:
+ *   - funcionario_id  : int
+ *   - fecha_evento    : date (inicio del primer período)
+ *   - periodos_años   : JSON array de números de año de período, ej. [1,3]
+ *   - observaciones   : string (opcional)
+ *   - archivo_pdf     : file (requerido)
  */
 function registrarVacacion($pdo) {
-    // Validar campos requeridos
-    $funcionario_id = filter_var($_POST['funcionario_id'] ?? 0, FILTER_VALIDATE_INT);
-    $fecha_evento = $_POST['fecha_evento'] ?? ''; 
-    $dias_habiles = filter_var($_POST['dias_habiles'] ?? 0, FILTER_VALIDATE_INT);
-    $observaciones = trim($_POST['observaciones'] ?? '');
 
-    if (!$funcionario_id || empty($fecha_evento) || !$dias_habiles) {
+    // ── Helper LOTTT ──────────────────────────────────────────────────────────
+    $diasPorPeriodo = function(int $n): int {
+        if ($n === 1) return 15;
+        return min(18 + ($n - 2), 30);
+    };
+
+    // ── Validar entrada ───────────────────────────────────────────────────────
+    $funcionario_id  = filter_var($_POST['funcionario_id'] ?? 0, FILTER_VALIDATE_INT);
+    $fecha_evento    = trim($_POST['fecha_evento'] ?? '');
+    $observaciones   = trim($_POST['observaciones'] ?? '');
+    $periodos_raw    = $_POST['periodos_años'] ?? ''; // JSON string: "[1,2]"
+
+    if (!$funcionario_id || empty($fecha_evento)) {
         throw new Exception('Datos incompletos para registrar vacación', 400);
     }
 
-    if ($dias_habiles <= 0 || $dias_habiles > 30) {
-        throw new Exception('Los días hábiles deben estar entre 1 y 30', 400);
+    $periodos_seleccionados = json_decode($periodos_raw, true);
+    if (!is_array($periodos_seleccionados) || empty($periodos_seleccionados)) {
+        throw new Exception('Debe seleccionar al menos un período vacacional', 400);
     }
 
-    // Iniciar transacción
+    // Asegurarse que sean enteros positivos únicos
+    $periodos_seleccionados = array_values(array_unique(array_filter(
+        array_map('intval', $periodos_seleccionados),
+        fn($v) => $v >= 1
+    )));
+
+    if (empty($periodos_seleccionados)) {
+        throw new Exception('Los períodos seleccionados no son válidos', 400);
+    }
+
+    // ── Iniciar transacción ───────────────────────────────────────────────────
     $pdo->beginTransaction();
 
     try {
-        $stmt = $pdo->prepare("SELECT f.id, f.estado, f.nombres, f.apellidos, f.fecha_ingreso FROM funcionarios f WHERE f.id = ?");
+        // Obtener datos del funcionario
+        $stmt = $pdo->prepare("
+            SELECT id, estado, nombres, apellidos, fecha_ingreso
+            FROM funcionarios WHERE id = ?
+        ");
         $stmt->execute([$funcionario_id]);
         $funcionario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$funcionario) throw new Exception('Funcionario no encontrado', 404);
-        if ($funcionario['estado'] === 'inactivo') throw new Exception('Funcionario inactivo', 400);
+        if (!$funcionario)                              throw new Exception('Funcionario no encontrado', 404);
+        if ($funcionario['estado'] === 'inactivo')      throw new Exception('Funcionario inactivo', 400);
 
-        // VALIDACIÓN LOTTT
+        // Calcular antigüedad
         $fecha_ingreso = new DateTime($funcionario['fecha_ingreso']);
-        $fecha_actual = new DateTime();
+        $fecha_actual  = new DateTime();
         $años_servicio = $fecha_ingreso->diff($fecha_actual)->y;
 
         if ($años_servicio < 1) throw new Exception('No cumple requisito mínimo de 1 año de servicio', 400);
 
-        $dias_totales_lottt = min(15 + ($años_servicio - 1), 30);
+        // Validar que los períodos solicitados no superen los años de servicio
+        foreach ($periodos_seleccionados as $p_año) {
+            if ($p_año > $años_servicio) {
+                throw new Exception("El período del año {$p_año} no le corresponde (solo tiene {$años_servicio} años de servicio)", 400);
+            }
+        }
 
-        // Contar días usados
-        $año_actual = date('Y');
+        // Obtener períodos ya tomados
         $stmt = $pdo->prepare("
-            SELECT COALESCE(SUM(JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.dias_habiles'))), 0) as total_usado
+            SELECT CAST(JSON_UNQUOTE(JSON_EXTRACT(detalles, '$.periodo_año')) AS UNSIGNED) AS periodo_año
             FROM historial_administrativo
-            WHERE funcionario_id = ? AND tipo_evento = 'VACACION' AND YEAR(fecha_evento) = ? AND (fecha_fin < CURDATE() OR (fecha_fin IS NULL AND fecha_evento < CURDATE()))
+            WHERE funcionario_id = ?
+              AND tipo_evento = 'VACACION'
+              AND JSON_EXTRACT(detalles, '$.periodo_año') IS NOT NULL
         ");
-        $stmt->execute([$funcionario_id, $año_actual]);
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        $dias_usados = (int)($resultado['total_usado'] ?? 0);
-        $dias_disponibles = $dias_totales_lottt - $dias_usados;
+        $stmt->execute([$funcionario_id]);
+        $ya_tomados = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'periodo_año');
+        $ya_tomados = array_map('intval', $ya_tomados);
 
-        if ($dias_habiles > $dias_disponibles) {
-            throw new Exception("Solo tiene {$dias_disponibles} días disponibles. Ya usó {$dias_usados}.", 400);
-        }
-
-        // CALCULAR FECHAS
-        $fecha_inicio = new DateTime($fecha_evento);
-        $dias_contados = 0;
-        $fecha_actual_calculo = clone $fecha_inicio;
-
-        while ((int)$fecha_actual_calculo->format('N') > 5) {
-            $fecha_actual_calculo->modify('+1 day');
-        }
-
-        while ($dias_contados < $dias_habiles) {
-            $dia_semana = (int)$fecha_actual_calculo->format('N');
-            if ($dia_semana >= 1 && $dia_semana <= 5) {
-                $dias_contados++;
-            }
-            if ($dias_contados < $dias_habiles) {
-                $fecha_actual_calculo->modify('+1 day');
+        foreach ($periodos_seleccionados as $p_año) {
+            if (in_array($p_año, $ya_tomados, true)) {
+                throw new Exception("El período del año {$p_año} ya fue tomado", 400);
             }
         }
 
-        $fecha_ultimo_dia = $fecha_actual_calculo->format('Y-m-d');
-        
-        $fecha_retorno = clone $fecha_actual_calculo;
-        $fecha_retorno->modify('+1 day');
-        while ((int)$fecha_retorno->format('N') > 5) $fecha_retorno->modify('+1 day');
-        $fecha_retorno_str = $fecha_retorno->format('Y-m-d');
-
-        // JSON Detalles
-        $detalles = json_encode([
-            'dias_habiles' => $dias_habiles,
-            'observaciones' => htmlspecialchars($observaciones, ENT_QUOTES, 'UTF-8'),
-            'años_servicio' => $años_servicio,
-            'dias_totales_año' => $dias_totales_lottt,
-            'fecha_retorno' => $fecha_retorno_str
-        ], JSON_UNESCAPED_UNICODE);
-
-        // Archivo
-        $ruta_archivo = null;
-        $nombre_original = null;
-        if (isset($_FILES['archivo_pdf']) && $_FILES['archivo_pdf']['error'] === UPLOAD_ERR_OK) {
-            $resultado_archivo = guardarArchivoHistorial($funcionario_id, 'vacaciones', $_FILES['archivo_pdf']);
-            $ruta_archivo = $resultado_archivo['ruta'];
-            $nombre_original = $resultado_archivo['nombre_original'];
-        } else {
+        // Guardar archivo (único para todos los períodos del lote)
+        if (!isset($_FILES['archivo_pdf']) || $_FILES['archivo_pdf']['error'] !== UPLOAD_ERR_OK) {
             throw new Exception('Se requiere documento de aval', 400);
         }
+        $resultado_archivo = guardarArchivoHistorial($funcionario_id, 'vacaciones', $_FILES['archivo_pdf']);
+        $ruta_archivo      = $resultado_archivo['ruta'];
+        $nombre_original   = $resultado_archivo['nombre_original'];
 
-        // Insertar
-        $stmt = $pdo->prepare("
-            INSERT INTO historial_administrativo (
-                funcionario_id, tipo_evento, fecha_evento, fecha_fin,
-                detalles, ruta_archivo_pdf, nombre_archivo_original,
-                registrado_por
-            ) VALUES (?, 'VACACION', ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([
-            $funcionario_id, $fecha_evento, $fecha_ultimo_dia,
-            $detalles, $ruta_archivo, $nombre_original, $_SESSION['usuario_id']
-        ]);
+        // Insertar un registro por cada período seleccionado
+        // Los períodos van en secuencia: al terminar uno, empieza el siguiente día hábil
+        $fecha_cursor = new DateTime($fecha_evento);
+        // Avanzar si cae en fin de semana
+        while ((int)$fecha_cursor->format('N') > 5) $fecha_cursor->modify('+1 day');
 
-        $historial_id = $pdo->lastInsertId();
+        $historial_ids   = [];
+        $fecha_retorno_final = null;
 
-        // Actualizar estado funcionario
+        foreach ($periodos_seleccionados as $p_año) {
+            $dias_habiles = $diasPorPeriodo($p_año);
+
+            // Calcular fecha de fin del período (contando días hábiles)
+            $fecha_inicio_periodo = clone $fecha_cursor;
+            $dias_contados = 0;
+
+            while ($dias_contados < $dias_habiles) {
+                $dow = (int)$fecha_cursor->format('N');
+                if ($dow >= 1 && $dow <= 5) {
+                    $dias_contados++;
+                }
+                if ($dias_contados < $dias_habiles) {
+                    $fecha_cursor->modify('+1 day');
+                }
+            }
+
+            $fecha_fin_periodo = clone $fecha_cursor;
+
+            // Calcular fecha de retorno (próximo día hábil tras el fin)
+            $fecha_retorno = clone $fecha_cursor;
+            $fecha_retorno->modify('+1 day');
+            while ((int)$fecha_retorno->format('N') > 5) $fecha_retorno->modify('+1 day');
+            $fecha_retorno_str = $fecha_retorno->format('Y-m-d');
+
+            // Detalles JSON
+            $detalles = json_encode([
+                'periodo_año'  => $p_año,
+                'dias_habiles' => $dias_habiles,
+                'observaciones'=> htmlspecialchars($observaciones, ENT_QUOTES, 'UTF-8'),
+                'años_servicio'=> $años_servicio,
+                'fecha_retorno'=> $fecha_retorno_str,
+            ], JSON_UNESCAPED_UNICODE);
+
+            $stmt = $pdo->prepare("
+                INSERT INTO historial_administrativo (
+                    funcionario_id, tipo_evento, fecha_evento, fecha_fin,
+                    detalles, ruta_archivo_pdf, nombre_archivo_original,
+                    registrado_por
+                ) VALUES (?, 'VACACION', ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $funcionario_id,
+                $fecha_inicio_periodo->format('Y-m-d'),
+                $fecha_fin_periodo->format('Y-m-d'),
+                $detalles,
+                $ruta_archivo,
+                $nombre_original,
+                $_SESSION['usuario_id'],
+            ]);
+
+            $historial_ids[] = $pdo->lastInsertId();
+            $fecha_retorno_final = $fecha_retorno_str;
+
+            // Avanzar el cursor al inicio del siguiente período
+            $fecha_cursor = clone $fecha_retorno;
+        }
+
+        // Actualizar estado funcionario a 'vacaciones'
         $stmt = $pdo->prepare("UPDATE funcionarios SET estado = 'vacaciones', updated_at = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$funcionario_id]);
 
         // Auditoría
-        registrarAuditoria('REGISTRAR_VACACION', 'historial_administrativo', $historial_id, null, [
-            'funcionario_id' => $funcionario_id,
-            'dias_habiles' => $dias_habiles,
-            'estado_actualizado' => 'vacaciones'
+        registrarAuditoria('REGISTRAR_VACACION', 'historial_administrativo', $historial_ids[0], null, [
+            'funcionario_id'    => $funcionario_id,
+            'periodos_registrados' => $periodos_seleccionados,
+            'estado_actualizado'=> 'vacaciones',
         ]);
 
         $pdo->commit();
 
         return [
             'success' => true,
-            'message' => 'Vacación registrada exitosamente.',
+            'message' => count($periodos_seleccionados) > 1
+                ? count($periodos_seleccionados) . ' períodos vacacionales registrados exitosamente.'
+                : 'Período vacacional registrado exitosamente.',
             'data' => [
-                'fecha_retorno' => $fecha_retorno_str
+                'periodos_registrados' => $periodos_seleccionados,
+                'fecha_retorno'        => $fecha_retorno_final,
             ]
         ];
 

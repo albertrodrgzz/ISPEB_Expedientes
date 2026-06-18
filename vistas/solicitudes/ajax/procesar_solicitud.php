@@ -171,58 +171,131 @@ try {
         ");
         $stmt->execute([$revisor_id, $observaciones, $ruta_relativa, $solicitud_id]);
 
-        // 2) Insertar evento en historial_administrativo
-        // Determinar tipo de evento según tipo de solicitud
-        $tipo_evento = strtoupper($solicitud['tipo_solicitud'] === 'vacaciones' ? 'VACACION' : 'PERMISO');
+        // 2) Insertar evento(s) en historial_administrativo
+        // Para VACACION: un registro por período solicitado (con periodo_año)
+        $historial_id = null;
 
-        $dias_habiles_solicitud = 0;
         if ($tipo_evento === 'VACACION') {
-            $d1 = new DateTime($solicitud['fecha_inicio']);
-            $d2 = new DateTime($solicitud['fecha_fin']);
-            if ($d2 >= $d1) {
-                $curr = clone $d1;
-                while ($curr <= $d2) {
-                    $dia_semana_num = (int)$curr->format('N');
-                    if ($dia_semana_num >= 1 && $dia_semana_num <= 5) {
-                        $dias_habiles_solicitud++;
-                    }
-                    $curr->modify('+1 day');
-                }
+            // Función LOTTT inline
+            $fnDiasLOTTT = function(int $n): int {
+                if ($n === 1) return 15;
+                return min(18 + ($n - 2), 30);
+            };
+
+            // Parsear períodos del motivo: [Períodos: Año 1, Año 2] motivo...
+            $motivo_raw   = $solicitud['motivo'];
+            $anios_sol    = [];
+            if (preg_match('/^\[Períodos:\s*([^\]]+)\]/u', $motivo_raw, $mp)) {
+                preg_match_all('/\d+/', $mp[1], $numMatch);
+                $anios_sol = array_map('intval', $numMatch[0]);
             }
+
+            $fechaCurr = new DateTime($solicitud['fecha_inicio']);
+
+            foreach ($anios_sol as $i => $anio) {
+                $diasAnio   = $fnDiasLOTTT($anio);
+                $fechaFin_p = clone $fechaCurr;
+                $fechaFin_p->modify('+' . ($diasAnio - 1) . ' days');
+
+                $det_p = json_encode([
+                    'origen'         => 'solicitud_empleado',
+                    'solicitud_id'   => $solicitud_id,
+                    'tipo_solicitud' => 'vacaciones',
+                    'periodo_año'    => $anio,
+                    'dias_periodo'   => $diasAnio,
+                    'fecha_inicio'   => $fechaCurr->format('Y-m-d'),
+                    'fecha_fin'      => $fechaFin_p->format('Y-m-d'),
+                    'motivo'         => $motivo_raw,
+                    'aprobado_por'   => $revisor_id,
+                    'observaciones'  => $observaciones,
+                ], JSON_UNESCAPED_UNICODE);
+
+                $stmtH = $pdo->prepare("
+                    INSERT INTO historial_administrativo
+                        (funcionario_id, tipo_evento, fecha_evento, fecha_fin,
+                         detalles, ruta_archivo_pdf, nombre_archivo_original,
+                         registrado_por, created_at, updated_at)
+                    VALUES (?, 'VACACION', ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+                $stmtH->execute([
+                    $func_id,
+                    $fechaCurr->format('Y-m-d'),
+                    $fechaFin_p->format('Y-m-d'),
+                    $det_p,
+                    $ruta_relativa,
+                    $nombre_archivo_orig,
+                    $revisor_id,
+                ]);
+                if ($i === 0) $historial_id = $pdo->lastInsertId();
+
+                // Avanzar al inicio del siguiente período
+                $fechaCurr->modify('+' . $diasAnio . ' days');
+            }
+
+            // Si no se pudieron parsear períodos, insertar un registro genérico
+            if (empty($anios_sol)) {
+                $detalles = json_encode([
+                    'origen'         => 'solicitud_empleado',
+                    'solicitud_id'   => $solicitud_id,
+                    'tipo_solicitud' => 'vacaciones',
+                    'fecha_inicio'   => $solicitud['fecha_inicio'],
+                    'fecha_fin'      => $solicitud['fecha_fin'],
+                    'motivo'         => $motivo_raw,
+                    'aprobado_por'   => $revisor_id,
+                    'observaciones'  => $observaciones,
+                ], JSON_UNESCAPED_UNICODE);
+                $stmtH = $pdo->prepare("
+                    INSERT INTO historial_administrativo
+                        (funcionario_id, tipo_evento, fecha_evento, fecha_fin,
+                         detalles, ruta_archivo_pdf, nombre_archivo_original,
+                         registrado_por, created_at, updated_at)
+                    VALUES (?, 'VACACION', ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+                $stmtH->execute([
+                    $func_id,
+                    $solicitud['fecha_inicio'],
+                    $solicitud['fecha_fin'],
+                    $detalles,
+                    $ruta_relativa,
+                    $nombre_archivo_orig,
+                    $revisor_id,
+                ]);
+                $historial_id = $pdo->lastInsertId();
+            }
+
+        } else {
+            // PERMISO: un único registro
+            $detalles = json_encode([
+                'origen'         => 'solicitud_empleado',
+                'solicitud_id'   => $solicitud_id,
+                'tipo_solicitud' => $solicitud['tipo_solicitud'],
+                'fecha_inicio'   => $solicitud['fecha_inicio'],
+                'fecha_fin'      => $solicitud['fecha_fin'],
+                'dias_habiles'   => $dias_habiles_solicitud,
+                'motivo'         => $solicitud['motivo'],
+                'aprobado_por'   => $revisor_id,
+                'observaciones'  => $observaciones,
+            ], JSON_UNESCAPED_UNICODE);
+
+            $stmtH = $pdo->prepare("
+                INSERT INTO historial_administrativo
+                    (funcionario_id, tipo_evento, fecha_evento, fecha_fin,
+                     detalles, ruta_archivo_pdf, nombre_archivo_original,
+                     registrado_por, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ");
+            $stmtH->execute([
+                $func_id,
+                $tipo_evento,
+                $solicitud['fecha_inicio'],
+                $solicitud['fecha_fin'],
+                $detalles,
+                $ruta_relativa,
+                $nombre_archivo_orig,
+                $revisor_id,
+            ]);
+            $historial_id = $pdo->lastInsertId();
         }
-
-        $detalles = json_encode([
-            'origen'           => 'solicitud_empleado',
-            'solicitud_id'     => $solicitud_id,
-            'tipo_solicitud'   => $solicitud['tipo_solicitud'],
-            'fecha_inicio'     => $solicitud['fecha_inicio'],
-            'fecha_fin'        => $solicitud['fecha_fin'],
-            'dias_habiles'     => $dias_habiles_solicitud,
-            'motivo'           => $solicitud['motivo'],
-            'aprobado_por'     => $revisor_id,
-            'observaciones'    => $observaciones
-        ], JSON_UNESCAPED_UNICODE);
-
-        $stmt = $pdo->prepare("
-            INSERT INTO historial_administrativo
-                (funcionario_id, tipo_evento, fecha_evento, fecha_fin,
-                 detalles, ruta_archivo_pdf, nombre_archivo_original,
-                 registrado_por, created_at, updated_at)
-            VALUES
-                (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-        ");
-        $stmt->execute([
-            $func_id,
-            $tipo_evento,
-            $solicitud['fecha_inicio'],
-            $solicitud['fecha_fin'],
-            $detalles,
-            $ruta_relativa,                  // ruta del memo (null si no se adjuntó)
-            $nombre_archivo_orig,
-            $revisor_id
-        ]);
-
-        $historial_id = $pdo->lastInsertId();
 
         // 3) Opcional: actualizar estado del funcionario si son vacaciones
         if ($solicitud['tipo_solicitud'] === 'vacaciones') {

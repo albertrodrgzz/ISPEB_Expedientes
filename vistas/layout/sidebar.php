@@ -101,9 +101,9 @@ require_once __DIR__ . '/../../config/icons.php';
                                 [
                                     'label' => 'Constancia de Trabajo',
                                     'url'   => '/vistas/reportes/constancia_trabajo.php',
+                                    'target' => '_blank',
                                     'dir'   => 'reportes'
                                 ]
-                                // 'Recibos de Pago' eliminado — no disponible para Nivel 3
                             ]
                         ],
                         [
