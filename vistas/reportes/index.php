@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Módulo de Reportes
  * Sistema SIGED - Gestión de Expedientes Digitales
@@ -268,6 +268,103 @@ $tipos_eventos = $stmt->fetch()['total'];
                     </button>
                 </div>
             </div>
+            <!-- Reporte por Departamento -->
+            <div class="report-card" style="--card-color: #7c3aed;">
+                <div class="report-card-header" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);">
+                    <div class="report-icon"><?= Icon::get('grid', 'width: 48px; height: 48px; stroke: white;') ?></div>
+                    <h3 class="report-title">Por Departamento</h3>
+                    <p class="report-description">Personal agrupado por departamento</p>
+                </div>
+                <div class="report-card-body">
+                    <div class="report-info">
+                        <?= Icon::get('info') ?> Listado de todo el personal activo agrupado por departamento con subtotales.
+                    </div>
+                    <button class="report-button" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);" onclick="abrirFormDepartamento()">
+                        <?= Icon::get('grid') ?>
+                        Generar Reporte
+                    </button>
+                </div>
+            </div>
+
+            <!-- Personal Ausente -->
+            <div class="report-card" style="--card-color: #0891b2;">
+                <div class="report-card-header" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);">
+                    <div class="report-icon"><?= Icon::get('calendar', 'width: 48px; height: 48px; stroke: white;') ?></div>
+                    <h3 class="report-title">Personal Ausente</h3>
+                    <p class="report-description">Funcionarios en vacaciones o reposo</p>
+                </div>
+                <div class="report-card-body">
+                    <div class="report-info">
+                        <?= Icon::get('info') ?> Muestra quienes están actualmente de vacaciones o en reposo medico.
+                    </div>
+                    <div style="display:flex;gap:8px;flex-direction:column;">
+                        <button class="report-button" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);" onclick="window.open('generar_pdf.php?tipo=ausentes','_blank')">
+                            <?= Icon::get('file-text') ?> Ver PDF
+                        </button>
+                        <button class="report-button" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);" onclick="window.open('exportar_excel.php?tipo=ausentes','_blank')">
+                            <?= Icon::get('download') ?> Exportar Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Vacacional -->
+            <div class="report-card" style="--card-color: #16a34a;">
+                <div class="report-card-header" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);">
+                    <div class="report-icon"><?= Icon::get('sun', 'width: 48px; height: 48px; stroke: white;') ?></div>
+                    <h3 class="report-title">Control Vacacional</h3>
+                    <p class="report-description">Días LOTTT usados vs disponibles</p>
+                </div>
+                <div class="report-card-body">
+                    <div class="report-info">
+                        <?= Icon::get('info') ?> Días correspondientes, usados y disponibles según la LOTTT. Incluye semáforo de disponibilidad por funcionario.
+                    </div>
+                    <div style="display:flex;gap:8px;flex-direction:column;">
+                        <button class="report-button" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);" onclick="window.open('generar_pdf.php?tipo=vacacional','_blank')">
+                            <?= Icon::get('file-text') ?> Generar PDF
+                        </button>
+                        <button class="report-button" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); font-size:13px; padding:10px 16px;" onclick="window.open('exportar_excel.php?tipo=vacaciones','_blank')">
+                            <?= Icon::get('download') ?> Exportar Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amonestaciones -->
+            <div class="report-card" style="--card-color: #dc2626;">
+                <div class="report-card-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+                    <div class="report-icon"><?= Icon::get('alert-triangle', 'width: 48px; height: 48px; stroke: white;') ?></div>
+                    <h3 class="report-title">Amonestaciones</h3>
+                    <p class="report-description">Historial disciplinario del personal</p>
+                </div>
+                <div class="report-card-body">
+                    <div class="report-info">
+                        <?= Icon::get('info') ?> Listado de amonestaciones registradas con tipo de falta, motivo y sancion aplicada.
+                    </div>
+                    <button class="report-button" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);" onclick="abrirFormAmonestaciones()">
+                        <?= Icon::get('alert-triangle') ?>
+                        Generar Reporte
+                    </button>
+                </div>
+            </div>
+
+            <!-- Antiguedad -->
+            <div class="report-card" style="--card-color: #d97706;">
+                <div class="report-card-header" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+                    <div class="report-icon"><?= Icon::get('award', 'width: 48px; height: 48px; stroke: white;') ?></div>
+                    <h3 class="report-title">Antiguedad de Servicio</h3>
+                    <p class="report-description">Ranking por anos de servicio</p>
+                </div>
+                <div class="report-card-body">
+                    <div class="report-info">
+                        <?= Icon::get('info') ?> Ranking de funcionarios activos ordenados por tiempo de servicio, con filtro de anos minimos.
+                    </div>
+                    <button class="report-button" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);" onclick="abrirFormAntiguedad()">
+                        <?= Icon::get('award') ?>
+                        Generar Reporte
+                    </button>
+                </div>
+            </div>
             <?php endif; ?>
 
         </div>
@@ -464,6 +561,149 @@ $tipos_eventos = $stmt->fetch()['total'];
                 `generar_pdf.php?tipo=historial&funcionario_id=${formValues.funcionario_id}&evento=${formValues.tipo}`,
                 '_blank'
             );
+        }
+    }
+
+    /**
+     * Reporte por Departamento
+     */
+    async function abrirFormDepartamento() {
+        const { value: formato } = await Swal.fire({
+            title: 'Reporte por Departamento',
+            html: `
+                <div class="swal-form-grid">
+                    <div class="swal-field" style="grid-column:1/-1;margin-top:8px;">
+                        <label class="swal-label" style="margin-bottom:8px;display:block;">Formato de exportacion</label>
+                        <div style="display:flex;gap:12px;">
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #BFDBFE;border-radius:10px;cursor:pointer;background:#EFF6FF;">
+                                <input type="radio" name="fmt" value="pdf" checked style="accent-color:#1D4ED8;">
+                                <span style="font-weight:600;color:#1D4ED8;">PDF</span>
+                            </label>
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #A7F3D0;border-radius:10px;cursor:pointer;background:#ECFDF5;">
+                                <input type="radio" name="fmt" value="excel" style="accent-color:#059669;">
+                                <span style="font-weight:600;color:#059669;">Excel (.xls)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `,
+            width: '440px',
+            showCancelButton: true,
+            confirmButtonText: 'Generar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => document.querySelector('input[name="fmt"]:checked')?.value ?? 'pdf'
+        });
+        if (formato) {
+            if (formato === 'excel') {
+                window.open('exportar_excel.php?tipo=departamento', '_blank');
+            } else {
+                window.open('generar_pdf.php?tipo=departamento', '_blank');
+            }
+        }
+    }
+
+    /**
+     * Reporte de Amonestaciones
+     */
+    async function abrirFormAmonestaciones() {
+        const anioActual = new Date().getFullYear();
+        let opts = '';
+        for (let y = anioActual; y >= anioActual - 5; y--) {
+            opts += `<option value="${y}">${y}</option>`;
+        }
+        const { value: formValues } = await Swal.fire({
+            title: 'Reporte de Amonestaciones',
+            html: `
+                <div class="swal-form-grid">
+                    <div class="swal-field" style="grid-column:1/-1;">
+                        <label class="swal-label">Ano</label>
+                        <select id="swal-anio" class="swal2-select" style="width:100%;">${opts}</select>
+                    </div>
+                    <div class="swal-field" style="grid-column:1/-1;margin-top:8px;">
+                        <label class="swal-label" style="margin-bottom:8px;display:block;">Formato</label>
+                        <div style="display:flex;gap:12px;">
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #FECACA;border-radius:10px;cursor:pointer;background:#FFF5F5;">
+                                <input type="radio" name="fmtA" value="pdf" checked style="accent-color:#DC2626;">
+                                <span style="font-weight:600;color:#DC2626;">PDF</span>
+                            </label>
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #A7F3D0;border-radius:10px;cursor:pointer;background:#ECFDF5;">
+                                <input type="radio" name="fmtA" value="excel" style="accent-color:#059669;">
+                                <span style="font-weight:600;color:#059669;">Excel (.xls)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `,
+            width: '460px',
+            showCancelButton: true,
+            confirmButtonText: 'Generar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => ({
+                anio: document.getElementById('swal-anio').value,
+                formato: document.querySelector('input[name="fmtA"]:checked')?.value ?? 'pdf'
+            })
+        });
+        if (formValues) {
+            const { anio, formato } = formValues;
+            if (formato === 'excel') {
+                window.open(`exportar_excel.php?tipo=amonestaciones&anio=${anio}`, '_blank');
+            } else {
+                window.open(`generar_pdf.php?tipo=amonestaciones&anio=${anio}`, '_blank');
+            }
+        }
+    }
+
+    /**
+     * Reporte de Antiguedad
+     */
+    async function abrirFormAntiguedad() {
+        const { value: formValues } = await Swal.fire({
+            title: 'Reporte de Antiguedad',
+            html: `
+                <div class="swal-form-grid">
+                    <div class="swal-field" style="grid-column:1/-1;">
+                        <label class="swal-label">Anos minimos de servicio (0 = todos)</label>
+                        <select id="swal-anios" class="swal2-select" style="width:100%;">
+                            <option value="0">Todos</option>
+                            <option value="1">1 ano o mas</option>
+                            <option value="3">3 anos o mas</option>
+                            <option value="5">5 anos o mas</option>
+                            <option value="10">10 anos o mas</option>
+                            <option value="15">15 anos o mas</option>
+                            <option value="20">20 anos o mas</option>
+                        </select>
+                    </div>
+                    <div class="swal-field" style="grid-column:1/-1;margin-top:8px;">
+                        <label class="swal-label" style="margin-bottom:8px;display:block;">Formato</label>
+                        <div style="display:flex;gap:12px;">
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #FDE68A;border-radius:10px;cursor:pointer;background:#FFFBEB;">
+                                <input type="radio" name="fmtAnt" value="pdf" checked style="accent-color:#D97706;">
+                                <span style="font-weight:600;color:#D97706;">PDF</span>
+                            </label>
+                            <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;border:2px solid #A7F3D0;border-radius:10px;cursor:pointer;background:#ECFDF5;">
+                                <input type="radio" name="fmtAnt" value="excel" style="accent-color:#059669;">
+                                <span style="font-weight:600;color:#059669;">Excel (.xls)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `,
+            width: '460px',
+            showCancelButton: true,
+            confirmButtonText: 'Generar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => ({
+                anios: document.getElementById('swal-anios').value,
+                formato: document.querySelector('input[name="fmtAnt"]:checked')?.value ?? 'pdf'
+            })
+        });
+        if (formValues) {
+            const { anios, formato } = formValues;
+            if (formato === 'excel') {
+                window.open(`exportar_excel.php?tipo=antiguedad&anios_min=${anios}`, '_blank');
+            } else {
+                window.open(`generar_pdf.php?tipo=antiguedad&anios_min=${anios}`, '_blank');
+            }
         }
     }
     </script>

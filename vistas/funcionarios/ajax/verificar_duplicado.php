@@ -47,9 +47,29 @@ try {
         $valor = preg_replace('/[^0-9]/', '', $valor);
     }
 
+    // Normalizar email: minúsculas
+    if ($campo === 'email') {
+        $valor = strtolower($valor);
+    }
+
     $db = getDB();
 
-    $sql    = "SELECT id, nombres, apellidos FROM funcionarios WHERE REPLACE(REPLACE(REPLACE(LOWER({$campo}), 'v-', ''), '-', ''), '.', '') = ?";
+    // Construir consulta según el campo para comparación correcta
+    if ($campo === 'cedula') {
+        // Cédula: comparar solo dígitos contra solo dígitos en BD
+        $sql = "SELECT id, nombres, apellidos FROM funcionarios
+                WHERE REGEXP_REPLACE(cedula, '[^0-9]', '') = ?";
+    } elseif ($campo === 'telefono') {
+        // Teléfono: comparar solo dígitos
+        $sql = "SELECT id, nombres, apellidos FROM funcionarios
+                WHERE REGEXP_REPLACE(telefono, '[^0-9]', '') = ?
+                AND telefono IS NOT NULL AND telefono != ''";
+    } else {
+        // Email: comparación exacta insensible a mayúsculas
+        $sql = "SELECT id, nombres, apellidos FROM funcionarios
+                WHERE LOWER(email) = ?
+                AND email IS NOT NULL AND email != ''";
+    }
     $params = [$valor];
 
     if ($excluir_id > 0) {

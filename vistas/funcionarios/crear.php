@@ -79,8 +79,16 @@ $datos = [
         $errores['telefono'] = 'Ingrese el teléfono sin guiones ni letras (ej: 04121234567).';
     }
 
-    if (!empty($datos['email']) && !filter_var($datos['email'], FILTER_VALIDATE_EMAIL)) {
+    // Email: obligatorio y con formato válido
+    if (empty($datos['email'])) {
+        $errores['email'] = 'El correo electrónico es obligatorio.';
+    } elseif (!filter_var($datos['email'], FILTER_VALIDATE_EMAIL)) {
         $errores['email'] = 'El correo electrónico no tiene un formato válido.';
+    }
+
+    // Género: obligatorio
+    if (empty($datos['genero'])) {
+        $errores['genero'] = 'Debe seleccionar el género.';
     }
 
     if (empty($datos['cargo_id'])) {
@@ -95,8 +103,10 @@ $datos = [
         $errores['fecha_ingreso'] = 'La fecha de ingreso no puede ser futura.';
     }
 
-    // Fecha de nacimiento: debe ser mayor de 18 años
-    if (!empty($datos['fecha_nacimiento'])) {
+    // Fecha de nacimiento: obligatoria y mayor de 18 años
+    if (empty($datos['fecha_nacimiento'])) {
+        $errores['fecha_nacimiento'] = 'La fecha de nacimiento es obligatoria.';
+    } else {
         $edad = (int) date_diff(
             date_create($datos['fecha_nacimiento']),
             date_create('today')
@@ -274,11 +284,12 @@ function fieldClass(string $campo, array $errores): string {
 
                             <!-- Fecha de Nacimiento -->
                             <div class="form-group">
-                                <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                                <label for="fecha_nacimiento">Fecha de Nacimiento <span class="required">*</span></label>
                                 <input type="date" id="fecha_nacimiento" name="fecha_nacimiento"
                                     class="<?php echo fieldClass('fecha_nacimiento',$errores); ?>"
                                     max="<?php echo date('Y-m-d', strtotime('-18 years')); ?>"
-                                    value="<?php echo htmlspecialchars($_POST['fecha_nacimiento'] ?? ''); ?>">
+                                    value="<?php echo htmlspecialchars($_POST['fecha_nacimiento'] ?? ''); ?>"
+                                    required>
                                 <div class="field-feedback <?php echo isset($errores['fecha_nacimiento']) ? 'error' : ''; ?>" id="fb-fecha_nacimiento">
                                     <?php if (isset($errores['fecha_nacimiento'])) echo '❌ ' . $errores['fecha_nacimiento']; ?>
                                 </div>
@@ -312,13 +323,15 @@ function fieldClass(string $campo, array $errores): string {
 
                             <!-- Género -->
                             <div class="form-group">
-                                <label for="genero">Género</label>
-                                <select id="genero" name="genero" class="form-control">
+                                <label for="genero">Género <span class="required">*</span></label>
+                                <select id="genero" name="genero" class="<?php echo fieldClass('genero',$errores); ?>" required>
                                     <option value="">Seleccione...</option>
                                     <option value="M" <?php echo ($_POST['genero'] ?? '') == 'M' ? 'selected' : ''; ?>>Masculino</option>
                                     <option value="F" <?php echo ($_POST['genero'] ?? '') == 'F' ? 'selected' : ''; ?>>Femenino</option>
                                 </select>
-                                <div class="field-feedback" id="fb-genero"></div>
+                                <div class="field-feedback <?php echo isset($errores['genero']) ? 'error' : ''; ?>" id="fb-genero">
+                                    <?php if (isset($errores['genero'])) echo '❌ ' . $errores['genero']; ?>
+                                </div>
                             </div>
 
                             <!-- Teléfono -->
@@ -337,11 +350,12 @@ function fieldClass(string $campo, array $errores): string {
 
                             <!-- Email -->
                             <div class="form-group">
-                                <label for="email">Correo Electrónico</label>
+                                <label for="email">Correo Electrónico <span class="required">*</span></label>
                                 <input type="email" id="email" name="email"
                                     class="<?php echo fieldClass('email',$errores); ?>"
                                     placeholder="correo@ispeb.gob.ve"
-                                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
+                                    required>
                                 <div class="field-feedback <?php echo isset($errores['email']) ? 'error' : ''; ?>" id="fb-email">
                                     <?php if (isset($errores['email'])) echo '❌ ' . $errores['email']; ?>
                                 </div>
@@ -521,12 +535,15 @@ function fieldClass(string $campo, array $errores): string {
         // ── Validación de teléfono (cliente + servidor) ───────────────────────
         // (manejado por el listener de abajo)
 
-        // ── Validación de email (cliente + servidor) ──────────────────────────
+        // ── Validación de email (obligatorio + servidor) ──────────────────────
         document.getElementById('email').addEventListener('blur', function () {
             const val = this.value.trim().toLowerCase();
             this.value = val;
-            if (!val) { clearFeedback('email'); estado['email'] = true; return; }
-
+            if (!val) {
+                setFeedback('email', 'error', '❌ El correo electrónico es obligatorio.');
+                estado['email'] = false;
+                return;
+            }
             const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
             if (!ok) {
                 setFeedback('email', 'error', '❌ Ingrese un correo válido. Ejemplo: usuario@ispeb.gob.ve');
@@ -534,6 +551,24 @@ function fieldClass(string $campo, array $errores): string {
                 return;
             }
             verificarEnServidor('email', val);
+        });
+
+        // ── Validación de género ──────────────────────────────────────────────
+        document.getElementById('genero').addEventListener('change', function () {
+            if (!this.value) {
+                setFeedback('genero', 'error', '❌ Debe seleccionar el género.');
+            } else {
+                clearFeedback('genero');
+            }
+        });
+
+        // ── Validación de fecha de nacimiento ─────────────────────────────────
+        document.getElementById('fecha_nacimiento').addEventListener('change', function () {
+            if (!this.value) {
+                setFeedback('fecha_nacimiento', 'error', '❌ La fecha de nacimiento es obligatoria.');
+            } else {
+                clearFeedback('fecha_nacimiento');
+            }
         });
 
         // ── Llamada AJAX genérica ─────────────────────────────────────────────
@@ -563,15 +598,7 @@ function fieldClass(string $campo, array $errores): string {
             }, 400);
         }
 
-        // ── Formateo automático de cédula mientras escribe ────────────────────
-        document.getElementById('cedula').addEventListener('input', function () {
-            // Autoformatea: si empieza con V o E sin guión, lo agrega
-            let v = this.value.toUpperCase().replace(/[^VE0-9\-]/g, '');
-            if (/^[VE]\d/.test(v) && v[1] !== '-') {
-                v = v[0] + '-' + v.slice(1);
-            }
-            this.value = v;
-        });
+        // (El input de cédula ya está manejado arriba: solo dígitos)
 
         // ── Teléfono: solo dígitos ──────────────────────────────────────────
         document.getElementById('telefono').addEventListener('input', function () {
@@ -605,19 +632,65 @@ function fieldClass(string $campo, array $errores): string {
             });
         });
 
-        // ── Bloquear submit si hay errores de duplicados activos ──────────────
+        // ── Validación completa al intentar enviar ────────────────────────────
         document.getElementById('formCrear').addEventListener('submit', function (e) {
             let hayError = false;
-            camposDuplicados.forEach(c => {
-                if (estado[c] === false) hayError = true;
-                if (estado[c] === null) {
-                    const val = document.getElementById(c)?.value.trim();
-                    if (c === 'cedula' && val && !/^\d{6,9}$/.test(val)) {
-                        setFeedback(c, 'error', '❌ Ingrese solo los números de la cédula.');
-                        hayError = true;
-                    }
+
+            // 1. Campos de texto obligatorios
+            const camposObligatorios = [
+                { id: 'cedula',    msg: '❌ La cédula es obligatoria.' },
+                { id: 'nombres',   msg: '❌ El nombre es obligatorio.' },
+                { id: 'apellidos', msg: '❌ El apellido es obligatorio.' },
+                { id: 'email',     msg: '❌ El correo electrónico es obligatorio.' },
+            ];
+            camposObligatorios.forEach(({ id, msg }) => {
+                const inp = document.getElementById(id);
+                if (!inp) return;
+                if (!inp.value.trim()) {
+                    setFeedback(id, 'error', msg);
+                    hayError = true;
                 }
             });
+
+            // 2. Selects obligatorios
+            const selectsObligatorios = [
+                { id: 'genero',          msg: '❌ Debe seleccionar el género.' },
+                { id: 'cargo_id',        msg: '❌ Debe seleccionar un cargo.' },
+                { id: 'departamento_id', msg: '❌ Debe seleccionar un departamento.' },
+            ];
+            selectsObligatorios.forEach(({ id, msg }) => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                if (!sel.value) {
+                    setFeedback(id, 'error', msg);
+                    hayError = true;
+                }
+            });
+
+            // 3. Fechas obligatorias
+            const fechaNac = document.getElementById('fecha_nacimiento');
+            if (!fechaNac?.value) {
+                setFeedback('fecha_nacimiento', 'error', '❌ La fecha de nacimiento es obligatoria.');
+                hayError = true;
+            }
+            const fechaIng = document.getElementById('fecha_ingreso');
+            if (!fechaIng?.value) {
+                setFeedback('fecha_ingreso', 'error', '❌ La fecha de ingreso es obligatoria.');
+                hayError = true;
+            }
+
+            // 4. Validar formato de cédula si fue ingresada
+            const cedVal = document.getElementById('cedula')?.value.trim();
+            if (cedVal && !/^\d{6,9}$/.test(cedVal)) {
+                setFeedback('cedula', 'error', '❌ Ingrese solo los números de la cédula (6-9 dígitos).');
+                hayError = true;
+            }
+
+            // 5. Verificar errores de duplicados AJAX pendientes
+            camposDuplicados.forEach(c => {
+                if (estado[c] === false) hayError = true;
+            });
+
             if (hayError) {
                 e.preventDefault();
                 window.scrollTo({ top: 0, behavior: 'smooth' });

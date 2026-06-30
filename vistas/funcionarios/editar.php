@@ -33,7 +33,8 @@ $csrfToken = generarTokenCSRF();
 
 // ─── Helpers de validación ───────────────────────────────────────────────────
 function validarCedulaVenezolana(string $cedula): bool {
-    return (bool) preg_match('/^[VEve]-?\d{6,8}$/', trim($cedula));
+    // Acepta solo dígitos, sin prefijo V/E ni guiones (6-9 números)
+    return (bool) preg_match('/^\d{6,9}$/', trim($cedula));
 }
 function validarTelefonoVenezolano(string $tel): bool {
     $tel = preg_replace('/[\s\-()]/', '', $tel);
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $datos = [
-        'cedula'           => strtoupper(trim(limpiar($_POST['cedula']))),
+        'cedula'           => preg_replace('/[^0-9]/', '', trim(limpiar($_POST['cedula']))),
         'nombres'          => trim(limpiar($_POST['nombres'])),
         'apellidos'        => trim(limpiar($_POST['apellidos'])),
         'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?? null,
@@ -68,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($datos['cedula'])) {
         $errores['cedula'] = 'La cédula es obligatoria.';
     } elseif (!validarCedulaVenezolana($datos['cedula'])) {
-        $errores['cedula'] = 'Formato inválido. Ejemplo: V-12345678 o E-1234567.';
+        $errores['cedula'] = 'Ingrese solo los números de la cédula, sin prefijo V ni guiones (ej: 12345678).';
     }
 
     if (empty($datos['nombres'])) {
@@ -84,11 +85,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!empty($datos['telefono']) && !validarTelefonoVenezolano($datos['telefono'])) {
-        $errores['telefono'] = 'Formato de teléfono inválido. Ejemplo: 0412-1234567.';
+        $errores['telefono'] = 'Formato de teléfono inválido. Ej: 04121234567.';
     }
 
-    if (!empty($datos['email']) && !filter_var($datos['email'], FILTER_VALIDATE_EMAIL)) {
+    // Email: obligatorio y con formato válido
+    if (empty($datos['email'])) {
+        $errores['email'] = 'El correo electrónico es obligatorio.';
+    } elseif (!filter_var($datos['email'], FILTER_VALIDATE_EMAIL)) {
         $errores['email'] = 'El correo electrónico no tiene un formato válido.';
+    }
+
+    // Género: obligatorio
+    if (empty($datos['genero'])) {
+        $errores['genero'] = 'Debe seleccionar el género.';
     }
 
     if (empty($datos['cargo_id'])) {
@@ -103,7 +112,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errores['fecha_ingreso'] = 'La fecha de ingreso no puede ser futura.';
     }
 
-    if (!empty($datos['fecha_nacimiento'])) {
+    // Fecha de nacimiento: obligatoria y mayor de 18 años
+    if (empty($datos['fecha_nacimiento'])) {
+        $errores['fecha_nacimiento'] = 'La fecha de nacimiento es obligatoria.';
+    } else {
         $edad = (int) date_diff(
             date_create($datos['fecha_nacimiento']),
             date_create('today')
@@ -143,7 +155,12 @@ function fieldClass(string $campo, array $errores): string {
 
 // Valor actual del campo (POST tiene prioridad para repintar errores)
 function val(string $campo, array $funcionario): string {
-    return htmlspecialchars($_POST[$campo] ?? $funcionario[$campo] ?? '');
+    $valor = $_POST[$campo] ?? $funcionario[$campo] ?? '';
+    // Para la cédula: limpiar prefijo V/E y guiones (solo dígitos)
+    if ($campo === 'cedula') {
+        $valor = preg_replace('/[^0-9]/', '', $valor);
+    }
+    return htmlspecialchars($valor);
 }
 ?>
 <!DOCTYPE html>
@@ -202,7 +219,7 @@ function val(string $campo, array $funcionario): string {
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Datos del Funcionario</h2>
-                    <p class="card-subtitle">Editando: <strong><?php echo htmlspecialchars($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?></strong></p>
+                    <p class="card-subtitle">Editando: <strong><?php echo htmlspecialchars($funcionario['nombres'] . ' ' . $funcionario['apellidos']); ?></strong> &mdash; Los campos marcados con <span style="color:var(--color-danger)">*</span> son obligatorios.</p>
                 </div>
 
                 <div style="padding: 32px;">
@@ -227,8 +244,12 @@ function val(string $campo, array $funcionario): string {
                                 <label for="cedula">Cédula <span class="required">*</span></label>
                                 <input type="text" id="cedula" name="cedula"
                                     class="<?php echo fieldClass('cedula',$errores); ?>"
+                                    placeholder="Ej: 12345678"
                                     value="<?php echo val('cedula', $funcionario); ?>"
-                                    autocomplete="off" required>
+                                    autocomplete="off"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    required>
                                 <div class="field-feedback <?php echo isset($errores['cedula']) ? 'error' : ''; ?>" id="fb-cedula">
                                     <?php if (isset($errores['cedula'])) echo '❌ ' . $errores['cedula']; ?>
                                 </div>
@@ -236,11 +257,12 @@ function val(string $campo, array $funcionario): string {
 
                             <!-- Fecha de Nacimiento -->
                             <div class="form-group">
-                                <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                                <label for="fecha_nacimiento">Fecha de Nacimiento <span class="required">*</span></label>
                                 <input type="date" id="fecha_nacimiento" name="fecha_nacimiento"
                                     class="<?php echo fieldClass('fecha_nacimiento',$errores); ?>"
                                     max="<?php echo date('Y-m-d', strtotime('-18 years')); ?>"
-                                    value="<?php echo val('fecha_nacimiento', $funcionario); ?>">
+                                    value="<?php echo val('fecha_nacimiento', $funcionario); ?>"
+                                    required>
                                 <div class="field-feedback <?php echo isset($errores['fecha_nacimiento']) ? 'error' : ''; ?>" id="fb-fecha_nacimiento">
                                     <?php if (isset($errores['fecha_nacimiento'])) echo '❌ ' . $errores['fecha_nacimiento']; ?>
                                 </div>
@@ -270,14 +292,16 @@ function val(string $campo, array $funcionario): string {
 
                             <!-- Género -->
                             <div class="form-group">
-                                <label for="genero">Género</label>
-                                <select id="genero" name="genero" class="form-control">
+                                <label for="genero">Género <span class="required">*</span></label>
+                                <select id="genero" name="genero" class="<?php echo fieldClass('genero',$errores); ?>" required>
                                     <option value="">Seleccione...</option>
                                     <option value="M"    <?php echo ($_POST['genero'] ?? $funcionario['genero']) == 'M'    ? 'selected' : ''; ?>>Masculino</option>
                                     <option value="F"    <?php echo ($_POST['genero'] ?? $funcionario['genero']) == 'F'    ? 'selected' : ''; ?>>Femenino</option>
                                     <option value="Otro" <?php echo ($_POST['genero'] ?? $funcionario['genero']) == 'Otro' ? 'selected' : ''; ?>>Otro</option>
                                 </select>
-                                <div class="field-feedback" id="fb-genero"></div>
+                                <div class="field-feedback <?php echo isset($errores['genero']) ? 'error' : ''; ?>" id="fb-genero">
+                                    <?php if (isset($errores['genero'])) echo '❌ ' . $errores['genero']; ?>
+                                </div>
                             </div>
 
                             <!-- Teléfono -->
@@ -294,10 +318,12 @@ function val(string $campo, array $funcionario): string {
 
                             <!-- Email -->
                             <div class="form-group">
-                                <label for="email">Correo Electrónico</label>
+                                <label for="email">Correo Electrónico <span class="required">*</span></label>
                                 <input type="email" id="email" name="email"
                                     class="<?php echo fieldClass('email',$errores); ?>"
-                                    value="<?php echo val('email', $funcionario); ?>">
+                                    placeholder="correo@ispeb.gob.ve"
+                                    value="<?php echo val('email', $funcionario); ?>"
+                                    required>
                                 <div class="field-feedback <?php echo isset($errores['email']) ? 'error' : ''; ?>" id="fb-email">
                                     <?php if (isset($errores['email'])) echo '❌ ' . $errores['email']; ?>
                                 </div>
@@ -457,50 +483,62 @@ function val(string $campo, array $funcionario): string {
             }, 400);
         }
 
-        // Cédula
+        // Cédula — solo dígitos, sin prefijo V/E ni guiones
         document.getElementById('cedula').addEventListener('input', function () {
-            let v = this.value.toUpperCase().replace(/[^VE0-9\-]/g, '');
-            if (/^[VE]\d/.test(v) && v[1] !== '-') v = v[0] + '-' + v.slice(1);
-            this.value = v;
+            // Eliminar cualquier caracter que no sea dígito
+            this.value = this.value.replace(/[^0-9]/g, '');
         });
         document.getElementById('cedula').addEventListener('blur', function () {
-            const val = this.value.trim().toUpperCase();
+            const val = this.value.trim();
             this.value = val;
             if (!val) { clearFeedback('cedula'); estado['cedula'] = false; return; }
-            if (!/^[VE]-?\d{6,8}$/.test(val)) {
-                setFeedback('cedula', 'error', '❌ Formato inválido. Ejemplo: V-12345678');
+            if (!/^\d{6,9}$/.test(val)) {
+                setFeedback('cedula', 'error', '❌ Ingrese solo los números (6-9 dígitos). Ej: 12345678');
                 estado['cedula'] = false; return;
             }
             verificarEnServidor('cedula', val);
         });
 
-        // Teléfono
+        // Teléfono — solo dígitos, campo opcional
         document.getElementById('telefono').addEventListener('input', function () {
-            let v = this.value.replace(/[^\d]/g, '');
-            if (v.length > 4) v = v.slice(0, 4) + '-' + v.slice(4, 11);
-            this.value = v;
+            this.value = this.value.replace(/[^0-9]/g, '');
         });
         document.getElementById('telefono').addEventListener('blur', function () {
-            const val = this.value.trim();
+            const val = this.value.replace(/[^0-9]/g, '');
+            this.value = val;
             if (!val) { clearFeedback('telefono'); estado['telefono'] = true; return; }
-            const limpio = val.replace(/[\s\-()]/g, '');
-            if (!/^(\+58|0058|0)?4(1[246]|2[246])\d{7}$/.test(limpio)) {
-                setFeedback('telefono', 'error', '❌ Formato inválido. Ejemplo: 0412-1234567');
+            if (!/^(0|0058|\+58)?4(1[246]|2[246])\d{7}$/.test(val) && val.length !== 11) {
+                setFeedback('telefono', 'error', '❌ Ej: 04121234567 (11 dígitos)');
                 estado['telefono'] = false; return;
             }
             verificarEnServidor('telefono', val);
         });
 
-        // Email
+        // Email — obligatorio
         document.getElementById('email').addEventListener('blur', function () {
             const val = this.value.trim().toLowerCase();
             this.value = val;
-            if (!val) { clearFeedback('email'); estado['email'] = true; return; }
+            if (!val) {
+                setFeedback('email', 'error', '❌ El correo electrónico es obligatorio.');
+                estado['email'] = false; return;
+            }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
                 setFeedback('email', 'error', '❌ Ingrese un correo válido.');
                 estado['email'] = false; return;
             }
             verificarEnServidor('email', val);
+        });
+
+        // Género — obligatorio
+        document.getElementById('genero').addEventListener('change', function () {
+            if (!this.value) setFeedback('genero', 'error', '❌ Debe seleccionar el género.');
+            else clearFeedback('genero');
+        });
+
+        // Fecha de nacimiento — obligatoria
+        document.getElementById('fecha_nacimiento').addEventListener('change', function () {
+            if (!this.value) setFeedback('fecha_nacimiento', 'error', '❌ La fecha de nacimiento es obligatoria.');
+            else clearFeedback('fecha_nacimiento');
         });
 
         // Nombre y Apellido
@@ -513,10 +551,44 @@ function val(string $campo, array $funcionario): string {
             });
         });
 
-        // Bloquear submit si hay errores de duplicados
+        // ── Validación completa al intentar enviar ────────────────────────────
         document.getElementById('formEditar').addEventListener('submit', function (e) {
             let hayError = false;
+
+            // 1. Campos de texto obligatorios
+            [
+                { id: 'cedula',    msg: '❌ La cédula es obligatoria.' },
+                { id: 'nombres',   msg: '❌ El nombre es obligatorio.' },
+                { id: 'apellidos', msg: '❌ El apellido es obligatorio.' },
+                { id: 'email',     msg: '❌ El correo electrónico es obligatorio.' },
+            ].forEach(({ id, msg }) => {
+                const inp = document.getElementById(id);
+                if (inp && !inp.value.trim()) { setFeedback(id, 'error', msg); hayError = true; }
+            });
+
+            // 2. Selects obligatorios
+            [
+                { id: 'genero',          msg: '❌ Debe seleccionar el género.' },
+                { id: 'cargo_id',        msg: '❌ Debe seleccionar un cargo.' },
+                { id: 'departamento_id', msg: '❌ Debe seleccionar un departamento.' },
+            ].forEach(({ id, msg }) => {
+                const sel = document.getElementById(id);
+                if (sel && !sel.value) { setFeedback(id, 'error', msg); hayError = true; }
+            });
+
+            // 3. Fechas obligatorias
+            if (!document.getElementById('fecha_nacimiento')?.value) {
+                setFeedback('fecha_nacimiento', 'error', '❌ La fecha de nacimiento es obligatoria.');
+                hayError = true;
+            }
+            if (!document.getElementById('fecha_ingreso')?.value) {
+                setFeedback('fecha_ingreso', 'error', '❌ La fecha de ingreso es obligatoria.');
+                hayError = true;
+            }
+
+            // 4. Errores de duplicados AJAX
             camposDup.forEach(c => { if (estado[c] === false) hayError = true; });
+
             if (hayError) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
         });
     })();

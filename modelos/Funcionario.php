@@ -152,10 +152,12 @@ class Funcionario {
             }
         }
 
-        // — Email (solo si se proporcionó) —
+        // — Email (ahora obligatorio, pero se verifica solo si se proporcionó) —
         if (!empty($datos['email'])) {
-            $sql = "SELECT id, nombres, apellidos FROM funcionarios WHERE email = ? AND email != ''";
-            $params = [$datos['email']];
+            $emailNormalizado = strtolower($datos['email']);
+            $sql = "SELECT id, nombres, apellidos FROM funcionarios
+                    WHERE LOWER(email) = ? AND email IS NOT NULL AND email != ''";
+            $params = [$emailNormalizado];
             if ($excluir_id) {
                 $sql .= " AND id != ?";
                 $params[] = $excluir_id;

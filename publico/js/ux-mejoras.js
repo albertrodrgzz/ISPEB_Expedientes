@@ -36,14 +36,22 @@
                 const submitButton = encontrarBotonSubmit(form);
 
                 if (submitButton) {
-                    // Prevenir doble envío
+                    // Prevenir doble envío si ya está procesando
                     if (submitButton.disabled) {
                         e.preventDefault();
                         return false;
                     }
 
-                    // Aplicar estado de carga
-                    aplicarEstadoCarga(submitButton);
+                    // Esperar a que todos los demás listeners hayan corrido
+                    // antes de decidir si aplicar el estado de carga.
+                    // Si algún listener llamó e.preventDefault() (validación falló),
+                    // NO aplicamos el spinner y el botón queda habilitado.
+                    const evento = e;
+                    setTimeout(function () {
+                        if (!evento.defaultPrevented) {
+                            aplicarEstadoCarga(submitButton);
+                        }
+                    }, 0);
                 }
             });
 

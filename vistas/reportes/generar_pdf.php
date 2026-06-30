@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Generador de Reportes PDF
  * Sistema de Gestión de Expedientes Digitales - ISPEB
@@ -417,5 +417,461 @@ if ($tipo === 'historial') {
 // ---------------------------------------------------------------
 // Tipo no reconocido
 // ---------------------------------------------------------------
+
+// ---------------------------------------------------------------
+// TIPO: REPORTE POR DEPARTAMENTO
+// ---------------------------------------------------------------
+if ($tipo === 'departamento') {
+    $db = getDB();
+    $stmt_depts = $db->query("SELECT * FROM departamentos WHERE estado = 'activo' ORDER BY nombre");
+    $departamentos = $stmt_depts->fetchAll();
+    require_once __DIR__ . '/../../lib/fpdf/fpdf.php';
+
+    class PDF_Departamento extends FPDF {
+        function Header() {
+            $logo = __DIR__ . '/../../publico/imagenes/cintillo.png';
+            if (file_exists($logo)) $this->Image($logo, 10, 10, 277);
+            $this->Ln(30);
+            $this->SetFont('Arial','B',13);
+            $this->Cell(0,8,mb_convert_encoding('REPORTE DE PERSONAL POR DEPARTAMENTO','ISO-8859-1','UTF-8'),0,1,'C');
+            $this->SetFont('Arial','',9);
+            $this->Cell(0,5,mb_convert_encoding('Fecha: '.date('d/m/Y H:i'),'ISO-8859-1','UTF-8'),0,1,'C');
+            $this->Ln(4);
+        }
+        function Footer() {
+            $this->SetY(-15); $this->SetFont('Arial','I',8); $this->SetTextColor(128);
+            $this->Cell(0,10,mb_convert_encoding('Pagina ','ISO-8859-1','UTF-8').$this->PageNo().' / {nb}',0,0,'C');
+        }
+    }
+
+    $pdf = new PDF_Departamento();
+    $pdf->AliasNbPages();
+    $pdf->AddPage('L');
+    $total_global = 0;
+
+    foreach ($departamentos as $dept) {
+        $stmt = $db->prepare("
+            SELECT f.cedula, f.nombres, f.apellidos, c.nombre_cargo,
+                   f.estado, TIMESTAMPDIFF(YEAR, f.fecha_ingreso, CURDATE()) AS antiguedad
+            FROM funcionarios f
+            INNER JOIN cargos c ON f.cargo_id = c.id
+            WHERE f.departamento_id = ? AND f.estado != 'inactivo'
+            ORDER BY f.apellidos, f.nombres
+        ");
+        $stmt->execute([$dept['id']]);
+        $filas = $stmt->fetchAll();
+        if (empty($filas)) continue;
+
+        $pdf->SetFont('Arial','B',9);
+        $pdf->SetFillColor(15,76,129); $pdf->SetTextColor(255);
+        $pdf->Cell(0,7,mb_convert_encoding(' DEPARTAMENTO: '.strtoupper($dept['nombre']),'ISO-8859-1','UTF-8'),1,1,'L',true);
+        $pdf->SetTextColor(0);
+        $pdf->SetFont('Arial','B',8); $pdf->SetFillColor(220,230,245);
+        $pdf->Cell(28,6,mb_convert_encoding('CEDULA','ISO-8859-1','UTF-8'),1,0,'C',true);
+        $pdf->Cell(80,6,'NOMBRES Y APELLIDOS',1,0,'C',true);
+        $pdf->Cell(100,6,'CARGO',1,0,'C',true);
+        $pdf->Cell(30,6,mb_convert_encoding('ANTIGUEDAD','ISO-8859-1','UTF-8'),1,0,'C',true);
+        $pdf->Cell(24,6,'ESTADO',1,1,'C',true);
+
+        $pdf->SetFont('Arial','',8); $fill = false;
+        foreach ($filas as $row) {
+            $pdf->SetFillColor($fill?240:255,$fill?248:255,255);
+            $nombre = mb_convert_encoding($row['nombres'].' '.$row['apellidos'],'ISO-8859-1','UTF-8');
+            $cargo  = mb_convert_encoding($row['nombre_cargo']??'N/A','ISO-8859-1','UTF-8');
+            $ant    = $row['antiguedad'].' a'.mb_convert_encoding('n','ISO-8859-1','UTF-8').'os';
+            $est    = mb_convert_encoding(ucfirst($row['estado']),'ISO-8859-1','UTF-8');
+            $pdf->Cell(28,6,$row['cedula'],1,0,'C',$fill);
+            $pdf->Cell(80,6,substr($nombre,0,52),1,0,'L',$fill);
+            $pdf->Cell(100,6,substr($cargo,0,60),1,0,'L',$fill);
+            $pdf->Cell(30,6,$ant,1,0,'C',$fill);
+            $pdf->Cell(24,6,$est,1,1,'C',$fill);
+            $fill = !$fill;
+        }
+        $pdf->SetFont('Arial','B',8); $pdf->SetFillColor(200,220,245);
+        $pdf->Cell(0,6,mb_convert_encoding('Subtotal: '.count($filas).' funcionario(s)','ISO-8859-1','UTF-8'),1,1,'R',true);
+        $pdf->Ln(3);
+        $total_global += count($filas);
+    }
+    $pdf->SetFont('Arial','B',9); $pdf->SetFillColor(15,76,129); $pdf->SetTextColor(255);
+    $pdf->Cell(0,7,mb_convert_encoding('TOTAL GENERAL: '.$total_global.' funcionario(s)','ISO-8859-1','UTF-8'),1,1,'R',true);
+    registrarAuditoria('GENERAR_REPORTE_PDF','funcionarios',null,null,['tipo_reporte'=>'departamento']);
+    if (ob_get_length()) ob_end_clean();
+    $pdf->Output('I','Reporte_Departamentos_'.date('Ymd').'.pdf');
+    exit;
+}
+
+// ---------------------------------------------------------------
+// TIPO: PERSONAL AUSENTE (vacaciones / reposo)
+// ---------------------------------------------------------------
+if ($tipo === 'ausentes') {
+    $db = getDB();
+    $stmt = $db->query("
+        SELECT f.cedula, f.nombres, f.apellidos, f.estado,
+               c.nombre_cargo, d.nombre AS departamento
+        FROM funcionarios f
+        LEFT JOIN cargos c ON f.cargo_id = c.id
+        LEFT JOIN departamentos d ON f.departamento_id = d.id
+        WHERE f.estado IN ('vacaciones','reposo')
+        ORDER BY f.estado, d.nombre, f.apellidos
+    ");
+    $filas = $stmt->fetchAll();
+    require_once __DIR__ . '/../../lib/fpdf/fpdf.php';
+
+    class PDF_Ausentes extends FPDF {
+        function Header() {
+            $logo = __DIR__ . '/../../publico/imagenes/cintillo.png';
+            if (file_exists($logo)) $this->Image($logo, 10, 10, 190);
+            $this->Ln(30);
+            $this->SetFont('Arial','B',13);
+            $this->Cell(0,8,mb_convert_encoding('PERSONAL AUSENTE - VACACIONES Y REPOSO','ISO-8859-1','UTF-8'),0,1,'C');
+            $this->SetFont('Arial','',9);
+            $this->Cell(0,5,mb_convert_encoding('Fecha: '.date('d/m/Y H:i'),'ISO-8859-1','UTF-8'),0,1,'C');
+            $this->Ln(4);
+            $this->SetFont('Arial','B',8); $this->SetFillColor(15,76,129); $this->SetTextColor(255);
+            $this->Cell(28,7,mb_convert_encoding('CEDULA','ISO-8859-1','UTF-8'),1,0,'C',true);
+            $this->Cell(70,7,'NOMBRES Y APELLIDOS',1,0,'C',true);
+            $this->Cell(55,7,'CARGO',1,0,'C',true);
+            $this->Cell(55,7,'DEPARTAMENTO',1,0,'C',true);
+            $this->Cell(28,7,'ESTADO',1,1,'C',true);
+            $this->SetTextColor(0);
+        }
+        function Footer() {
+            $this->SetY(-15); $this->SetFont('Arial','I',8); $this->SetTextColor(128);
+            $this->Cell(0,10,mb_convert_encoding('Pagina ','ISO-8859-1','UTF-8').$this->PageNo().' / {nb}',0,0,'C');
+        }
+    }
+
+    $pdf = new PDF_Ausentes();
+    $pdf->AliasNbPages(); $pdf->AddPage();
+    $pdf->SetFont('Arial','',8); $fill = false;
+    if (empty($filas)) {
+        $pdf->SetFont('Arial','I',10);
+        $pdf->Cell(0,10,mb_convert_encoding('No hay personal ausente en este momento.','ISO-8859-1','UTF-8'),1,1,'C');
+    } else {
+        foreach ($filas as $row) {
+            $pdf->SetFillColor($fill?240:255,$fill?248:255,$fill?230:255);
+            $nombre = mb_convert_encoding($row['nombres'].' '.$row['apellidos'],'ISO-8859-1','UTF-8');
+            $cargo  = mb_convert_encoding($row['nombre_cargo']??'N/A','ISO-8859-1','UTF-8');
+            $depto  = mb_convert_encoding($row['departamento']??'N/A','ISO-8859-1','UTF-8');
+            $estado = mb_convert_encoding(ucfirst($row['estado']),'ISO-8859-1','UTF-8');
+            $pdf->Cell(28,6,$row['cedula'],1,0,'C',$fill);
+            $pdf->Cell(70,6,substr($nombre,0,42),1,0,'L',$fill);
+            $pdf->Cell(55,6,substr($cargo,0,33),1,0,'L',$fill);
+            $pdf->Cell(55,6,substr($depto,0,33),1,0,'L',$fill);
+            $pdf->Cell(28,6,$estado,1,1,'C',$fill);
+            $fill = !$fill;
+        }
+        $pdf->SetFont('Arial','B',8); $pdf->SetFillColor(220,230,245);
+        $pdf->Cell(0,6,mb_convert_encoding('TOTAL AUSENTES: '.count($filas).' funcionario(s)','ISO-8859-1','UTF-8'),1,1,'R',true);
+    }
+    registrarAuditoria('GENERAR_REPORTE_PDF','funcionarios',null,null,['tipo_reporte'=>'ausentes']);
+    if (ob_get_length()) ob_end_clean();
+    $pdf->Output('I','Personal_Ausente_'.date('Ymd').'.pdf');
+    exit;
+}
+
+// ---------------------------------------------------------------
+// TIPO: ANTIGUEDAD
+// ---------------------------------------------------------------
+if ($tipo === 'antiguedad') {
+    $anios_min = (int)($_GET['anios_min'] ?? 0);
+    $db = getDB();
+    $stmt = $db->prepare("
+        SELECT f.cedula, f.nombres, f.apellidos,
+               c.nombre_cargo, d.nombre AS departamento,
+               f.fecha_ingreso,
+               TIMESTAMPDIFF(YEAR, f.fecha_ingreso, CURDATE()) AS anios,
+               TIMESTAMPDIFF(MONTH, f.fecha_ingreso, CURDATE()) % 12 AS meses
+        FROM funcionarios f
+        LEFT JOIN cargos c ON f.cargo_id = c.id
+        LEFT JOIN departamentos d ON f.departamento_id = d.id
+        WHERE f.estado = 'activo'
+        HAVING anios >= ?
+        ORDER BY anios DESC, meses DESC, f.apellidos
+    ");
+    $stmt->execute([$anios_min]);
+    $filas = $stmt->fetchAll();
+    require_once __DIR__ . '/../../lib/fpdf/fpdf.php';
+
+    class PDF_Antiguedad extends FPDF {
+        public $anios_min = 0;
+        function Header() {
+            $logo = __DIR__ . '/../../publico/imagenes/cintillo.png';
+            if (file_exists($logo)) $this->Image($logo, 10, 10, 277);
+            $this->Ln(30);
+            $this->SetFont('Arial','B',13);
+            $this->Cell(0,8,mb_convert_encoding('REPORTE DE ANTIGUEDAD DE PERSONAL','ISO-8859-1','UTF-8'),0,1,'C');
+            $this->SetFont('Arial','',9);
+            $label = $this->anios_min > 0 ? 'Con '.$this->anios_min.' o mas anos de servicio' : 'Todos los funcionarios activos';
+            $this->Cell(0,5,mb_convert_encoding($label.' | Fecha: '.date('d/m/Y'),'ISO-8859-1','UTF-8'),0,1,'C');
+            $this->Ln(4);
+            // Anchos: 7+28+90+80+50+22 = 277mm (landscape)
+            $this->SetFont('Arial','B',8); $this->SetFillColor(15,76,129); $this->SetTextColor(255);
+            $this->Cell(7,7,'#',1,0,'C',true);
+            $this->Cell(28,7,mb_convert_encoding('CEDULA','ISO-8859-1','UTF-8'),1,0,'C',true);
+            $this->Cell(90,7,'NOMBRES Y APELLIDOS',1,0,'C',true);
+            $this->Cell(80,7,'CARGO',1,0,'C',true);
+            $this->Cell(50,7,'DEPARTAMENTO',1,0,'C',true);
+            $this->Cell(22,7,mb_convert_encoding('ANTIGUEDAD','ISO-8859-1','UTF-8'),1,1,'C',true);
+            $this->SetTextColor(0);
+        }
+        function Footer() {
+            $this->SetY(-15); $this->SetFont('Arial','I',8); $this->SetTextColor(128);
+            $this->Cell(0,10,mb_convert_encoding('Pagina ','ISO-8859-1','UTF-8').$this->PageNo().' / {nb}',0,0,'C');
+        }
+    }
+
+    $pdf = new PDF_Antiguedad();
+    $pdf->anios_min = $anios_min;
+    $pdf->AliasNbPages();
+    $pdf->AddPage('L'); // Landscape para que quepan todas las columnas
+    $pdf->SetMargins(10, 10, 10);
+    $pdf->SetFont('Arial','',8); $fill = false; $n = 1;
+    foreach ($filas as $row) {
+        $pdf->SetFillColor($fill?240:255,$fill?248:255,255);
+        $nombre = mb_convert_encoding($row['nombres'].' '.$row['apellidos'],'ISO-8859-1','UTF-8');
+        $cargo  = mb_convert_encoding($row['nombre_cargo']??'N/A','ISO-8859-1','UTF-8');
+        $depto  = mb_convert_encoding($row['departamento']??'N/A','ISO-8859-1','UTF-8');
+        $ant    = $row['anios'].'a '.$row['meses'].'m';
+        $pdf->Cell(7,6,$n,1,0,'C',$fill);
+        $pdf->Cell(28,6,$row['cedula'],1,0,'C',$fill);
+        $pdf->Cell(90,6,substr($nombre,0,55),1,0,'L',$fill);
+        $pdf->Cell(80,6,substr($cargo,0,50),1,0,'L',$fill);
+        $pdf->Cell(50,6,substr($depto,0,30),1,0,'L',$fill);
+        $pdf->Cell(22,6,$ant,1,1,'C',$fill);
+        $fill = !$fill; $n++;
+    }
+    $pdf->SetFont('Arial','B',8); $pdf->SetFillColor(220,230,245);
+    $pdf->Cell(0,6,mb_convert_encoding('TOTAL: '.count($filas).' funcionario(s)','ISO-8859-1','UTF-8'),1,1,'R',true);
+    registrarAuditoria('GENERAR_REPORTE_PDF','funcionarios',null,null,['tipo_reporte'=>'antiguedad','anios_min'=>$anios_min]);
+    if (ob_get_length()) ob_end_clean();
+    $pdf->Output('I','Reporte_Antiguedad_'.date('Ymd').'.pdf');
+    exit;
+}
+
+// ---------------------------------------------------------------
+// TIPO: AMONESTACIONES
+// ---------------------------------------------------------------
+if ($tipo === 'amonestaciones') {
+    $anio = (int)($_GET['anio'] ?? date('Y'));
+    $db = getDB();
+    $stmt = $db->prepare("
+        SELECT ha.fecha_evento, f.cedula, f.nombres, f.apellidos,
+               d.nombre AS departamento,
+               JSON_UNQUOTE(JSON_EXTRACT(ha.detalles,'$.tipo_falta')) AS tipo_falta,
+               JSON_UNQUOTE(JSON_EXTRACT(ha.detalles,'$.motivo'))     AS motivo,
+               JSON_UNQUOTE(JSON_EXTRACT(ha.detalles,'$.sancion'))    AS sancion
+        FROM historial_administrativo ha
+        INNER JOIN funcionarios f ON ha.funcionario_id = f.id
+        INNER JOIN departamentos d ON f.departamento_id = d.id
+        WHERE ha.tipo_evento = 'AMONESTACION' AND YEAR(ha.fecha_evento) = ?
+        ORDER BY ha.fecha_evento DESC
+    ");
+    $stmt->execute([$anio]);
+    $filas = $stmt->fetchAll();
+    require_once __DIR__ . '/../../lib/fpdf/fpdf.php';
+
+    class PDF_AmonestacionesPDF extends FPDF {
+        public $anio = '';
+        function Header() {
+            $logo = __DIR__ . '/../../publico/imagenes/cintillo.png';
+            if (file_exists($logo)) $this->Image($logo, 10, 10, 277);
+            $this->Ln(30);
+            $this->SetFont('Arial','B',13);
+            $this->Cell(0,8,mb_convert_encoding('REPORTE DE AMONESTACIONES - ANO '.$this->anio,'ISO-8859-1','UTF-8'),0,1,'C');
+            $this->SetFont('Arial','',9);
+            $this->Cell(0,5,mb_convert_encoding('Fecha: '.date('d/m/Y H:i'),'ISO-8859-1','UTF-8'),0,1,'C');
+            $this->Ln(4);
+            $this->SetFont('Arial','B',8); $this->SetFillColor(185,28,28); $this->SetTextColor(255);
+            $this->Cell(25,7,'FECHA',1,0,'C',true);
+            $this->Cell(25,7,mb_convert_encoding('CEDULA','ISO-8859-1','UTF-8'),1,0,'C',true);
+            $this->Cell(65,7,'FUNCIONARIO',1,0,'C',true);
+            $this->Cell(45,7,'DEPARTAMENTO',1,0,'C',true);
+            $this->Cell(35,7,'TIPO FALTA',1,0,'C',true);
+            $this->Cell(82,7,mb_convert_encoding('MOTIVO / SANCION','ISO-8859-1','UTF-8'),1,1,'C',true);
+            $this->SetTextColor(0);
+        }
+        function Footer() {
+            $this->SetY(-15); $this->SetFont('Arial','I',8); $this->SetTextColor(128);
+            $this->Cell(0,10,mb_convert_encoding('Pagina ','ISO-8859-1','UTF-8').$this->PageNo().' / {nb}',0,0,'C');
+        }
+    }
+
+    $pdf = new PDF_AmonestacionesPDF();
+    $pdf->anio = $anio;
+    $pdf->AliasNbPages(); $pdf->AddPage('L'); // Landscape
+    $pdf->SetMargins(10, 10, 10);
+    $pdf->SetFont('Arial','',7.5); $fill = false;
+    if (empty($filas)) {
+        $pdf->SetFont('Arial','I',10);
+        $pdf->Cell(0,10,mb_convert_encoding('No se registraron amonestaciones en el ano '.$anio.'.','ISO-8859-1','UTF-8'),1,1,'C');
+    } else {
+        foreach ($filas as $row) {
+            $pdf->SetFillColor($fill?255:255,$fill?240:255,$fill?240:255);
+            $nombre  = mb_convert_encoding($row['nombres'].' '.$row['apellidos'],'ISO-8859-1','UTF-8');
+            $depto   = mb_convert_encoding($row['departamento'],'ISO-8859-1','UTF-8');
+            $falta   = mb_convert_encoding($row['tipo_falta']??'--','ISO-8859-1','UTF-8');
+            $motivo  = mb_convert_encoding(($row['motivo']??'').'. '.($row['sancion']??''),'ISO-8859-1','UTF-8');
+            $fecha   = $row['fecha_evento'] ? date('d/m/Y',strtotime($row['fecha_evento'])) : '--';
+            $pdf->Cell(25,6,$fecha,1,0,'C',$fill);
+            $pdf->Cell(25,6,$row['cedula'],1,0,'C',$fill);
+            $pdf->Cell(65,6,substr($nombre,0,45),1,0,'L',$fill);
+            $pdf->Cell(45,6,substr($depto,0,30),1,0,'L',$fill);
+            $pdf->Cell(35,6,substr($falta,0,22),1,0,'C',$fill);
+            $pdf->Cell(82,6,substr($motivo,0,60),1,1,'L',$fill);
+            $fill = !$fill;
+        }
+        $pdf->SetFont('Arial','B',8); $pdf->SetFillColor(254,202,202);
+        $pdf->Cell(0,6,mb_convert_encoding('TOTAL AMONESTACIONES '.$anio.': '.count($filas),'ISO-8859-1','UTF-8'),1,1,'R',true);
+    }
+    registrarAuditoria('GENERAR_REPORTE_PDF','historial_administrativo',null,null,['tipo_reporte'=>'amonestaciones','anio'=>$anio]);
+    if (ob_get_length()) ob_end_clean();
+    $pdf->Output('I','Amonestaciones_'.$anio.'.pdf');
+    exit;
+}
+
+// ---------------------------------------------------------------
+// TIPO: CONTROL VACACIONAL
+// ---------------------------------------------------------------
+if ($tipo === 'vacacional') {
+    $anio = (int)date('Y');
+    $db = getDB();
+
+    $stmt = $db->query("
+        SELECT
+            f.cedula, f.nombres, f.apellidos,
+            d.nombre AS departamento,
+            c.nombre_cargo,
+            TIMESTAMPDIFF(YEAR, f.fecha_ingreso, CURDATE()) AS antiguedad,
+            COALESCE(
+                SUM(
+                    CASE WHEN YEAR(ha.fecha_evento) = YEAR(CURDATE())
+                         THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(ha.detalles,'$.dias_habiles')) AS UNSIGNED)
+                         ELSE 0 END
+                ), 0
+            ) AS dias_usados
+        FROM funcionarios f
+        INNER JOIN departamentos d ON f.departamento_id = d.id
+        LEFT JOIN cargos c ON f.cargo_id = c.id
+        LEFT JOIN historial_administrativo ha ON ha.funcionario_id = f.id AND ha.tipo_evento = 'VACACION'
+        WHERE f.estado != 'inactivo'
+        GROUP BY f.id, f.cedula, f.nombres, f.apellidos, d.nombre, c.nombre_cargo, f.fecha_ingreso
+        ORDER BY d.nombre, f.apellidos, f.nombres
+    ");
+    $filas = $stmt->fetchAll();
+
+    require_once __DIR__ . '/../../lib/fpdf/fpdf.php';
+
+    class PDF_Vacacional extends FPDF {
+        public $anio = '';
+        function Header() {
+            $logo = __DIR__ . '/../../publico/imagenes/cintillo.png';
+            if (file_exists($logo)) $this->Image($logo, 10, 10, 277);
+            $this->Ln(30);
+            $this->SetFont('Arial','B',13);
+            $this->Cell(0,8,mb_convert_encoding('CONTROL VACACIONAL '.$this->anio.' — LOTTT','ISO-8859-1','UTF-8'),0,1,'C');
+            $this->SetFont('Arial','',8.5);
+            $this->Cell(0,5,mb_convert_encoding('15 dias el 1er ano + 1 dia por ano adicional (maximo 30). Fecha: '.date('d/m/Y'),'ISO-8859-1','UTF-8'),0,1,'C');
+            $this->Ln(3);
+            // Anchos landscape 277mm: 28+80+60+55+22+22+22+28+30+30 = 377 - NO
+            // Anchos landscape 277mm: 25+70+55+45+18+18+18+28 = 277mm
+            $this->SetFont('Arial','B',7.5); $this->SetFillColor(15,76,129); $this->SetTextColor(255);
+            $this->Cell(25,8,mb_convert_encoding('CEDULA','ISO-8859-1','UTF-8'),1,0,'C',true);
+            $this->Cell(70,8,'NOMBRES Y APELLIDOS',1,0,'C',true);
+            $this->Cell(55,8,'CARGO',1,0,'C',true);
+            $this->Cell(45,8,'DEPARTAMENTO',1,0,'C',true);
+            $this->Cell(22,8,mb_convert_encoding('ANTIGUEDAD','ISO-8859-1','UTF-8'),1,0,'C',true);
+            $this->Cell(22,8,mb_convert_encoding('DIAS CORR.','ISO-8859-1','UTF-8'),1,0,'C',true);
+            $this->Cell(18,8,'USADOS',1,0,'C',true);
+            $this->Cell(20,8,'DISPONIBLES',1,1,'C',true);
+            $this->SetTextColor(0);
+        }
+        function Footer() {
+            $this->SetY(-15); $this->SetFont('Arial','I',8); $this->SetTextColor(128);
+            $this->Cell(0,10,mb_convert_encoding('Pagina ','ISO-8859-1','UTF-8').$this->PageNo().' / {nb}',0,0,'C');
+        }
+    }
+
+    $pdf = new PDF_Vacacional();
+    $pdf->anio = $anio;
+    $pdf->AliasNbPages();
+    $pdf->AddPage('L');
+    $pdf->SetMargins(10, 10, 10);
+    $pdf->SetFont('Arial','',7.5);
+    $fill = false;
+
+    $depto_actual = null;
+    $total_corr = 0; $total_us = 0; $total_disp = 0;
+
+    foreach ($filas as $row) {
+        // Separador de departamento
+        if ($row['departamento'] !== $depto_actual) {
+            $depto_actual = $row['departamento'];
+            $pdf->SetFont('Arial','B',8);
+            $pdf->SetFillColor(200, 220, 245);
+            $pdf->SetTextColor(15,76,129);
+            $pdf->Cell(0,6,mb_convert_encoding('  '.$depto_actual,'ISO-8859-1','UTF-8'),1,1,'L',true);
+            $pdf->SetTextColor(0);
+            $pdf->SetFont('Arial','',7.5);
+        }
+
+        $anios_s   = (int)$row['antiguedad'];
+        $dias_corr = ($anios_s >= 1) ? min(15 + ($anios_s - 1), 30) : 0;
+        $dias_us   = (int)$row['dias_usados'];
+        $dias_disp = max(0, $dias_corr - $dias_us);
+
+        // Color segun disponibilidad
+        if ($dias_disp <= 0)      { $r=254; $g=202; $b=202; } // rojo
+        elseif ($dias_disp <= 5)  { $r=253; $g=230; $b=138; } // amarillo
+        else                       { $r=167; $g=243; $b=208; } // verde
+
+        $pdf->SetFillColor($fill?240:255,$fill?248:255,255);
+        $nombre = mb_convert_encoding($row['nombres'].' '.$row['apellidos'],'ISO-8859-1','UTF-8');
+        $cargo  = mb_convert_encoding($row['nombre_cargo']??'N/A','ISO-8859-1','UTF-8');
+        $ant    = $anios_s.' '.mb_convert_encoding('año(s)','ISO-8859-1','UTF-8');
+
+        $pdf->Cell(25,6,$row['cedula'],1,0,'C',$fill);
+        $pdf->Cell(70,6,substr($nombre,0,45),1,0,'L',$fill);
+        $pdf->Cell(55,6,substr($cargo,0,35),1,0,'L',$fill);
+        $pdf->Cell(45,6,substr(mb_convert_encoding($row['departamento'],'ISO-8859-1','UTF-8'),0,28),1,0,'L',$fill);
+        $pdf->Cell(22,6,$ant,1,0,'C',$fill);
+        $pdf->Cell(22,6,$dias_corr,1,0,'C',$fill);
+        $pdf->Cell(18,6,$dias_us,1,0,'C',$fill);
+        // Celda de dias disponibles con color de semaforo
+        $pdf->SetFillColor($r,$g,$b);
+        $pdf->Cell(20,6,$dias_disp,1,1,'C',true);
+        $pdf->SetFillColor($fill?240:255,$fill?248:255,255);
+
+        $total_corr += $dias_corr;
+        $total_us   += $dias_us;
+        $total_disp += $dias_disp;
+        $fill = !$fill;
+    }
+
+    // Fila de totales
+    $pdf->SetFont('Arial','B',8);
+    $pdf->SetFillColor(15,76,129); $pdf->SetTextColor(255);
+    $pdf->Cell(217,6,mb_convert_encoding('TOTALES GENERALES:','ISO-8859-1','UTF-8'),1,0,'R',true);
+    $pdf->Cell(22,6,$total_corr,1,0,'C',true);
+    $pdf->Cell(18,6,$total_us,1,0,'C',true);
+    $pdf->Cell(20,6,$total_disp,1,1,'C',true);
+
+    // Leyenda
+    $pdf->Ln(4);
+    $pdf->SetFont('Arial','B',8); $pdf->SetTextColor(0);
+    $pdf->Cell(0,5,mb_convert_encoding('LEYENDA:','ISO-8859-1','UTF-8'),0,1,'L');
+    $pdf->SetFont('Arial','',7.5);
+    $pdf->SetFillColor(167,243,208); $pdf->Cell(8,5,'',1,0,'C',true); $pdf->Cell(60,5,' Con dias disponibles (> 5)',0,0,'L');
+    $pdf->SetFillColor(253,230,138); $pdf->Cell(8,5,'',1,0,'C',true); $pdf->Cell(60,5,' Pocos dias disponibles (1-5)',0,0,'L');
+    $pdf->SetFillColor(254,202,202); $pdf->Cell(8,5,'',1,0,'C',true); $pdf->Cell(80,5,' Sin dias disponibles (0)',0,1,'L');
+
+    registrarAuditoria('GENERAR_REPORTE_PDF','funcionarios',null,null,['tipo_reporte'=>'vacacional','anio'=>$anio]);
+    if (ob_get_length()) ob_end_clean();
+    $pdf->Output('I','Control_Vacacional_'.$anio.'.pdf');
+    exit;
+}
+// ---------------------------------------------------------------
+// Tipo no reconocido
+// ---------------------------------------------------------------
 ob_end_clean();
-die('Tipo de reporte no válido. Use: constancia, listado o historial.');
+die('Tipo de reporte no valido.');

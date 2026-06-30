@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Exportación a Excel (HTML-table con formato institucional)
  * SIGED — Sistema de Gestión de Expedientes Digitales
@@ -392,4 +392,114 @@ if ($tipo === 'nombramientos') {
 // Tipo no reconocido
 echo "\xEF\xBB\xBF";
 echo '<html><body><table><tr><td>ERROR: Tipo de reporte no válido.</td></tr></table></body></html>';
+exit;
+
+// =========================================================
+// TIPO: AUSENTES (vacaciones / reposo)
+// =========================================================
+if ($tipo === 'ausentes') {
+    $stmt = $db->query("
+        SELECT f.cedula, f.nombres, f.apellidos, f.estado,
+               c.nombre_cargo, d.nombre AS departamento
+        FROM funcionarios f
+        LEFT JOIN cargos c ON f.cargo_id = c.id
+        LEFT JOIN departamentos d ON f.departamento_id = d.id
+        WHERE f.estado IN ('vacaciones','reposo')
+        ORDER BY f.estado, d.nombre, f.apellidos
+    ");
+    $filas = $stmt->fetchAll();
+    $cols = 5;
+
+    echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+    echo '<head><meta charset="UTF-8"></head><body>';
+    echo '<table border="0" cellpadding="0" cellspacing="0">' . "\n";
+
+    excelHeader('SIGED - PERSONAL AUSENTE - VACACIONES Y REPOSO', 'Fecha: ' . date('d/m/Y H:i'), $cols);
+
+    echo '<tr>';
+    foreach (['Cedula','Nombres y Apellidos','Cargo','Departamento','Estado'] as $h) {
+        echo '<th style="' . $GLOBALS['style_th'] . '">' . $h . '</th>';
+    }
+    echo '</tr>' . "\n";
+
+    $n = 0;
+    foreach ($filas as $row) {
+        $alt = ($n % 2 === 1);
+        $tdL = $alt ? $GLOBALS['style_td_alt']   : $GLOBALS['style_td_left'];
+        $tdC = $alt ? $GLOBALS['style_td_alt_c']  : $GLOBALS['style_td_center'];
+        $colorEstado = $row['estado'] === 'vacaciones' ? 'background:#A7F3D0;' : 'background:#FDE68A;';
+        echo '<tr>';
+        echo '<td style="' . $tdC . '">' . htmlspecialchars($row['cedula']) . '</td>';
+        echo '<td style="' . $tdL . '">' . htmlspecialchars($row['nombres'] . ' ' . $row['apellidos']) . '</td>';
+        echo '<td style="' . $tdL . '">' . htmlspecialchars($row['nombre_cargo'] ?? 'N/A') . '</td>';
+        echo '<td style="' . $tdL . '">' . htmlspecialchars($row['departamento'] ?? 'N/A') . '</td>';
+        echo '<td style="' . $colorEstado . 'font-family:Arial;font-size:10pt;text-align:center;border:1px solid #DDDDDD;padding:5px;font-weight:bold;">' . ucfirst($row['estado']) . '</td>';
+        echo '</tr>' . "\n";
+        $n++;
+    }
+    echo '<tr><td colspan="' . $cols . '" style="' . $GLOBALS['style_footer_row'] . '">TOTAL AUSENTES: ' . count($filas) . ' funcionario(s)</td></tr>' . "\n";
+    echo '</table></body></html>';
+    exit;
+}
+
+// =========================================================
+// TIPO: ANTIGUEDAD
+// =========================================================
+if ($tipo === 'antiguedad') {
+    $anios_min = (int)($_GET['anios_min'] ?? 0);
+    $stmt = $db->prepare("
+        SELECT f.cedula, f.nombres, f.apellidos,
+               c.nombre_cargo, d.nombre AS departamento,
+               f.fecha_ingreso,
+               TIMESTAMPDIFF(YEAR, f.fecha_ingreso, CURDATE()) AS anios,
+               TIMESTAMPDIFF(MONTH, f.fecha_ingreso, CURDATE()) % 12 AS meses
+        FROM funcionarios f
+        LEFT JOIN cargos c ON f.cargo_id = c.id
+        LEFT JOIN departamentos d ON f.departamento_id = d.id
+        WHERE f.estado = 'activo'
+        HAVING anios >= ?
+        ORDER BY anios DESC, meses DESC, f.apellidos
+    ");
+    $stmt->execute([$anios_min]);
+    $filas = $stmt->fetchAll();
+    $cols = 6;
+    $subtitulo = $anios_min > 0 ? 'Funcionarios con ' . $anios_min . '+ anos de servicio' : 'Todos los funcionarios activos';
+
+    echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+    echo '<head><meta charset="UTF-8"></head><body>';
+    echo '<table border="0" cellpadding="0" cellspacing="0">' . "\n";
+
+    excelHeader('SIGED - REPORTE DE ANTIGUEDAD DE PERSONAL', $subtitulo, $cols);
+
+    echo '<tr>';
+    foreach (['Cedula','Nombres y Apellidos','Cargo','Departamento','Fecha Ingreso','Antiguedad'] as $h) {
+        echo '<th style="' . $GLOBALS['style_th'] . '">' . $h . '</th>';
+    }
+    echo '</tr>' . "\n";
+
+    $n = 0;
+    foreach ($filas as $row) {
+        $alt = ($n % 2 === 1);
+        $tdL = $alt ? $GLOBALS['style_td_alt']   : $GLOBALS['style_td_left'];
+        $tdC = $alt ? $GLOBALS['style_td_alt_c']  : $GLOBALS['style_td_center'];
+        $ant = $row['anios'] . ' a. ' . $row['meses'] . ' m.';
+        // Resaltar en verde los de mas de 10 anos
+        $colorAnt = $row['anios'] >= 10 ? 'background:#A7F3D0;' : '';
+        echo '<tr>';
+        echo '<td style="' . $tdC . '">' . htmlspecialchars($row['cedula']) . '</td>';
+        echo '<td style="' . $tdL . '">' . htmlspecialchars($row['nombres'] . ' ' . $row['apellidos']) . '</td>';
+        echo '<td style="' . $tdL . '">' . htmlspecialchars($row['nombre_cargo'] ?? 'N/A') . '</td>';
+        echo '<td style="' . $tdL . '">' . htmlspecialchars($row['departamento'] ?? 'N/A') . '</td>';
+        echo '<td style="' . $tdC . '">' . ($row['fecha_ingreso'] ? date('d/m/Y', strtotime($row['fecha_ingreso'])) : '--') . '</td>';
+        echo '<td style="' . $colorAnt . 'font-family:Arial;font-size:10pt;text-align:center;border:1px solid #DDDDDD;padding:5px;font-weight:bold;">' . $ant . '</td>';
+        echo '</tr>' . "\n";
+        $n++;
+    }
+    echo '<tr><td colspan="' . $cols . '" style="' . $GLOBALS['style_footer_row'] . '">TOTAL: ' . count($filas) . ' funcionario(s)</td></tr>' . "\n";
+    echo '</table></body></html>';
+    exit;
+}
+// Tipo no reconocido
+echo chr(0xEF).chr(0xBB).chr(0xBF);
+echo '<html><body><table><tr><td>ERROR: Tipo de reporte no valido.</td></tr></table></body></html>';
 exit;

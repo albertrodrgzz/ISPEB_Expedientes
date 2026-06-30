@@ -43,10 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // ── Parsear Inputs ────────────────────────────────────────────────────────────
-$accion       = trim($_POST['accion']       ?? '');
+$accion = trim($_POST['accion'] ?? '');
 $solicitud_id = filter_var($_POST['solicitud_id'] ?? 0, FILTER_VALIDATE_INT);
 $observaciones = htmlspecialchars(trim($_POST['observaciones'] ?? ''), ENT_QUOTES, 'UTF-8');
-$revisor_id   = (int) ($_SESSION['usuario_id'] ?? 0);
+$revisor_id = (int) ($_SESSION['usuario_id'] ?? 0);
 
 try {
     // Validaciones comunes
@@ -93,8 +93,8 @@ try {
         $stmt->execute([$revisor_id, $observaciones, $solicitud_id]);
 
         registrarAuditoria('RECHAZAR_SOLICITUD', 'solicitudes_empleados', $solicitud_id, ['estado' => 'pendiente'], [
-            'estado'        => 'rechazada',
-            'revisado_por'  => $revisor_id,
+            'estado' => 'rechazada',
+            'revisado_por' => $revisor_id,
             'observaciones' => $observaciones
         ]);
 
@@ -108,7 +108,7 @@ try {
     // ════════════════════════════════════════════════
 
     // Archivo de aprobación (opcional: PDF, JPG o PNG)
-    $func_id       = (int) $solicitud['funcionario_id'];
+    $func_id = (int) $solicitud['funcionario_id'];
     $ruta_relativa = null;
     $nombre_archivo_orig = null;
 
@@ -129,8 +129,8 @@ try {
         }
 
         // Validar MIME type
-        $finfo    = finfo_open(FILEINFO_MIME_TYPE);
-        $mime     = finfo_file($finfo, $archivo['tmp_name']);
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $archivo['tmp_name']);
         finfo_close($finfo);
         $mimes_ok = ['application/pdf', 'image/jpeg', 'image/png'];
         if (!in_array($mime, $mimes_ok)) {
@@ -145,8 +145,8 @@ try {
         }
 
         $nombre_guardar = 'aval_' . $solicitud_id . '_' . date('Ymd_His') . '.' . $ext;
-        $ruta_abs       = $dir_abs . '/' . $nombre_guardar;
-        $ruta_relativa  = $dir_rel . '/' . $nombre_guardar;
+        $ruta_abs = $dir_abs . '/' . $nombre_guardar;
+        $ruta_relativa = $dir_rel . '/' . $nombre_guardar;
         $nombre_archivo_orig = basename($archivo['name']);
 
         if (!move_uploaded_file($archivo['tmp_name'], $ruta_abs)) {
@@ -175,16 +175,20 @@ try {
         // Para VACACION: un registro por período solicitado (con periodo_año)
         $historial_id = null;
 
+        $tipo_evento = strtoupper($solicitud['tipo_solicitud'] === 'vacaciones' ? 'VACACION' : 'PERMISO');
+        $dias_habiles_solicitud = 0;
+
         if ($tipo_evento === 'VACACION') {
             // Función LOTTT inline
-            $fnDiasLOTTT = function(int $n): int {
-                if ($n === 1) return 15;
+            $fnDiasLOTTT = function (int $n): int {
+                if ($n === 1)
+                    return 15;
                 return min(18 + ($n - 2), 30);
             };
 
             // Parsear períodos del motivo: [Períodos: Año 1, Año 2] motivo...
-            $motivo_raw   = $solicitud['motivo'];
-            $anios_sol    = [];
+            $motivo_raw = $solicitud['motivo'];
+            $anios_sol = [];
             if (preg_match('/^\[Períodos:\s*([^\]]+)\]/u', $motivo_raw, $mp)) {
                 preg_match_all('/\d+/', $mp[1], $numMatch);
                 $anios_sol = array_map('intval', $numMatch[0]);
@@ -193,21 +197,21 @@ try {
             $fechaCurr = new DateTime($solicitud['fecha_inicio']);
 
             foreach ($anios_sol as $i => $anio) {
-                $diasAnio   = $fnDiasLOTTT($anio);
+                $diasAnio = $fnDiasLOTTT($anio);
                 $fechaFin_p = clone $fechaCurr;
                 $fechaFin_p->modify('+' . ($diasAnio - 1) . ' days');
 
                 $det_p = json_encode([
-                    'origen'         => 'solicitud_empleado',
-                    'solicitud_id'   => $solicitud_id,
+                    'origen' => 'solicitud_empleado',
+                    'solicitud_id' => $solicitud_id,
                     'tipo_solicitud' => 'vacaciones',
-                    'periodo_año'    => $anio,
-                    'dias_periodo'   => $diasAnio,
-                    'fecha_inicio'   => $fechaCurr->format('Y-m-d'),
-                    'fecha_fin'      => $fechaFin_p->format('Y-m-d'),
-                    'motivo'         => $motivo_raw,
-                    'aprobado_por'   => $revisor_id,
-                    'observaciones'  => $observaciones,
+                    'periodo_año' => $anio,
+                    'dias_periodo' => $diasAnio,
+                    'fecha_inicio' => $fechaCurr->format('Y-m-d'),
+                    'fecha_fin' => $fechaFin_p->format('Y-m-d'),
+                    'motivo' => $motivo_raw,
+                    'aprobado_por' => $revisor_id,
+                    'observaciones' => $observaciones,
                 ], JSON_UNESCAPED_UNICODE);
 
                 $stmtH = $pdo->prepare("
@@ -226,7 +230,8 @@ try {
                     $nombre_archivo_orig,
                     $revisor_id,
                 ]);
-                if ($i === 0) $historial_id = $pdo->lastInsertId();
+                if ($i === 0)
+                    $historial_id = $pdo->lastInsertId();
 
                 // Avanzar al inicio del siguiente período
                 $fechaCurr->modify('+' . $diasAnio . ' days');
@@ -235,14 +240,14 @@ try {
             // Si no se pudieron parsear períodos, insertar un registro genérico
             if (empty($anios_sol)) {
                 $detalles = json_encode([
-                    'origen'         => 'solicitud_empleado',
-                    'solicitud_id'   => $solicitud_id,
+                    'origen' => 'solicitud_empleado',
+                    'solicitud_id' => $solicitud_id,
                     'tipo_solicitud' => 'vacaciones',
-                    'fecha_inicio'   => $solicitud['fecha_inicio'],
-                    'fecha_fin'      => $solicitud['fecha_fin'],
-                    'motivo'         => $motivo_raw,
-                    'aprobado_por'   => $revisor_id,
-                    'observaciones'  => $observaciones,
+                    'fecha_inicio' => $solicitud['fecha_inicio'],
+                    'fecha_fin' => $solicitud['fecha_fin'],
+                    'motivo' => $motivo_raw,
+                    'aprobado_por' => $revisor_id,
+                    'observaciones' => $observaciones,
                 ], JSON_UNESCAPED_UNICODE);
                 $stmtH = $pdo->prepare("
                     INSERT INTO historial_administrativo
@@ -265,16 +270,29 @@ try {
 
         } else {
             // PERMISO: un único registro
+            $d1 = new DateTime($solicitud['fecha_inicio']);
+            $d2 = new DateTime($solicitud['fecha_fin']);
+            if ($d2 >= $d1) {
+                $curr = clone $d1;
+                while ($curr <= $d2) {
+                    $dia_semana_num = (int) $curr->format('N');
+                    if ($dia_semana_num >= 1 && $dia_semana_num <= 5) {
+                        $dias_habiles_solicitud++;
+                    }
+                    $curr->modify('+1 day');
+                }
+            }
+
             $detalles = json_encode([
-                'origen'         => 'solicitud_empleado',
-                'solicitud_id'   => $solicitud_id,
+                'origen' => 'solicitud_empleado',
+                'solicitud_id' => $solicitud_id,
                 'tipo_solicitud' => $solicitud['tipo_solicitud'],
-                'fecha_inicio'   => $solicitud['fecha_inicio'],
-                'fecha_fin'      => $solicitud['fecha_fin'],
-                'dias_habiles'   => $dias_habiles_solicitud,
-                'motivo'         => $solicitud['motivo'],
-                'aprobado_por'   => $revisor_id,
-                'observaciones'  => $observaciones,
+                'fecha_inicio' => $solicitud['fecha_inicio'],
+                'fecha_fin' => $solicitud['fecha_fin'],
+                'dias_habiles' => $dias_habiles_solicitud,
+                'motivo' => $solicitud['motivo'],
+                'aprobado_por' => $revisor_id,
+                'observaciones' => $observaciones,
             ], JSON_UNESCAPED_UNICODE);
 
             $stmtH = $pdo->prepare("
@@ -307,13 +325,16 @@ try {
         }
 
         // Registrar auditoría (dentro de la transacción)
-        registrarAuditoria('APROBAR_SOLICITUD', 'solicitudes_empleados', $solicitud_id,
+        registrarAuditoria(
+            'APROBAR_SOLICITUD',
+            'solicitudes_empleados',
+            $solicitud_id,
             ['estado' => 'pendiente'],
             [
-                'estado'        => 'aprobada',
-                'historial_id'  => $historial_id,
-                'ruta_archivo'  => $ruta_relativa,
-                'tipo_evento'   => $tipo_evento
+                'estado' => 'aprobada',
+                'historial_id' => $historial_id,
+                'ruta_archivo' => $ruta_relativa,
+                'tipo_evento' => $tipo_evento
             ]
         );
 
@@ -322,10 +343,10 @@ try {
 
         ob_end_clean();
         echo json_encode([
-            'success'       => true,
-            'message'       => 'Solicitud aprobada. Evento registrado en historial administrativo.',
-            'historial_id'  => $historial_id,
-            'ruta_archivo'  => $ruta_relativa
+            'success' => true,
+            'message' => 'Solicitud aprobada. Evento registrado en historial administrativo.',
+            'historial_id' => $historial_id,
+            'ruta_archivo' => $ruta_relativa
         ]);
 
     } catch (Exception $e) {

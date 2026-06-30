@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-06-2026 a las 13:39:35
+-- Tiempo de generación: 16-03-2026 a las 04:45:41
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -52,35 +52,7 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla_afectada`, `regist
 (197, 1, 'REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', 22, NULL, '{\"funcionario_id\":2,\"cargo_actual\":\"Jefe de Departamento\",\"fecha_evento\":\"2026-03-15\"}', '::1', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-03-16 03:43:06'),
 (198, 1, 'REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', 23, NULL, '{\"funcionario_id\":1,\"cargo_actual\":\"Jefe de Direcci\\u00f3n\",\"fecha_evento\":\"2026-03-15\"}', '::1', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-03-16 03:43:19'),
 (199, 1, 'REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', 24, NULL, '{\"funcionario_id\":7,\"cargo_actual\":\"Secretaria\",\"fecha_evento\":\"2026-03-15\"}', '::1', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-03-16 03:44:12'),
-(200, 1, 'REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', 25, NULL, '{\"funcionario_id\":3,\"cargo_actual\":\"Analista\",\"fecha_evento\":\"2026-03-15\"}', '::1', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-03-16 03:44:40'),
-(201, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-03-16 03:46:18'),
-(202, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 03:50:24'),
-(203, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-16 03:50:29'),
-(204, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-19 15:37:28'),
-(205, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-19 15:37:36'),
-(206, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-19 15:38:56'),
-(207, 1, 'GENERAR_CONSTANCIA', 'funcionarios', 8, NULL, '{\"funcionario\":\"YOSBERLIN CORASPE\",\"generado_por\":\"Albert Nazareth Rodriguez Sifontes\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-19 15:40:37'),
-(208, 1, 'GENERAR_REPORTE_PDF', 'funcionarios', NULL, NULL, '{\"tipo_reporte\":\"listado\",\"filtros\":\"Estado: activo, Orden: departamento\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-19 15:42:50'),
-(209, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-19 15:43:36'),
-(210, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-19 15:43:59'),
-(211, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-03-20 14:18:48'),
-(212, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-03-20 14:19:37'),
-(213, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '2026-06-06 01:29:42'),
-(214, 1, 'REGISTRAR_TRASLADO', 'historial_administrativo', 28, NULL, '{\"funcionario_id\":10,\"departamento_origen\":\"Soporte T\\u00e9cnico\",\"departamento_destino\":\"Sistemas\",\"motivo\":\"Prueba\",\"departamento_id_actualizado\":2}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:30:31'),
-(215, 1, 'REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', 29, NULL, '{\"funcionario_id\":12,\"cargo_actual\":\"T\\u00e9cnico\",\"fecha_evento\":\"2026-06-18\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:30:58'),
-(216, 1, 'REGISTRAR_AMONESTACION', 'historial_administrativo', 30, NULL, '{\"tipo_falta\":\"leve\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:32:39'),
-(217, 1, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:35:25'),
-(218, 9, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:36:10'),
-(219, 9, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:36:16'),
-(220, NULL, 'REGISTRO_COMPLETADO', 'usuarios', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:37:35'),
-(221, 12, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:37:43'),
-(222, 12, 'GENERAR_CONSTANCIA', 'funcionarios', 12, NULL, '{\"funcionario\":\"HUASCAR ALEXANDER GUILARTE DE PRINCIPAL\",\"generado_por\":\"Huascar Alexander Guilarte de Principal\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:37:46'),
-(223, 12, 'LOGOUT', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:37:52'),
-(224, NULL, 'RECUPERAR_PASSWORD_INICIO', 'usuarios', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:38:00'),
-(225, NULL, 'RECUPERAR_PASSWORD_INTENTO_FALLIDO', 'usuarios', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:38:10'),
-(226, NULL, 'RECUPERAR_PASSWORD_VALIDACION_EXITOSA', 'usuarios', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:38:29'),
-(227, NULL, 'RECUPERAR_PASSWORD_EXITO', 'usuarios', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:38:38'),
-(228, 1, 'LOGIN', NULL, NULL, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', '2026-06-18 11:38:44');
+(200, 1, 'REGISTRAR_NOMBRAMIENTO', 'historial_administrativo', 25, NULL, '{\"funcionario_id\":3,\"cargo_actual\":\"Analista\",\"fecha_evento\":\"2026-03-15\"}', '::1', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-03-16 03:44:40');
 
 -- --------------------------------------------------------
 
@@ -176,10 +148,7 @@ INSERT INTO `funcionarios` (`id`, `cedula`, `nombres`, `apellidos`, `fecha_nacim
 (2, 'V-8899490', 'Ruben José', 'Rodriguez Albillar', '1967-02-27', 'M', '0416-2895115', 'rubenjrodriguez27@gmail.com', 'Venezuela', 'TSU', 'TSU en Relaciones Industriales', NULL, 0, 2, 4, '2024-12-15', 'default-avatar.png', 'activo', '2026-03-07 22:12:04', '2026-03-16 03:39:02'),
 (3, 'V-12193581', 'Mayling Carolina', 'Sifontes Gascón', '1976-10-28', 'F', '0412-0869764', 'maylingcsifontes81@gmai.com', 'Sector La lucha, Calle Campo Elias, Casa 7', 'Universitario', 'Lic. en Administración', NULL, 0, 4, 5, '2025-05-05', 'default-avatar.png', 'activo', '2026-03-07 22:12:04', '2026-03-09 22:58:02'),
 (7, '16759128', 'Mary del Valle', 'Sifontes Gascón', '2004-02-10', 'F', '04249304292', 'mary@gmail.com', 'Venezuela', 'Postgrado', 'Doctor en informatica', NULL, 0, 3, 3, '2025-09-10', NULL, 'activo', '2026-03-10 17:39:16', '2026-03-16 03:44:00'),
-(8, '31230388', 'Yosberlin', 'Coraspe', '2008-03-12', 'F', '04162895119', 'albertrodrigrez7@gmail.com', 'Callejon Peñon Negro', 'Postgrado', 'Doctor en informatica', NULL, 0, 4, 2, '2023-01-15', NULL, 'activo', '2026-03-16 03:10:52', '2026-03-16 03:39:08'),
-(10, '31111222', 'Dailenis Josefina', 'Principal de Huascar', '2002-05-15', 'F', '04249399004', 'dai@gmail.com', NULL, 'Universitario', 'Ing. Informática', NULL, 0, 3, 2, '2023-02-07', NULL, 'activo', '2026-06-18 10:36:09', '2026-06-18 11:30:31'),
-(11, '31230358', 'Juana', 'Peralta', '2005-06-14', 'F', '04125896523', 'kskskks@gmail.com', NULL, 'Universitario', 'Ing. Informática', NULL, 0, 5, 4, '2021-05-18', NULL, 'vacaciones', '2026-06-18 10:40:04', '2026-06-18 11:05:40'),
-(12, '31375786', 'Huascar Alexander', 'Guilarte de Principal', '2005-11-09', 'M', '04125874585', 'huasar@gmail.com', 'Sector La lucha, Calle Campo Elias, Casa 7', 'Postgrado', 'Ing. Informática', NULL, 0, 5, 5, '2023-01-10', NULL, 'activo', '2026-06-18 10:25:35', '2026-06-18 11:10:48');
+(8, '31230388', 'Yosberlin', 'Coraspe', '2008-03-12', 'F', '04162895119', 'albertrodrigrez7@gmail.com', 'Callejon Peñon Negro', 'Postgrado', 'Doctor en informatica', NULL, 0, 4, 2, '2023-01-15', NULL, 'activo', '2026-03-16 03:10:52', '2026-03-16 03:39:08');
 
 -- --------------------------------------------------------
 
@@ -200,7 +169,7 @@ CREATE TABLE `historial_administrativo` (
   `registrado_por` int(10) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ;
 
 --
 -- Volcado de datos para la tabla `historial_administrativo`
@@ -211,12 +180,7 @@ INSERT INTO `historial_administrativo` (`id`, `funcionario_id`, `tipo_evento`, `
 (22, 2, 'NOMBRAMIENTO', '2026-03-15', NULL, '{\"cargo\":\"Jefe de Departamento\",\"departamento\":\"Atención al Usuario\",\"motivo\":\"Registro de nombramiento\"}', 'subidas/funcionarios/2/nombramientos/nombramientos_20260315_234306.pdf', 'NOMBRAMIENTO.pdf', 1, '2026-03-16 03:43:06', '2026-03-16 03:43:06'),
 (23, 1, 'NOMBRAMIENTO', '2026-03-15', NULL, '{\"cargo\":\"Jefe de Dirección\",\"departamento\":\"Dirección de Telemática\",\"motivo\":\"Registro de nombramiento\"}', 'subidas/funcionarios/1/nombramientos/nombramientos_20260315_234319.pdf', 'NOMBRAMIENTO.pdf', 1, '2026-03-16 03:43:19', '2026-03-16 03:43:19'),
 (24, 7, 'NOMBRAMIENTO', '2026-03-15', NULL, '{\"cargo\":\"Secretaria\",\"departamento\":\"Redes y Telecomunicaciones\",\"motivo\":\"Registro de nombramiento\"}', 'subidas/funcionarios/7/nombramientos/nombramientos_20260315_234412.pdf', 'NOMBRAMIENTO.pdf', 1, '2026-03-16 03:44:12', '2026-03-16 03:44:12'),
-(25, 3, 'NOMBRAMIENTO', '2026-03-15', NULL, '{\"cargo\":\"Analista\",\"departamento\":\"Soporte Técnico\",\"motivo\":\"Registro de nombramiento\"}', 'subidas/funcionarios/3/nombramientos/nombramientos_20260315_234440.pdf', 'NOMBRAMIENTO.pdf', 1, '2026-03-16 03:44:40', '2026-03-16 03:44:40'),
-(26, 11, 'VACACION', '2026-06-18', '2026-07-02', '{\"origen\":\"solicitud_empleado\",\"solicitud_id\":3,\"tipo_solicitud\":\"vacaciones\",\"fecha_inicio\":\"2026-06-18\",\"fecha_fin\":\"2026-07-02\",\"dias_habiles\":1,\"motivo\":\"[Períodos: Año 1, Año 2] quiero irme a la playa\",\"aprobado_por\":1,\"observaciones\":\"\",\"periodo_año\":1,\"dias_periodo\":15}', 'subidas/solicitudes/11/aval_3_20260618_070540.pdf', 'AVAL.pdf', 1, '2026-06-18 11:05:40', '2026-06-18 11:10:48'),
-(27, 11, 'VACACION', '2026-07-03', '2026-07-20', '{\"origen\":\"solicitud_empleado\",\"solicitud_id\":3,\"tipo_solicitud\":\"vacaciones\",\"fecha_inicio\":\"2026-07-03\",\"fecha_fin\":\"2026-07-20\",\"dias_habiles\":1,\"motivo\":\"[Períodos: Año 1, Año 2] quiero irme a la playa\",\"aprobado_por\":1,\"observaciones\":\"\",\"periodo_año\":2,\"dias_periodo\":18}', 'subidas/solicitudes/11/aval_3_20260618_070540.pdf', 'AVAL.pdf', 1, '2026-06-18 11:10:48', '2026-06-18 11:10:48'),
-(28, 10, 'TRASLADO', '2026-06-18', NULL, '{\"departamento_origen\":\"Soporte Técnico\",\"departamento_destino\":\"Sistemas\",\"motivo\":\"Prueba\"}', 'subidas/funcionarios/10/traslados/traslados_20260618_073031.pdf', 'AVAL.pdf', 1, '2026-06-18 11:30:31', '2026-06-18 11:30:31'),
-(29, 12, 'NOMBRAMIENTO', '2026-06-18', NULL, '{\"cargo\":\"Técnico\",\"departamento\":\"Soporte Técnico\",\"motivo\":\"Registro de nombramiento\"}', 'subidas/funcionarios/12/nombramientos/nombramientos_20260618_073058.pdf', 'NOMBRAMIENTO.pdf', 1, '2026-06-18 11:30:58', '2026-06-18 11:30:58'),
-(30, 10, 'AMONESTACION', '2026-06-18', NULL, '{\"tipo_falta\":\"leve\",\"motivo\":\"se pasó\",\"sancion\":\"sin permiso\"}', 'subidas/funcionarios/10/amonestaciones/amonestaciones_20260618_073239.pdf', 'AVAL.pdf', 1, '2026-06-18 11:32:39', '2026-06-18 11:32:39');
+(25, 3, 'NOMBRAMIENTO', '2026-03-15', NULL, '{\"cargo\":\"Analista\",\"departamento\":\"Soporte Técnico\",\"motivo\":\"Registro de nombramiento\"}', 'subidas/funcionarios/3/nombramientos/nombramientos_20260315_234440.pdf', 'NOMBRAMIENTO.pdf', 1, '2026-03-16 03:44:40', '2026-03-16 03:44:40');
 
 -- --------------------------------------------------------
 
@@ -274,8 +238,7 @@ CREATE TABLE `solicitudes_empleados` (
 --
 
 INSERT INTO `solicitudes_empleados` (`id`, `funcionario_id`, `tipo_solicitud`, `fecha_inicio`, `fecha_fin`, `motivo`, `estado`, `revisado_por`, `observaciones_respuesta`, `ruta_archivo_aprobacion`, `created_at`, `updated_at`) VALUES
-(2, 8, 'vacaciones', '2026-03-16', '2026-03-16', '[Períodos: Año 1, Año 2] pppppppppppppppppppppppppppppppppppppppppp', 'rechazada', 1, '[Fechas solicitadas en conflicto con necesidades del servicio] Fechas solicitadas en conflicto con necesidades del servicio.', NULL, '2026-03-16 03:35:33', '2026-03-16 03:35:55'),
-(3, 11, 'vacaciones', '2026-06-18', '2026-06-18', '[Períodos: Año 1, Año 2] quiero irme a la playa', 'aprobada', 1, '', 'subidas/solicitudes/11/aval_3_20260618_070540.pdf', '2026-06-18 10:41:23', '2026-06-18 11:05:40');
+(2, 8, 'vacaciones', '2026-03-16', '2026-03-16', '[Períodos: Año 1, Año 2] pppppppppppppppppppppppppppppppppppppppppp', 'rechazada', 1, '[Fechas solicitadas en conflicto con necesidades del servicio] Fechas solicitadas en conflicto con necesidades del servicio.', NULL, '2026-03-16 03:35:33', '2026-03-16 03:35:55');
 
 -- --------------------------------------------------------
 
@@ -312,14 +275,84 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `funcionario_id`, `username`, `password_hash`, `email_recuperacion`, `token_recuperacion`, `token_expiracion`, `ultimo_acceso`, `intentos_fallidos`, `bloqueado_hasta`, `estado`, `registro_completado`, `pregunta_seguridad_1`, `respuesta_seguridad_1`, `pregunta_seguridad_2`, `respuesta_seguridad_2`, `pregunta_seguridad_3`, `respuesta_seguridad_3`, `created_at`, `updated_at`) VALUES
-(1, 1, 'arodriguez', '$2y$10$/W0.bDJrkL1uOLJ.9xKX1.J9p8xgOW60uqPcvjGwbyLPimWOmfLRq', 'arodriguez@ispeb.gob.ve', NULL, NULL, '2026-06-18 07:38:44', 0, NULL, 'activo', 1, 1, '$2y$10$Jiwxo8abGtaop.k2/0WDZu5PFKtA8/QVdhuQo3ePepl0CGRT8Jpam', 2, '$2y$10$Ws4WAsAJgKyZzLJkRbAhjuIs7PAT1rI5ZTohSlAbISukMJUPNXvVC', 4, '$2y$10$OKeGVoyYaeGm0xCOuS1OvOzS6dzKVFQf6GNVmOyasmvLfHC9IeNGi', '2026-03-07 22:12:04', '2026-06-18 11:38:44'),
-(2, 2, 'rrodriguez', '$2b$12$NrZpfu9imjqofQ6dye2Tsuv93Ay3SCOsk1iPv9fhQyjmqkNAzM40q', 'rrodriguez@ispeb.gob.ve', NULL, NULL, '2026-06-18 06:34:40', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-06-18 10:34:40'),
-(3, 3, 'msifontes', '$2b$12$EjzeyDks5N/1nXSGY0T69ub.CYKCwr6YXsOIrGrbIiFGqrWI1M56W', 'msifontes@ispeb.gob.ve', NULL, NULL, '2026-06-18 06:34:32', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-06-18 10:34:32'),
+(1, 1, 'arodriguez', '$2y$10$/W0.bDJrkL1uOLJ.9xKX1.J9p8xgOW60uqPcvjGwbyLPimWOmfLRq', 'arodriguez@ispeb.gob.ve', NULL, NULL, '2026-03-15 23:35:41', 0, NULL, 'activo', 1, 1, '$2y$10$Jiwxo8abGtaop.k2/0WDZu5PFKtA8/QVdhuQo3ePepl0CGRT8Jpam', 2, '$2y$10$Ws4WAsAJgKyZzLJkRbAhjuIs7PAT1rI5ZTohSlAbISukMJUPNXvVC', 4, '$2y$10$OKeGVoyYaeGm0xCOuS1OvOzS6dzKVFQf6GNVmOyasmvLfHC9IeNGi', '2026-03-07 22:12:04', '2026-03-16 03:35:41'),
+(2, 2, 'rrodriguez', '$2b$12$NrZpfu9imjqofQ6dye2Tsuv93Ay3SCOsk1iPv9fhQyjmqkNAzM40q', 'rrodriguez@ispeb.gob.ve', NULL, NULL, '2026-03-08 19:59:51', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-03-08 23:59:51'),
+(3, 3, 'msifontes', '$2b$12$EjzeyDks5N/1nXSGY0T69ub.CYKCwr6YXsOIrGrbIiFGqrWI1M56W', 'msifontes@ispeb.gob.ve', NULL, NULL, '2026-03-07 20:30:05', 0, NULL, 'activo', 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-07 22:12:04', '2026-03-08 00:30:05'),
 (7, 7, 'masifontes', '$2y$10$JBc9es/1cW4tJcUB4OwYge9cvK6cURAh68fqshZX7LGXZZhFGRF2u', 'mary@gmail.com', NULL, NULL, '2026-03-10 13:41:57', 0, NULL, 'activo', 1, 1, '$2y$10$F99zSkBWZ/34A0iaanXrKeZ8XnkoCMM450q4HZLzywqBlzQOsUL/S', 2, '$2y$10$OqySeuJwRF4W/Um2qpGu/eaip6ksB0PXnqD6ZJzbASHzWxU//i/WS', 4, '$2y$10$TGtXNXLdAQM444K0IwfJFuA78CDf4XoHyM3iGNUnmT8R6ladkfpP2', '2026-03-10 17:39:16', '2026-03-10 17:41:57'),
-(8, 8, 'ycoraspe', '$2y$10$NyjQzIZWzuSbnLSVB.VMueV6OlSqGnmO//mIATO51usUPZoQ3rUGW', 'albertrodrigrez7@gmail.com', NULL, NULL, '2026-03-15 23:23:53', 0, NULL, 'activo', 1, 4, '$2y$10$ybbYSzkopt3O5RqWO7sIYOrjsh16m.M1.Z07ptJx9qm4k9F5nwoi6', 3, '$2y$10$s8iJEte/UJFkh7cWFp1J6.BIQeRFBSSyVk44Grxd.xPsxovEGTszO', 8, '$2y$10$3EAMdv512DLmUPs/liTW2eBl9T3Yilju50ORl4cJk7qBVbvduuw1u', '2026-03-16 03:10:52', '2026-03-16 03:23:53'),
-(9, 10, 'dprincipal', '$2y$10$cuBgb6hHmRQjKCxrv7Bt5.AdkIJD/9MHiE8WfDpNHnOHkypAfp.Se', 'dai@gmail.com', NULL, NULL, '2026-06-18 07:36:10', 0, NULL, 'activo', 1, 1, '$2y$10$2A5/RJ3zr2AznEIwHUrIiORKIroNQvWcnuxAITJZASVd.nrKvLZ06', 2, '$2y$10$oZcLiEPMHt5bUVRQvzg4uer1ob.naqHvWuKSRM39K0WFzVnLwFfxy', 4, '$2y$10$5yikT2S2nGA9722c57T4LugExUslbzCo9MwEytKkpAtVgLhulAlDm', '2026-06-18 10:36:09', '2026-06-18 11:36:10'),
-(10, 11, 'jperalta', '$2y$10$L5XTXvfO/2L0O2bqsBNtg.pgll2vHohs52aJp7SyPAzwBEwGqwRAG', 'kskskks@gmail.com', NULL, NULL, '2026-06-18 06:40:56', 0, NULL, 'activo', 1, 1, '$2y$10$5rwTi7sU0xK1jR8uAMQP4OledV1v0mXesoogqX//aR978nTplwfwe', 2, '$2y$10$GWo8W84xGhjfvHzBFxmNke4hCvPCQgKri/o/VLImFXokjelZBMxb6', 4, '$2y$10$t3ZnVlE7KltA7SMnRBEFdeP24CQg4/qJOQnIlpjEreWVbD2KBUzsW', '2026-06-18 10:40:04', '2026-06-18 10:40:56'),
-(12, 12, 'hguilarte', '$2y$10$LYrm0.UfQUlyATLApJsg/e7VnLpIGBxEn3j.ZFKkIPD8Ov.U0195a', NULL, NULL, NULL, '2026-06-18 07:37:43', 0, NULL, 'activo', 1, 1, '$2y$10$crWyJTntxQiIbdZG.eDVn.dqQMX7.rGJO6m62WRcO5KOTK7Z16by.', 2, '$2y$10$ooKLBt3uoaLAOIsg9qmgr.q8uuSekBqW1eh6Oh0V3j42Q9iO3CN4e', 4, '$2y$10$V6lrslD.TRy/FcGukQWqEezrY2cOIsqjX/vplphw0j31GJOzMtysW', '2026-06-18 11:37:15', '2026-06-18 11:38:38');
+(8, 8, 'ycoraspe', '$2y$10$NyjQzIZWzuSbnLSVB.VMueV6OlSqGnmO//mIATO51usUPZoQ3rUGW', 'albertrodrigrez7@gmail.com', NULL, NULL, '2026-03-15 23:23:53', 0, NULL, 'activo', 1, 4, '$2y$10$ybbYSzkopt3O5RqWO7sIYOrjsh16m.M1.Z07ptJx9qm4k9F5nwoi6', 3, '$2y$10$s8iJEte/UJFkh7cWFp1J6.BIQeRFBSSyVk44Grxd.xPsxovEGTszO', 8, '$2y$10$3EAMdv512DLmUPs/liTW2eBl9T3Yilju50ORl4cJk7qBVbvduuw1u', '2026-03-16 03:10:52', '2026-03-16 03:23:53');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `vista_funcionarios_completo`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `vista_funcionarios_completo`;
+CREATE TABLE `vista_funcionarios_completo` (
+`id` int(10) unsigned
+,`cedula` varchar(20)
+,`nombre_completo` varchar(201)
+,`nombres` varchar(100)
+,`apellidos` varchar(100)
+,`fecha_nacimiento` date
+,`edad` bigint(21)
+,`genero` enum('M','F','Otro')
+,`telefono` varchar(20)
+,`email` varchar(150)
+,`direccion` text
+,`nivel_educativo` enum('Primaria','Bachiller','TSU','Universitario','Postgrado','Maestría','Doctorado')
+,`titulo_obtenido` varchar(200)
+,`cantidad_hijos` tinyint(3) unsigned
+,`nombre_cargo` varchar(100)
+,`nivel_acceso` tinyint(4)
+,`departamento` varchar(150)
+,`fecha_ingreso` date
+,`antiguedad_anos` bigint(21)
+,`foto` varchar(255)
+,`estado` enum('activo','vacaciones','reposo','inactivo')
+,`created_at` timestamp
+,`updated_at` timestamp
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `vista_usuarios_activos`
+-- (Véase abajo para la vista actual)
+--
+DROP VIEW IF EXISTS `vista_usuarios_activos`;
+CREATE TABLE `vista_usuarios_activos` (
+`usuario_id` int(10) unsigned
+,`username` varchar(50)
+,`estado_usuario` enum('activo','inactivo','bloqueado')
+,`ultimo_acceso` datetime
+,`funcionario_id` int(10) unsigned
+,`cedula` varchar(20)
+,`nombre_completo` varchar(201)
+,`nombre_cargo` varchar(100)
+,`nivel_acceso` tinyint(4)
+,`departamento` varchar(150)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `vista_funcionarios_completo`
+--
+DROP TABLE IF EXISTS `vista_funcionarios_completo`;
+
+DROP VIEW IF EXISTS `vista_funcionarios_completo`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_funcionarios_completo`  AS SELECT `f`.`id` AS `id`, `f`.`cedula` AS `cedula`, concat(`f`.`nombres`,' ',`f`.`apellidos`) AS `nombre_completo`, `f`.`nombres` AS `nombres`, `f`.`apellidos` AS `apellidos`, `f`.`fecha_nacimiento` AS `fecha_nacimiento`, timestampdiff(YEAR,`f`.`fecha_nacimiento`,curdate()) AS `edad`, `f`.`genero` AS `genero`, `f`.`telefono` AS `telefono`, `f`.`email` AS `email`, `f`.`direccion` AS `direccion`, `f`.`nivel_educativo` AS `nivel_educativo`, `f`.`titulo_obtenido` AS `titulo_obtenido`, `f`.`cantidad_hijos` AS `cantidad_hijos`, `c`.`nombre_cargo` AS `nombre_cargo`, `c`.`nivel_acceso` AS `nivel_acceso`, `d`.`nombre` AS `departamento`, `f`.`fecha_ingreso` AS `fecha_ingreso`, timestampdiff(YEAR,`f`.`fecha_ingreso`,curdate()) AS `antiguedad_anos`, `f`.`foto` AS `foto`, `f`.`estado` AS `estado`, `f`.`created_at` AS `created_at`, `f`.`updated_at` AS `updated_at` FROM ((`funcionarios` `f` join `cargos` `c` on(`f`.`cargo_id` = `c`.`id`)) join `departamentos` `d` on(`f`.`departamento_id` = `d`.`id`)) ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `vista_usuarios_activos`
+--
+DROP TABLE IF EXISTS `vista_usuarios_activos`;
+
+DROP VIEW IF EXISTS `vista_usuarios_activos`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_usuarios_activos`  AS SELECT `u`.`id` AS `usuario_id`, `u`.`username` AS `username`, `u`.`estado` AS `estado_usuario`, `u`.`ultimo_acceso` AS `ultimo_acceso`, `f`.`id` AS `funcionario_id`, `f`.`cedula` AS `cedula`, concat(`f`.`nombres`,' ',`f`.`apellidos`) AS `nombre_completo`, `c`.`nombre_cargo` AS `nombre_cargo`, `c`.`nivel_acceso` AS `nivel_acceso`, `d`.`nombre` AS `departamento` FROM (((`usuarios` `u` join `funcionarios` `f` on(`u`.`funcionario_id` = `f`.`id`)) join `cargos` `c` on(`f`.`cargo_id` = `c`.`id`)) join `departamentos` `d` on(`f`.`departamento_id` = `d`.`id`)) WHERE `u`.`estado` = 'activo' ;
 
 --
 -- Índices para tablas volcadas
@@ -411,7 +444,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=229;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=201;
 
 --
 -- AUTO_INCREMENT de la tabla `cargos`
@@ -429,13 +462,13 @@ ALTER TABLE `departamentos`
 -- AUTO_INCREMENT de la tabla `funcionarios`
 --
 ALTER TABLE `funcionarios`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `historial_administrativo`
 --
 ALTER TABLE `historial_administrativo`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `preguntas_seguridad_catalogo`
@@ -447,13 +480,53 @@ ALTER TABLE `preguntas_seguridad_catalogo`
 -- AUTO_INCREMENT de la tabla `solicitudes_empleados`
 --
 ALTER TABLE `solicitudes_empleados`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `auditoria`
+--
+ALTER TABLE `auditoria`
+  ADD CONSTRAINT `auditoria_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `funcionarios`
+--
+ALTER TABLE `funcionarios`
+  ADD CONSTRAINT `funcionarios_ibfk_1` FOREIGN KEY (`cargo_id`) REFERENCES `cargos` (`id`),
+  ADD CONSTRAINT `funcionarios_ibfk_2` FOREIGN KEY (`departamento_id`) REFERENCES `departamentos` (`id`);
+
+--
+-- Filtros para la tabla `historial_administrativo`
+--
+ALTER TABLE `historial_administrativo`
+  ADD CONSTRAINT `historial_administrativo_ibfk_1` FOREIGN KEY (`funcionario_id`) REFERENCES `funcionarios` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `historial_administrativo_ibfk_2` FOREIGN KEY (`registrado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `solicitudes_empleados`
+--
+ALTER TABLE `solicitudes_empleados`
+  ADD CONSTRAINT `solicitudes_empleados_ibfk_1` FOREIGN KEY (`funcionario_id`) REFERENCES `funcionarios` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `solicitudes_empleados_ibfk_2` FOREIGN KEY (`revisado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `usuarios`
+--
+ALTER TABLE `usuarios`
+  ADD CONSTRAINT `fk_usuario_preg1` FOREIGN KEY (`pregunta_seguridad_1`) REFERENCES `preguntas_seguridad_catalogo` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_usuario_preg2` FOREIGN KEY (`pregunta_seguridad_2`) REFERENCES `preguntas_seguridad_catalogo` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_usuario_preg3` FOREIGN KEY (`pregunta_seguridad_3`) REFERENCES `preguntas_seguridad_catalogo` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`funcionario_id`) REFERENCES `funcionarios` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
